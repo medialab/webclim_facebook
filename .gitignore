@@ -1,17 +1,11 @@
-.ipynb_checkpoints
-*.csv
-*.gexf
-*.ipynb
-!data_viz_covid_one_page_v0.ipynb
-
-*.png
-!screenshot_graph.png
-!venn_diagram_facebook_groups_28_04_2020.png
-
 __pycache__/*
 
+.ipynb_checkpoints
+*.ipynb
+
+*.csv
+
+*.png
+
+*.gexf
 *.json
-!climate_28_04_2020.json
-!global_28_04_2020.json
-!Covid-19.json
-!Plandemic.json
