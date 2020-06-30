@@ -4,8 +4,3 @@ __pycache__/*
 *.ipynb
 
 *.csv
-
-*.png
-
-*.gexf
-*.json
