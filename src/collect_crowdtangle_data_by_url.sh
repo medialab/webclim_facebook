@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# -ge 2 ] ; then
-        DATE=$2
+if [ $# -ge 1 ] ; then
+        DATE=$1
 else
         DATE="2020-06-29"
         echo "The date '${DATE}' has been chosen by default."
@@ -20,4 +20,4 @@ else
     echo "Nothing to do, the output file already exists"
 fi
 
-## 1,381 url: 4h25 (29 June 2020)
+## 576 url (only COVID): 1h57 (29 June 2020)

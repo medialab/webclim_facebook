@@ -21,7 +21,7 @@ You should export the following tables in a CSV format from the Science Feedback
 * "Appearances-Grid view 2020-06-29.csv"
 * "Reviews _ Fact-checks-Grid view 2020-06-29.csv"
 
-### Collect the Facebook groups sharing these URLs
+### Collect the Facebook posts sharing these URLs
 
 You should get a CrowdTangle token and write it in a `config.json` file similar to the `config.json.example` file 
 (except that you should write the token value instead of "blablabla").
@@ -31,3 +31,29 @@ You should first clean the Science Feedback data, and then do the CrowdTangle re
 python src/clean_sciencefeedback_data.py 
 ./src/collect_crowdtangle_data_by_url.sh
 ```
+
+### Collect all the Facebook posts of the groups sharing these URLs
+
+You should first have the list of the Facebook groups you want to collect. To see this list, you can write in a Jupyter Notebook:
+
+```
+import pandas as pd
+pd.set_option('display.max_rows', None)
+
+posts_df = pd.read_csv("./data_crowdtangle_url/posts_url_2020-06-29.csv")
+posts_df["account_url"].value_counts()
+```
+
+We prefer to display the Facebook groups' URL because it is easier to search the groups using their URL on the CrowdTangle interface.
+
+Then we need to manually add the groups you want to collect on the Crowdtangle interface and run this command:
+
+```
+./src/collect_crowdtangle_data_by_group.sh 1
+```
+
+Because collecting hundreds of groups takes days to run, we are manually adding a batch of a few groups each time and running the command whith increasing numbers in the argument. The output files will appear in the `data_crowdtangle_group` folder and will be named:
+* posts_group_2020-07-15_1.csv
+* posts_group_2020-07-15_2.csv
+* posts_group_2020-07-15_3.csv
+* ...
