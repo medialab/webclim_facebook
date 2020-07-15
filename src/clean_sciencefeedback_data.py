@@ -53,17 +53,18 @@ def keep_only_covid_url(url_df):
     url_df = url_df.dropna(subset=['Item reviewed'])
     fact_check_df = fact_check_df.dropna(subset=['Items reviewed'])
 
-    url_df = url_df.merge(fact_check_df[['Items reviewed', 'topic']], 
+    url_df = url_df.merge(fact_check_df[['Items reviewed', 'topic', 'Date of publication']], 
                         left_on='Item reviewed', right_on='Items reviewed', how='left')
 
     url_df = url_df[(url_df['topic'].isin(["COVID-19", "COVID-19,5G"]))]
+    url_df = url_df.dropna(subset=['Date of publication'])
 
     return url_df
  
 
 def save_data(url_df, DATE):
 
-    url_df = url_df[['url', 'url_cleaned', 'domain_name', 'Item reviewed']]
+    url_df = url_df[['url', 'url_cleaned', 'domain_name', 'Item reviewed', 'Date of publication']]
     # url_df = url_df.iloc[1:, :]
     # url_df = url_df.sample()
 
