@@ -43,11 +43,29 @@ def clean_url_format(url_df):
     url_df = url_df.drop_duplicates(subset = "url", keep = "first")
     
     return url_df
-    
+
+
+def keep_only_covid_url(url_df):
+
+    fact_check_path = os.path.join(".", "data_sciencefeedback", "Reviews _ Fact-checks-Grid view " + DATE + ".csv")
+    fact_check_df = pd.read_csv(fact_check_path)
+
+    url_df = url_df.dropna(subset=['Item reviewed'])
+    fact_check_df = fact_check_df.dropna(subset=['Items reviewed'])
+
+    url_df = url_df.merge(fact_check_df[['Items reviewed', 'topic']], 
+                        left_on='Item reviewed', right_on='Items reviewed', how='left')
+
+    url_df = url_df[(url_df['topic'].isin(["COVID-19", "COVID-19,5G"]))]
+
+    return url_df
+ 
 
 def save_data(url_df, DATE):
 
     url_df = url_df[['url', 'url_cleaned', 'domain_name', 'Item reviewed']]
+    # url_df = url_df.iloc[1:, :]
+    # url_df = url_df.sample()
 
     clean_url_path = os.path.join(".", "data_sciencefeedback", "appearances_" + DATE + "_clean.csv")
     url_df.to_csv(clean_url_path, index=False)
@@ -67,4 +85,5 @@ if __name__ == "__main__":
     url_df = import_data(DATE)
     url_df = keep_only_the_urls_considered_fake_by_facebook(url_df)
     url_df = clean_url_format(url_df)
+    url_df = keep_only_covid_url(url_df)
     save_data(url_df, DATE)

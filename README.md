@@ -17,8 +17,9 @@ pip install -r requirements.txt
 
 ### Extract the Science Feedback dataset
 
-You should export the following table in a CSV format from the Science Feedback Airtable database, add the day's date in their name, and put them in the `data_sciencefeedback` folder:
+You should export the following tables in a CSV format from the Science Feedback Airtable database, add the day's date in their name, and put them in the `data_sciencefeedback` folder:
 * "Appearances-Grid view 2020-06-29.csv"
+* "Reviews _ Fact-checks-Grid view 2020-06-29.csv"
 
 ### Collect the Facebook groups sharing these URLs
 
