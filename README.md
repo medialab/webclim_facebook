@@ -62,3 +62,10 @@ If you collect 6 different csv files you can then aggregate and clean your data 
 ```
 python ./src/aggregate_crowdtangle_group_data.py 6 2020-07-15
 ```
+
+### Plot the temporal evolution
+
+We can now plot the average popularity and number of posts for all the collected groups with the command:
+```
+python ./src/plot_mean_popularity.py
+```
