@@ -57,3 +57,8 @@ Because collecting hundreds of groups takes days to run, we are manually adding 
 * posts_group_2020-07-15_2.csv
 * posts_group_2020-07-15_3.csv
 * ...
+
+If you collect 6 different csv files you can then aggregate and clean your data with:
+```
+python ./src/aggregate_crowdtangle_group_data.py 6 2020-07-15
+```
