@@ -28,7 +28,39 @@ def details_figure(title):
     plt.title(title)
 
 
-def plot_figure(posts_df, DATE):
+def plot_one_group(posts_df, group_index):
+    
+    group_id = posts_df['account_id'].unique()[group_index]
+    posts_df_group = posts_df[posts_df["account_id"] == group_id]
+    
+    plt.plot(posts_df_group.groupby(by=["date"])["reaction"].mean(), 
+            label="Mean number of reactions per post")
+
+    plt.plot(posts_df_group.groupby(by=["date"])["comment"].mean(), 
+            label="Mean number of comments per post")
+    
+    details_figure(title=posts_df_group['account_name'].unique()[0])
+
+
+def plot_the_groups_one_by_one(posts_df, DATE):
+
+    for group_index in range(posts_df['account_id'].nunique()):
+
+        if group_index % 10 == 0:
+            plt.figure(figsize=(12, 15))
+
+        plt.subplot(5, 2, group_index % 10 + 1)
+        plot_one_group(posts_df, group_index)
+
+        if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
+            plt.tight_layout()
+            figure_path = "./figure/group_dynamics_{}_{}.png".format(DATE, int(group_index / 10))
+            plt.savefig(figure_path)
+            print("The '{}' graph has been saved in the '{}' folder."
+                .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
+
+
+def plot_all_the_groups(posts_df, DATE):
 
     plt.figure(figsize=(12, 15))
     plt.subplot(311)
@@ -74,10 +106,9 @@ def plot_figure(posts_df, DATE):
     print("The '{}' graph has been saved in the '{}' folder."
             .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
 
-    plt.show()
-
 
 if __name__=="__main__":
     DATE = "2020-07-15"
     posts_df = import_data(DATE)
-    plot_figure(posts_df, DATE)
+    plot_the_groups_one_by_one(posts_df, DATE)
+    plot_all_the_groups(posts_df, DATE)
