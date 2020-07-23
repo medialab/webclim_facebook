@@ -44,12 +44,19 @@ posts_df = pd.read_csv("./data_crowdtangle_url/posts_url_2020-06-29.csv")
 posts_df["account_url"].value_counts()
 ```
 
-We prefer to display the Facebook groups' URL because it is easier to search the groups using their URL on the CrowdTangle interface.
+We prefer to display the Facebook groups' URL because it is easier to search the groups using their URL on the CrowdTangle interface. We need to manually add the groups you want to collect via their URLs on the Crowdtangle interface in a list.
 
-Then we need to manually add the groups you want to collect on the Crowdtangle interface and run this command:
+Then we can know what is the list number with the command:
 
 ```
-./src/collect_crowdtangle_data_by_group.sh 1
+token_crowdtangle=$(jq -r '.token_crowdtangle' config.json)
+minet ct lists --token $token_crowdtangle
+```
+
+You can now use the correct list number in the bash script, and run this command:
+
+```
+./src/collect_crowdtangle_data_by_group.sh 2020-07-22 1
 ```
 
 Because collecting hundreds of groups takes days to run, we are manually adding a batch of a few groups each time and running the command whith increasing numbers in the argument. The output files will appear in the `data_crowdtangle_group` folder and will be named:
@@ -60,12 +67,12 @@ Because collecting hundreds of groups takes days to run, we are manually adding 
 
 If you collect 6 different csv files you can then aggregate and clean your data with:
 ```
-python ./src/aggregate_crowdtangle_group_data.py 6 2020-07-15
+python ./src/aggregate_crowdtangle_group_data.py 2020-07-15 6 
 ```
 
 ### Plot the temporal evolution
 
 We can now plot the average popularity and number of posts for all the collected groups with the command:
 ```
-python ./src/plot_mean_popularity.py
+python ./src/plot_mean_popularity.py 2020-07-15
 ```

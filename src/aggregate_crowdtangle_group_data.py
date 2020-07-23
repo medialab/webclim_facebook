@@ -48,13 +48,8 @@ def export_clean_csv(simple_df):
 
 if __name__=="__main__":
 
-    END = int(sys.argv[1])
-
-    if len(sys.argv) >= 3:
-        DATE = sys.argv[2]
-    else:
-        DATE = "2020-07-15"
-        print("The date '{}' has been chosen by default.".format(DATE))
+    DATE = sys.argv[1]
+    END = int(sys.argv[2])
 
     df = import_all_csvs(DATE, END)
     simple_df = clean_columns(df)

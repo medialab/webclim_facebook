@@ -1,3 +1,5 @@
+import sys
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -108,7 +110,7 @@ def plot_all_the_groups(posts_df, DATE):
 
 
 if __name__=="__main__":
-    DATE = "2020-07-15"
+    DATE = sys.argv[1]
     posts_df = import_data(DATE)
     plot_the_groups_one_by_one(posts_df, DATE)
     plot_all_the_groups(posts_df, DATE)
