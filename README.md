@@ -53,13 +53,13 @@ token_crowdtangle=$(jq -r '.token_crowdtangle' config.json)
 minet ct lists --token $token_crowdtangle
 ```
 
-You can now use the correct list number in the bash script, and run this command:
+You can now use this command with the CrowdTangle list id of interest, the date of the day and the iteration number:
 
 ```
-./src/collect_crowdtangle_data_by_group.sh 2020-07-22 1
+./src/collect_crowdtangle_data_by_group.sh 1401873 2020-07-15 1
 ```
 
-Because collecting hundreds of groups takes days to run, we are manually adding a batch of a few groups each time and running the command whith increasing numbers in the argument. The output files will appear in the `data_crowdtangle_group` folder and will be named:
+Because collecting hundreds of groups takes days to run, we are manually adding a batch of a few groups each time and running the command whith increasing iteration numbers. The output files will appear in the `data_crowdtangle_group` folder and will be named:
 * posts_group_2020-07-15_1.csv
 * posts_group_2020-07-15_2.csv
 * posts_group_2020-07-15_3.csv
