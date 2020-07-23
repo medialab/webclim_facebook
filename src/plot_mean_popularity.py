@@ -67,13 +67,13 @@ def plot_all_the_groups(posts_df, DATE):
     plt.figure(figsize=(12, 15))
     plt.subplot(311)
 
-    plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.account_id.nunique(), 
+    plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
             label="Mean number of reactions per day")
 
-    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.account_id.nunique(), 
+    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
             label="Mean number of comments per day")
 
-    plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.account_id.nunique(), 
+    plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
             label="Mean number of shares per day")
 
     details_figure(title="The average daily popularity for the {} Facebook groups/pages"
@@ -81,7 +81,7 @@ def plot_all_the_groups(posts_df, DATE):
 
     plt.subplot(312)
 
-    plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.account_id.nunique(), 
+    plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
         label="Mean number of posts per day", color="red")
 
     details_figure(title="The average daily posts for the {} Facebook groups/pages"
