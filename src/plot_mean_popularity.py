@@ -4,13 +4,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import numpy as np
+import datetime
 
 
 def import_data(DATE):
 
     posts_df = pd.read_csv("./data_crowdtangle_group/posts_group_{}_simple.csv".format(DATE))
     posts_df['date'] = pd.to_datetime(posts_df['date'])
-    posts_df = posts_df[posts_df['date'] <= "2020-07-14"]
+    posts_df = posts_df[posts_df['date'] < datetime.datetime.strptime(DATE, '%Y-%m-%d')]
 
     return posts_df
 
@@ -63,6 +64,15 @@ def plot_the_groups_one_by_one(posts_df, DATE):
 
 
 def plot_all_the_groups(posts_df, DATE):
+
+#     # Pour plotter seulement les groupes qui commencent à publier le 01 septembre 
+#     list_complete_groups_id = []
+#     for id in posts_df['account_id'].unique():
+#         posts_df_group = posts_df[posts_df["account_id"] == id]
+#         if ((np.min(posts_df_group['date']) == datetime.date(2019, 9, 1)) & 
+#             (np.max(posts_df_group['date']) == datetime.datetime.strptime(DATE, '%Y-%m-%d') - datetime.timedelta(days=1))):
+#             list_complete_groups_id.append(id)
+#     posts_df = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
 
     plt.figure(figsize=(12, 15))
     plt.subplot(311)
