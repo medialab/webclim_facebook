@@ -25,7 +25,10 @@ def details_figure(title):
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
     plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2)) 
 
-    plt.xlim(np.datetime64('2019-08-26'), np.datetime64('2020-07-18'))
+    plt.xlim(
+        np.datetime64('2019-08-26'), 
+        np.datetime64(datetime.datetime.strptime(DATE, '%Y-%m-%d') + datetime.timedelta(days=4))
+    )
     plt.ylim(bottom=0)
 
     plt.title(title)
