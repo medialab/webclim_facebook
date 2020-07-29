@@ -66,16 +66,16 @@ def plot_the_groups_one_by_one(posts_df, DATE):
                 .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
 
 
-def plot_all_the_groups(posts_df, DATE):
+def plot_all_the_groups(posts_df, DATE, plot_only_complete_groups=False):
 
-#     # Pour plotter seulement les groupes qui commencent à publier le 01 septembre 
-#     list_complete_groups_id = []
-#     for id in posts_df['account_id'].unique():
-#         posts_df_group = posts_df[posts_df["account_id"] == id]
-#         if ((np.min(posts_df_group['date']) == datetime.date(2019, 9, 1)) & 
-#             (np.max(posts_df_group['date']) == datetime.datetime.strptime(DATE, '%Y-%m-%d') - datetime.timedelta(days=1))):
-#             list_complete_groups_id.append(id)
-#     posts_df = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
+    if plot_only_complete_groups == True: 
+        list_complete_groups_id = []
+        for id in posts_df['account_id'].unique():
+            posts_df_group = posts_df[posts_df["account_id"] == id]
+            if ((np.min(posts_df_group['date']) == datetime.date(2019, 9, 1)) & 
+                (np.max(posts_df_group['date']) == datetime.datetime.strptime(DATE, '%Y-%m-%d') - datetime.timedelta(days=1))):
+                list_complete_groups_id.append(id)
+        posts_df = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
 
     plt.figure(figsize=(12, 15))
     plt.subplot(311)
@@ -116,7 +116,10 @@ def plot_all_the_groups(posts_df, DATE):
 
     plt.tight_layout()
 
-    figure_path = "./figure/average_dynamics_{}.png".format(DATE)
+    if plot_only_complete_groups == False:
+        figure_path = "./figure/average_dynamics_{}.png".format(DATE)
+    else:
+        figure_path = "./figure/average_dynamics_{}_only_complete_groups.png".format(DATE)
     plt.savefig(figure_path)
     print("The '{}' graph has been saved in the '{}' folder."
             .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
@@ -127,3 +130,4 @@ if __name__=="__main__":
     posts_df = import_data(DATE)
     plot_the_groups_one_by_one(posts_df, DATE)
     plot_all_the_groups(posts_df, DATE)
+    plot_all_the_groups(posts_df, DATE, plot_only_complete_groups=True)
