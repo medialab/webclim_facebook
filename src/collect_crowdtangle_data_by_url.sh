@@ -1,14 +1,11 @@
 #!/bin/bash
 
-if [ $# -ge 1 ] ; then
-        DATE=$1
-else
-        DATE="2020-06-29"
-        echo "The date '${DATE}' has been chosen by default."
-fi
+DATE=$1
+TOPIC=$2
+TODAY_DATE=$(date +"%Y-%m-%d")
 
-INPUT_FILE="./data_sciencefeedback/appearances_${DATE}_clean.csv"
-OUTPUT_FILE="./data_crowdtangle_url/posts_url_${DATE}.csv"
+INPUT_FILE="./data_sciencefeedback/appearances_${DATE}_${TOPIC}.csv"
+OUTPUT_FILE="./data_crowdtangle_url/posts_url_${TODAY_DATE}_${TOPIC}.csv"
 
 token_crowdtangle=$(jq -r '.token_crowdtangle' config.json)
 
@@ -21,3 +18,4 @@ else
 fi
 
 ## 576 url (only COVID): 1h57 (29 June 2020)
+## 334 url (only climate): 1h01 (30 July 2020)

@@ -45,46 +45,47 @@ def clean_url_format(url_df):
     return url_df
 
 
-def keep_only_covid_url(url_df):
+def keep_only_field_url(url_df, TOPIC):
 
     fact_check_path = os.path.join(".", "data_sciencefeedback", "Reviews _ Fact-checks-Grid view " + DATE + ".csv")
     fact_check_df = pd.read_csv(fact_check_path)
 
+    fact_check_df['field'] = fact_check_df['Review url'].str.extract('https://([^/]+)feedback.org')
+
     url_df = url_df.dropna(subset=['Item reviewed'])
     fact_check_df = fact_check_df.dropna(subset=['Items reviewed'])
 
-    url_df = url_df.merge(fact_check_df[['Items reviewed', 'topic', 'Date of publication']], 
+    url_df = url_df.merge(fact_check_df[['Items reviewed', 'topic', 'field', 'Date of publication']], 
                         left_on='Item reviewed', right_on='Items reviewed', how='left')
 
-    url_df = url_df[(url_df['topic'].isin(["COVID-19", "COVID-19,5G"]))]
+    if TOPIC=="covid":
+        url_df = url_df[(url_df['topic'].isin(["COVID-19", "COVID-19,5G"]))]
+    else:
+        url_df = url_df[url_df['field'] == TOPIC]
+
     url_df = url_df.dropna(subset=['Date of publication'])
 
     return url_df
  
 
-def save_data(url_df, DATE):
+def save_data(url_df, DATE, TOPIC):
 
     url_df = url_df[['url', 'url_cleaned', 'domain_name', 'Item reviewed', 'Date of publication']]
-    # url_df = url_df.iloc[1:, :]
-    # url_df = url_df.sample()
 
-    clean_url_path = os.path.join(".", "data_sciencefeedback", "appearances_" + DATE + "_clean.csv")
+    clean_url_path = os.path.join(".", "data_sciencefeedback", "appearances_" + DATE + "_" + TOPIC + ".csv")
     url_df.to_csv(clean_url_path, index=False)
 
-    print("The clean data file with {} fake news url has been saved in the 'data_sciencefeedback' folder."\
-        .format(len(url_df)))
+    print("The '{}' file with {} fake news url has been saved in the '{}' folder."\
+        .format(clean_url_path.split('/')[-1], len(url_df), clean_url_path.split('/')[-2]))
 
 
 if __name__ == "__main__":
 
-    if len(sys.argv) >= 2:
-        DATE = sys.argv[2]
-    else:
-        DATE = "2020-06-29"
-        print("The date '{}' has been chosen by default.".format(DATE))
+    DATE = sys.argv[1]
+    TOPIC = sys.argv[2]
 
     url_df = import_data(DATE)
     url_df = keep_only_the_urls_considered_fake_by_facebook(url_df)
     url_df = clean_url_format(url_df)
-    url_df = keep_only_covid_url(url_df)
-    save_data(url_df, DATE)
+    url_df = keep_only_field_url(url_df, TOPIC)
+    save_data(url_df, DATE, TOPIC)

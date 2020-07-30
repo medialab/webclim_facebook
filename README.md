@@ -28,8 +28,8 @@ You should get a CrowdTangle token and write it in a `config.json` file similar 
 
 You should first clean the Science Feedback data, and then do the CrowdTangle request. Warning: the second command will take a few hours to run!
 ```
-python src/clean_sciencefeedback_data.py 
-./src/collect_crowdtangle_data_by_url.sh
+python src/clean_sciencefeedback_data.py 2020-06-29 covid
+./src/collect_crowdtangle_data_by_url.sh 2020-06-29 covid
 ```
 
 ### Collect all the Facebook posts of the groups sharing these URLs
