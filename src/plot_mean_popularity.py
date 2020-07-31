@@ -23,10 +23,15 @@ def details_figure(title):
     plt.legend()
 
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
-    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2)) 
+    if (datetime.datetime.strptime(DATE, '%Y-%m-%d') - 
+        datetime.datetime.strptime(np.min(posts_df["date"]).strftime("%Y-%m-%d"), '%Y-%m-%d')).days < 365:
+        plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2)) 
+    else:
+        plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=4))
 
     plt.xlim(
-        np.datetime64('2019-08-26'), 
+        np.datetime64(datetime.datetime.strptime(np.min(posts_df["date"]).strftime("%Y-%m-%d"), '%Y-%m-%d') -
+                      datetime.timedelta(days=4)), 
         np.datetime64(datetime.datetime.strptime(DATE, '%Y-%m-%d') + datetime.timedelta(days=4))
     )
     plt.ylim(bottom=0)
@@ -72,7 +77,7 @@ def plot_all_the_groups(posts_df, DATE, plot_only_complete_groups=False):
         list_complete_groups_id = []
         for id in posts_df['account_id'].unique():
             posts_df_group = posts_df[posts_df["account_id"] == id]
-            if ((np.min(posts_df_group['date']) == datetime.date(2019, 9, 1)) & 
+            if ((np.min(posts_df_group['date']) == np.min(posts_df['date'])) & 
                 (np.max(posts_df_group['date']) == datetime.datetime.strptime(DATE, '%Y-%m-%d') - datetime.timedelta(days=1))):
                 list_complete_groups_id.append(id)
         posts_df = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
