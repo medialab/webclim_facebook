@@ -12,8 +12,50 @@ def import_data(DATE):
     posts_df = pd.read_csv("./data_crowdtangle_group/posts_group_{}_simple.csv".format(DATE))
     posts_df['date'] = pd.to_datetime(posts_df['date'])
     posts_df = posts_df[posts_df['date'] < datetime.datetime.strptime(DATE, '%Y-%m-%d')]
+    if DATE=="2020-07-31":
+        posts_df = posts_df[posts_df["account_id"]!=124059257758446] # Usual URL mix-up bug with the CT API
 
-    return posts_df
+    if DATE=="2020-07-31" or DATE=="2020-07-15" or DATE=="2020-07-24":
+        if DATE=="2020-07-31":
+            EXTRACT_DETAILS = "2020-07-27_climate"
+            REQUEST_DETAILS = "2020-07-30_climate"
+        elif DATE=="2020-07-15" or DATE=="2020-07-24":
+            EXTRACT_DETAILS = "2020-06-29_covid"
+            REQUEST_DETAILS = "2020-06-29_covid" 
+
+        url_df = pd.read_csv("./data_sciencefeedback/appearances_{}.csv".format(EXTRACT_DETAILS)) 
+        url_df['url'] = url_df['url'].transform(lambda x: x.strip())      
+
+        post_url_df = pd.read_csv("./data_crowdtangle_url/posts_url_{}.csv".format(REQUEST_DETAILS))
+        post_url_df = post_url_df.drop_duplicates(subset=["post_url"])
+    else:
+        url_df = pd.DataFrame()
+        post_url_df = pd.DataFrame()
+
+    return posts_df, post_url_df, url_df
+
+
+def plot_date_markers(account_id):
+    
+    post_url_group_df = post_url_df[post_url_df["account_id"]==account_id]
+    post_url_group_df = post_url_group_df.sort_values(by='date', ascending=True)\
+        .drop_duplicates(subset=['url'], keep='first')
+
+    urls = post_url_group_df["url"].unique().tolist()
+
+    for url in urls:
+        dates = []
+        
+        # We consider the date of the Facebook post or posts:
+        dates.append(post_url_group_df[post_url_group_df["url"] == url]["date"].values[0])
+        # We consider the date of the fact-check:
+        dates.append(url_df[url_df['url']==url]["Date of publication"].values[0])
+        # TODO: We need to add the date coming from the 'data_sciencefeedback/Rated Archive (06-01-2020 to 07-02-2020).csv' file
+
+        dates = [datetime.datetime.strptime(date, '%Y-%m-%d') for date in dates]
+        date_to_plot = np.max(dates)
+
+        plt.axvline(x=np.datetime64(date_to_plot), color='black')
 
 
 def details_figure(title):
@@ -49,11 +91,14 @@ def plot_one_group(posts_df, group_index):
 
     plt.plot(posts_df_group.groupby(by=["date"])["comment"].mean(), 
             label="Mean number of comments per post")
+
+    if DATE=="2020-07-31" or DATE=="2020-07-15" or DATE=="2020-07-24":
+        plot_date_markers(group_id)
     
     details_figure(title=posts_df_group['account_name'].unique()[0])
 
 
-def plot_the_groups_one_by_one(posts_df, DATE):
+def plot_the_groups_one_by_one(posts_df, post_url_df, url_df, DATE):
 
     for group_index in range(posts_df['account_id'].nunique()):
 
@@ -132,7 +177,7 @@ def plot_all_the_groups(posts_df, DATE, plot_only_complete_groups=False):
 
 if __name__=="__main__":
     DATE = sys.argv[1]
-    posts_df = import_data(DATE)
-    plot_the_groups_one_by_one(posts_df, DATE)
+    posts_df, post_url_df, url_df = import_data(DATE)
+    plot_the_groups_one_by_one(posts_df, post_url_df, url_df, DATE)
     plot_all_the_groups(posts_df, DATE)
     plot_all_the_groups(posts_df, DATE, plot_only_complete_groups=True)
