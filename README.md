@@ -56,23 +56,24 @@ minet ct lists --token $token_crowdtangle
 You can now use this command with the CrowdTangle list id of interest, the date of the day and the iteration number:
 
 ```
-./src/collect_crowdtangle_data_by_group.sh 1401873 2020-07-15 1
+./src/collect_crowdtangle_data_by_group.sh 1424980 2020-07-31 1 2
+./src/collect_crowdtangle_data_by_group.sh 1424622 2020-07-31 3 4
 ```
 
 Because collecting hundreds of groups takes days to run, we are manually adding a batch of a few groups each time and running the command whith increasing iteration numbers. The output files will appear in the `data_crowdtangle_group` folder and will be named:
-* posts_group_2020-07-15_1.csv
-* posts_group_2020-07-15_2.csv
-* posts_group_2020-07-15_3.csv
+* posts_group_2020-07-31_1.csv
+* posts_group_2020-07-31_2.csv
+* posts_group_2020-07-31_3.csv
 * ...
 
 If you collect 6 different csv files you can then aggregate and clean your data with:
 ```
-python ./src/aggregate_crowdtangle_group_data.py 2020-07-15 6 
+python ./src/aggregate_crowdtangle_group_data.py 2020-07-31 4
 ```
 
 ### Plot the temporal evolution
 
 We can now plot the average popularity and number of posts for all the collected groups with the command:
 ```
-python ./src/plot_mean_popularity.py 2020-07-15
+python ./src/plot_mean_popularity.py 2020-07-31
 ```
