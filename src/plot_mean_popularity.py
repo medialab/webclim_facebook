@@ -43,19 +43,36 @@ def plot_date_markers(post_url_df, url_df, account_id):
 
     urls = post_url_group_df["url"].unique().tolist()
 
+    dates_to_plot = []
+
     for url in urls:
-        dates = []
+        potential_dates = []
         
         # We consider the date of the Facebook post or posts:
-        dates.append(post_url_group_df[post_url_group_df["url"] == url]["date"].values[0])
+        potential_dates.append(post_url_group_df[post_url_group_df["url"] == url]["date"].values[0])
         # We consider the date of the fact-check:
-        dates.append(url_df[url_df['url']==url]["Date of publication"].values[0])
+        potential_dates.append(url_df[url_df['url']==url]["Date of publication"].values[0])
         # TODO: We need to add the date coming from the 'data_sciencefeedback/Rated Archive (06-01-2020 to 07-02-2020).csv' file
 
-        dates = [datetime.datetime.strptime(date, '%Y-%m-%d') for date in dates]
-        date_to_plot = np.max(dates)
+        potential_dates = [datetime.datetime.strptime(date, '%Y-%m-%d') for date in potential_dates]
+        date_to_plot = np.datetime64(np.max(potential_dates))
 
-        plt.axvline(x=np.datetime64(date_to_plot), color='black')
+        plt.axvline(x=date_to_plot, color='black')
+        dates_to_plot.append(date_to_plot)
+    
+    return dates_to_plot
+
+
+def plot_repeat_offenders_zone(dates_to_plot):
+
+    area_to_shade = []
+    if len(dates_to_plot) > 1:
+        area_to_shade = [dates_to_plot[1], dates_to_plot[1] + np.timedelta64(90, 'D')]
+        for date in dates_to_plot[2:]:
+            if date < area_to_shade[1]:
+                area_to_shade[1] = date + np.timedelta64(90, 'D')
+    
+    plt.axvspan(area_to_shade[0], area_to_shade[1], facecolor='r', alpha=0.2)
 
 
 def details_figure(title):
@@ -93,7 +110,8 @@ def plot_one_group(posts_df, post_url_df, url_df, group_index, plot_also_date_ma
             label="Mean number of comments per post")
 
     if plot_also_date_markers:
-        plot_date_markers(post_url_df, url_df, account_id)
+        dates_to_plot = plot_date_markers(post_url_df, url_df, account_id)
+        plot_repeat_offenders_zone(dates_to_plot)
     
     details_figure(title=posts_df_group['account_name'].unique()[0])
 
