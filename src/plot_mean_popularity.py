@@ -15,11 +15,11 @@ def import_data(DATE):
     if DATE=="2020-07-31":
         posts_df = posts_df[posts_df["account_id"]!=124059257758446] # Usual URL mix-up bug with the CT API
 
-    if DATE=="2020-07-31" or DATE=="2020-07-15" or DATE=="2020-07-24":
+    if DATE=="2020-07-31" or DATE=="2020-07-15" or DATE=="2020-07-24" or DATE=="2020-08-26":
         if DATE=="2020-07-31":
             EXTRACT_DETAILS = "2020-07-27_climate"
             REQUEST_DETAILS = "2020-07-30_climate"
-        elif DATE=="2020-07-15" or DATE=="2020-07-24":
+        elif DATE=="2020-07-15" or DATE=="2020-07-24" or DATE=="2020-08-26":
             EXTRACT_DETAILS = "2020-06-29_covid"
             REQUEST_DETAILS = "2020-06-29_covid" 
 
@@ -35,7 +35,7 @@ def import_data(DATE):
     return posts_df, post_url_df, url_df
 
 
-def plot_date_markers(account_id):
+def plot_date_markers(post_url_df, url_df, account_id):
     
     post_url_group_df = post_url_df[post_url_df["account_id"]==account_id]
     post_url_group_df = post_url_group_df.sort_values(by='date', ascending=True)\
@@ -81,10 +81,10 @@ def details_figure(title):
     plt.title(title)
 
 
-def plot_one_group(posts_df, group_index):
+def plot_one_group(posts_df, post_url_df, url_df, group_index, plot_also_date_markers=False):
     
-    group_id = posts_df['account_id'].unique()[group_index]
-    posts_df_group = posts_df[posts_df["account_id"] == group_id]
+    account_id = posts_df['account_id'].unique()[group_index]
+    posts_df_group = posts_df[posts_df["account_id"] == account_id]
     
     plt.plot(posts_df_group.groupby(by=["date"])["reaction"].mean(), 
             label="Mean number of reactions per post")
@@ -92,13 +92,13 @@ def plot_one_group(posts_df, group_index):
     plt.plot(posts_df_group.groupby(by=["date"])["comment"].mean(), 
             label="Mean number of comments per post")
 
-    if DATE=="2020-07-31" or DATE=="2020-07-15" or DATE=="2020-07-24":
-        plot_date_markers(group_id)
+    if plot_also_date_markers:
+        plot_date_markers(post_url_df, url_df, account_id)
     
     details_figure(title=posts_df_group['account_name'].unique()[0])
 
 
-def plot_the_groups_one_by_one(posts_df, post_url_df, url_df, DATE):
+def plot_the_groups_one_by_one(posts_df, post_url_df, url_df, DATE, plot_also_date_markers):
 
     for group_index in range(posts_df['account_id'].nunique()):
 
@@ -106,7 +106,8 @@ def plot_the_groups_one_by_one(posts_df, post_url_df, url_df, DATE):
             plt.figure(figsize=(12, 15))
 
         plt.subplot(5, 2, group_index % 10 + 1)
-        plot_one_group(posts_df, group_index)
+        plot_one_group(posts_df, post_url_df, url_df, group_index, 
+                       plot_also_date_markers=plot_also_date_markers)
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
@@ -178,6 +179,6 @@ def plot_all_the_groups(posts_df, DATE, plot_only_complete_groups=False):
 if __name__=="__main__":
     DATE = sys.argv[1]
     posts_df, post_url_df, url_df = import_data(DATE)
-    plot_the_groups_one_by_one(posts_df, post_url_df, url_df, DATE)
-    plot_all_the_groups(posts_df, DATE)
+    plot_the_groups_one_by_one(posts_df, post_url_df, url_df, DATE, plot_also_date_markers=True)
+    plot_all_the_groups(posts_df, DATE, plot_only_complete_groups=False)
     plot_all_the_groups(posts_df, DATE, plot_only_complete_groups=True)
