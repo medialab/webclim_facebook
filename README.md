@@ -32,7 +32,7 @@ python src/clean_sciencefeedback_data.py 2020-08-27
 ./src/collect_crowdtangle_data_by_url.sh 2020-08-27
 ```
 
-The commands can also be lauched for specific data, as only the ones related to covid:
+The commands can also be lauched for specific data, as only the ones related to climate, health or covid:
 ```
 python src/clean_sciencefeedback_data.py 2020-06-29 covid
 ./src/collect_crowdtangle_data_by_url.sh 2020-06-29 covid
