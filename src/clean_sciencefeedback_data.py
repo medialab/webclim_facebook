@@ -45,32 +45,35 @@ def clean_url_format(url_df):
     return url_df
 
 
-def keep_only_field_url(url_df, TOPIC):
+def add_info_from_fact_check_table(url_df):
 
     fact_check_path = os.path.join(".", "data_sciencefeedback", "Reviews _ Fact-checks-Grid view " + DATE + ".csv")
     fact_check_df = pd.read_csv(fact_check_path)
 
-    fact_check_df['field'] = fact_check_df['Review url'].str.extract('https://([^/]+)feedback.org')
+    fact_check_df['scientific_topic'] = fact_check_df['Review url'].str.extract('https://([^/]+)feedback.org')
 
     url_df = url_df.dropna(subset=['Item reviewed'])
     fact_check_df = fact_check_df.dropna(subset=['Items reviewed'])
 
-    url_df = url_df.merge(fact_check_df[['Items reviewed', 'topic', 'field', 'Date of publication']], 
+    url_df = url_df.merge(fact_check_df[['Items reviewed', 'topic', 'scientific_topic', 'Date of publication']], 
                         left_on='Item reviewed', right_on='Items reviewed', how='left')
-
-    if TOPIC=="covid":
-        url_df = url_df[(url_df['topic'].isin(["COVID-19", "COVID-19,5G"]))]
-    else:
-        url_df = url_df[url_df['field'] == TOPIC]
-
-    url_df = url_df.dropna(subset=['Date of publication'])
+    
+    url_df.loc[url_df['topic'].isin(["COVID-19", "COVID-19,5G"]), 'scientific_topic'] = 'covid'
+    
+    url_df = url_df.dropna(subset=['scientific_topic'])
 
     return url_df
+
+def keep_only_topic_data(url_df, TOPIC):
+    if TOPIC in ["climate", "health", "covid"]:
+        return url_df[url_df["scientific_topic"] == TOPIC]
+    else:
+        return url_df
  
 
 def save_data(url_df, DATE, TOPIC):
 
-    url_df = url_df[['url', 'url_cleaned', 'domain_name', 'Item reviewed', 'Date of publication']]
+    url_df = url_df[['url', 'url_cleaned', 'domain_name', 'Item reviewed', 'Date of publication', 'scientific_topic']]
 
     clean_url_path = os.path.join(".", "data_sciencefeedback", "appearances_" + DATE + "_" + TOPIC + ".csv")
     url_df.to_csv(clean_url_path, index=False)
@@ -82,10 +85,11 @@ def save_data(url_df, DATE, TOPIC):
 if __name__ == "__main__":
 
     DATE = sys.argv[1]
-    TOPIC = sys.argv[2]
+    TOPIC = sys.argv[2] if len(sys.argv) >= 3 else ""
 
     url_df = import_data(DATE)
     url_df = keep_only_the_urls_considered_fake_by_facebook(url_df)
     url_df = clean_url_format(url_df)
-    url_df = keep_only_field_url(url_df, TOPIC)
+    url_df = add_info_from_fact_check_table(url_df)
+    url_df = keep_only_topic_data(url_df, TOPIC)
     save_data(url_df, DATE, TOPIC)

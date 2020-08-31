@@ -1,7 +1,10 @@
 #!/bin/bash
 
 DATE=$1
-TOPIC=$2
+
+if [ $# -eq 1 ]; then TOPIC=""
+else TOPIC=$2; fi
+
 TODAY_DATE=$(date +"%Y-%m-%d")
 
 INPUT_FILE="./data_sciencefeedback/appearances_${DATE}_${TOPIC}.csv"
