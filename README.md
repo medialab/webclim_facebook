@@ -62,8 +62,7 @@ minet ct lists --token $token_crowdtangle
 You can now use this command with the CrowdTangle list id of interest, the date of the day and the iteration number:
 
 ```
-./src/collect_crowdtangle_data_by_group.sh 1424980 2020-07-31 1 2
-./src/collect_crowdtangle_data_by_group.sh 1424622 2020-07-31 3 4
+./src/collect_crowdtangle_data_by_group.sh 1439679 2020-09-01
 ```
 
 Because collecting hundreds of groups takes days to run, we are manually adding a batch of a few groups each time and running the command whith increasing iteration numbers. The output files will appear in the `data_crowdtangle_group` folder and will be named:
