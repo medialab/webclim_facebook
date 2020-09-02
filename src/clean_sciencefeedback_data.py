@@ -1,8 +1,8 @@
-import pandas as pd
-import ural
-
 import os
 import sys
+
+import pandas as pd
+import ural
 
 
 def import_data(DATE):
