@@ -82,3 +82,11 @@ We can now plot the average popularity and number of posts for all the collected
 ```
 python ./src/plot_mean_popularity.py 2020-07-31
 ```
+
+### Create the article's figures and tables
+
+You just need to precise the DATE of the Science Feedback data extraction, so you can run:
+```
+python src/create_paper_figures_and_tables.py 2020-08-27
+```
+
