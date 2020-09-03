@@ -15,7 +15,7 @@ def import_clean_science_feedback_data(DATE):
 def print_table_1(url_df):
 
     # Print the top 10 domain names for each topic
-    print()
+    print('\nTABLE 1')
     for topic in url_df["scientific_topic"].unique():
         print(topic.upper())
         url_df_temp = url_df[url_df["scientific_topic"]==topic]
@@ -47,8 +47,15 @@ def save_figure_1(url_df, DATE):
     diagram_path = os.path.join('.', 'figure', 'venn_diagram_domain_names_' + DATE + ".png")
     plt.savefig(diagram_path)
 
+    print('\nFIGURE 1')
     print("The '{}' figure has been saved in the '{}' folder."\
         .format(diagram_path.split('/')[-1], diagram_path.split('/')[-2]))
+
+    print('\n\nLIST INTERSECTION DOMAIN NAMES')
+    l = list(domain_name_subsets[0] & domain_name_subsets[1] & domain_name_subsets[2])
+    for ele in sorted(l): 
+        print(ele, end=', ')
+    print('\n\n')
 
 
 if __name__ == "__main__":
