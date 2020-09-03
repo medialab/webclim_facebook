@@ -30,9 +30,9 @@ def keep_only_the_urls_considered_fake_by_facebook(url_df):
 
 def clean_url_format(url_df):
 
-    url_df['url_cleaned'] = url_df['url'].transform(lambda x: x.strip())
+    url_df['url'] = url_df['url'].transform(lambda x: x.strip())
 
-    url_df['url_cleaned'] = url_df['url_cleaned']\
+    url_df['url_cleaned'] = url_df['url']\
         .apply(lambda x: ural.normalize_url(x, 
                                             strip_protocol=False, 
                                             strip_trailing_slash=True))
