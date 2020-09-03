@@ -2,6 +2,7 @@ import os
 import sys
 
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn3
 
@@ -13,7 +14,7 @@ def import_data(folder, file_name):
 
 
 def print_table_1(url_df):
-    
+
     print()
     print(url_df["scientific_topic"].value_counts(dropna=False))
 
@@ -115,6 +116,41 @@ def save_figure_2(post_url_df, DATE):
         .format(diagram_path.split('/')[-1], diagram_path.split('/')[-2]))
 
 
+def save_figure_3(post_url_df, url_df, DATE):
+
+    url_share_df = post_url_df['url'].value_counts().rename_axis('url').to_frame('nb_shares')
+
+    add_zero_shares_url = pd.DataFrame(
+        {'nb_shares': [0] * len(set(url_df["url"]) - set(post_url_df['url']))},
+        index = list(set(url_df["url"]) - set(post_url_df['url']))
+    )
+
+    url_share_df = pd.concat([url_share_df, add_zero_shares_url])
+
+    url_share_df['url'] = url_share_df.index
+    url_share_df = url_share_df.merge(url_df[['url', 'scientific_topic']], on='url', how='left')
+
+    plt.figure(figsize=(6, 8))
+
+    for i in range(url_share_df["scientific_topic"].nunique()):
+        topic = url_share_df["scientific_topic"].unique()[i]
+        plt.subplot(3, 1, i+1)
+        plt.hist(
+            url_share_df[url_share_df["scientific_topic"]==topic][['nb_shares']].values,
+            bins=np.arange(0, 100, 1)
+        )
+        plt.title(topic)
+        plt.ylabel('number of Facebook accounts\nsharing each URL')
+        plt.xlim([0, 100])
+        
+    figure_path = os.path.join('.', 'figure', 'histogram_shares_' + DATE + ".png")
+    plt.savefig(figure_path)
+
+    print('\nFIGURE 3')
+    print("The '{}' figure has been saved in the '{}' folder."\
+        .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
+
+
 if __name__ == "__main__":
 
     DATE = sys.argv[1] if len(sys.argv) >= 2 else "2020-08-27"
@@ -131,3 +167,4 @@ if __name__ == "__main__":
     post_url_df = clean_crowdtangle_url_data(post_url_df)
     print_table_2(post_url_df, url_df)
     save_figure_2(post_url_df, DATE)
+    save_figure_3(post_url_df, url_df, DATE)
