@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 from matplotlib_venn import venn3
 
 
+pd.options.display.max_colwidth = 300
+
+
 def import_data(folder, file_name):
     data_path = os.path.join(".", folder, file_name)
     df = pd.read_csv(data_path)
@@ -81,7 +84,14 @@ def print_table_2(post_url_df, url_df):
     for topic in post_url_df["scientific_topic"].unique():
         print(topic.upper())
         post_url_df_temp = post_url_df[post_url_df["scientific_topic"]==topic]
-        print(post_url_df_temp['account_name'].value_counts(dropna=False).nlargest(10))
+        top_10_temp = post_url_df_temp['account_id'].value_counts(dropna=False).nlargest(10)\
+            .rename_axis('account_id').to_frame('nb_fake_news_share')
+        top_10_temp = top_10_temp.reset_index()
+        top_10_temp = top_10_temp.merge(post_url_df[['account_id', 'account_name']].drop_duplicates(), 
+                                        on='account_id', how='left')
+        top_10_temp.index = top_10_temp['account_name']
+        top_10_temp = top_10_temp[['nb_fake_news_share']]
+        print(top_10_temp)
         print()
 
     return
