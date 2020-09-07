@@ -19,6 +19,16 @@ def import_data(folder, file_name):
     return df
 
 
+def save_figure(figure_name):
+
+    figure_path = os.path.join('.', 'figure', figure_name + '.png')
+    plt.savefig(figure_path)
+
+    print('\n\n' + figure_name.upper())
+    print("The '{}' figure has been saved in the '{}' folder."\
+        .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
+
+
 def print_table_1(url_df):
 
     print()
@@ -55,12 +65,7 @@ def save_figure_1(url_df, DATE):
     v.get_patch_by_id('011').set_color([1, 0.4, 1, 1])
     v.get_patch_by_id('111').set_color([0.95, 0.95, 0.95, 1])
 
-    diagram_path = os.path.join('.', 'figure', 'venn_diagram_domain_names_' + DATE + ".png")
-    plt.savefig(diagram_path)
-
-    print('\nFIGURE 1')
-    print("The '{}' figure has been saved in the '{}' folder."\
-        .format(diagram_path.split('/')[-1], diagram_path.split('/')[-2]))
+    save_figure('figure_1')
 
     print('\n\nLIST INTERSECTION DOMAIN NAMES')
     l = list(domain_name_subsets[0] & domain_name_subsets[1] & domain_name_subsets[2])
@@ -121,12 +126,7 @@ def save_figure_2(post_url_df, DATE):
     v.get_patch_by_id('011').set_color([1, 0.4, 1, 1])
     v.get_patch_by_id('111').set_color([0.95, 0.95, 0.95, 1])
 
-    diagram_path = os.path.join('.', 'figure', 'venn_diagram_facebook_accounts_' + DATE + ".png")
-    plt.savefig(diagram_path)
-
-    print('\nFIGURE 2')
-    print("The '{}' figure has been saved in the '{}' folder."\
-        .format(diagram_path.split('/')[-1], diagram_path.split('/')[-2]))
+    save_figure('figure_2')
 
 
 def save_figure_3(post_url_df, url_df, DATE):
@@ -138,7 +138,6 @@ def save_figure_3(post_url_df, url_df, DATE):
         index = list(set(url_df["url"]) - set(post_url_df['url']))
     )
 
-    print('\nFIGURE 3')
     print('\nThere are {} URLs.'.format(url_df["url"].nunique()))
     print('{} URLs are never shared on Facebook ({} %).'\
         .format(len(add_zero_shares_url), int(np.round(100 * len(add_zero_shares_url)/url_df["url"].nunique()))))
@@ -183,11 +182,7 @@ def save_figure_3(post_url_df, url_df, DATE):
 
     plt.tight_layout()
         
-    figure_path = os.path.join('.', 'figure', 'histogram_shares_' + DATE + ".png")
-    plt.savefig(figure_path)
-
-    print("\nThe '{}' figure has been saved in the '{}' folder."\
-        .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
+    save_figure('figure_3')
 
     print("\nWilcoxon rank-test between health and covid:")
     print(ranksums(nb_shares_per_topic[0], nb_shares_per_topic[1]))
@@ -220,21 +215,7 @@ def details_temporal_evolution(posts_df):
     plt.ylim(bottom=0)
 
 
-def save_figure_6(posts_df, plot_only_complete_groups=False):
-
-    print('\n\nFIGURE 6')
-
-    posts_df['date'] = pd.to_datetime(posts_df['date'])
-    posts_df = posts_df[posts_df['date'] < datetime.datetime.strptime(DATE, '%Y-%m-%d')]
-
-    if plot_only_complete_groups == True: 
-        list_complete_groups_id = []
-        for id in posts_df['account_id'].unique():
-            posts_df_group = posts_df[posts_df["account_id"] == id]
-            if ((np.min(posts_df_group['date']) == np.min(posts_df['date'])) & 
-                (np.max(posts_df_group['date']) == datetime.datetime.strptime(DATE, '%Y-%m-%d') - datetime.timedelta(days=1))):
-                list_complete_groups_id.append(id)
-        posts_df = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
+def plot_temporal_evolution(posts_df):
 
     plt.figure(figsize=(10, 8))
     plt.subplot(211)
@@ -260,13 +241,26 @@ def save_figure_6(posts_df, plot_only_complete_groups=False):
 
     plt.tight_layout()
 
-    if plot_only_complete_groups == False:
-        figure_path = os.path.join('.', 'figure', 'temporal_evolution.png')
-    else:
-        figure_path = os.path.join('.', 'figure', 'temporal_evolution_only_complete_groups.png')
-    plt.savefig(figure_path)
-    print("The '{}' graph has been saved in the '{}' folder."
-            .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
+
+def save_figure_6(posts_df):
+
+    plot_temporal_evolution(posts_df)
+    save_figure('figure_6')
+
+
+def save_supplementary_figure_1(posts_df):
+
+    list_complete_groups_id = []
+    for id in posts_df['account_id'].unique():
+        posts_df_group = posts_df[posts_df["account_id"] == id]
+        if ((np.min(posts_df_group['date']) == np.min(posts_df['date'])) & 
+            (np.max(posts_df_group['date']) == datetime.datetime.strptime(DATE, '%Y-%m-%d') - datetime.timedelta(days=1))):
+            list_complete_groups_id.append(id)
+    posts_df_temp = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
+
+    plot_temporal_evolution(posts_df_temp)
+
+    save_figure('supplementary_figure_1')
 
 
 if __name__ == "__main__":
@@ -290,4 +284,8 @@ if __name__ == "__main__":
     posts_fake_group_df = import_data(folder="data_crowdtangle_group", file_name="posts_fake_group.csv")
     posts_fake_page_df = import_data(folder="data_crowdtangle_group", file_name="posts_fake_page.csv")
     posts_fake_df = pd.concat([posts_fake_group_df, posts_fake_page_df])
+    posts_fake_df['date'] = pd.to_datetime(posts_fake_df['date'])
+    posts_fake_df = posts_fake_df[posts_fake_df['date'] < datetime.datetime.strptime(DATE, '%Y-%m-%d')]
+
     save_figure_6(posts_fake_df)
+    save_supplementary_figure_1(posts_fake_df)
