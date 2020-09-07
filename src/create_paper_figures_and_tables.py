@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn3
+from scipy.stats import ranksums
 
 
 pd.options.display.max_colwidth = 300
@@ -135,31 +136,65 @@ def save_figure_3(post_url_df, url_df, DATE):
         index = list(set(url_df["url"]) - set(post_url_df['url']))
     )
 
+    print('\nFIGURE 3')
+    print('\nThere are {} URLs.'.format(url_df["url"].nunique()))
+    print('{} URLs are never shared on Facebook ({} %).'\
+        .format(len(add_zero_shares_url), int(np.round(100 * len(add_zero_shares_url)/url_df["url"].nunique()))))
+
     url_share_df = pd.concat([url_share_df, add_zero_shares_url])
 
     url_share_df['url'] = url_share_df.index
     url_share_df = url_share_df.merge(url_df[['url', 'scientific_topic']], on='url', how='left')
 
-    plt.figure(figsize=(6, 8))
+    colors = ['y', 'r', 'b']
+
+    plt.figure(figsize=(6, 6))
+
+    nb_shares_per_topic = []
 
     for i in range(url_share_df["scientific_topic"].nunique()):
         topic = url_share_df["scientific_topic"].unique()[i]
-        plt.subplot(3, 1, i+1)
+        ax = plt.subplot(3, 1, i+1)
+
+        nb_shares_temp = url_share_df[url_share_df["scientific_topic"]==topic][['nb_shares']].values
+        nb_shares_per_topic.append(nb_shares_temp)
+
         plt.hist(
-            url_share_df[url_share_df["scientific_topic"]==topic][['nb_shares']].values,
-            bins=np.arange(0, 100, 1)
+            nb_shares_temp,
+            bins=np.arange(0, 100, 1),
+            color=colors[i]
         )
-        plt.title(topic)
-        plt.ylabel('number of Facebook accounts\nsharing each URL')
+        
+        mean_temp = np.mean(nb_shares_temp)
+        if i == 1:
+            height = [100, 130, 170]
+        else:
+            height = [50, 75, 100]
+        plt.plot([mean_temp, mean_temp], [0, height[0]], 'k--')
+        plt.text(mean_temp, height[2], 'mean:', horizontalalignment='center', verticalalignment='center')
+        plt.text(mean_temp, height[1], str(np.round(mean_temp, 1)), horizontalalignment='center', verticalalignment='center')
+        
+        plt.text(0.9, 0.85, topic, size=14, horizontalalignment='center', verticalalignment='center', transform=ax.transAxes)
+        if i == 2:
+            plt.xlabel('Number of Facebook accounts sharing each URL')
         plt.xlim([0, 100])
+
+    plt.tight_layout()
         
     figure_path = os.path.join('.', 'figure', 'histogram_shares_' + DATE + ".png")
     plt.savefig(figure_path)
 
-    print('\nFIGURE 3')
-    print("The '{}' figure has been saved in the '{}' folder."\
+    print("\nThe '{}' figure has been saved in the '{}' folder."\
         .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
 
+    print("\nWilcoxon rank-test between health and covid:")
+    print(ranksums(nb_shares_per_topic[0], nb_shares_per_topic[1]))
+
+    print("\nWilcoxon rank-test between covid and climate:")
+    print(ranksums(nb_shares_per_topic[1], nb_shares_per_topic[2]))   
+
+    print("\nWilcoxon rank-test between health and climate:")
+    print(ranksums(nb_shares_per_topic[0], nb_shares_per_topic[2]))
 
 if __name__ == "__main__":
 
