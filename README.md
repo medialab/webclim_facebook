@@ -59,28 +59,15 @@ token_crowdtangle=$(jq -r '.token_crowdtangle' config.json)
 minet ct lists --token $token_crowdtangle
 ```
 
-You can now use this command with the CrowdTangle list id of interest, the date of the day and the iteration number:
+You can now use this command with the CrowdTangle list id of interest, using today's date to specify the date of the request:
 
 ```
 ./src/collect_crowdtangle_data_by_group.sh 1439679 2020-09-01
 ```
 
-Because collecting hundreds of groups takes days to run, we are manually adding a batch of a few groups each time and running the command whith increasing iteration numbers. The output files will appear in the `data_crowdtangle_group` folder and will be named:
-* posts_group_2020-07-31_1.csv
-* posts_group_2020-07-31_2.csv
-* posts_group_2020-07-31_3.csv
-* ...
-
-If you collect 6 different csv files you can then aggregate and clean your data with:
+You can then clean the data, and give it a more meaningful name with:
 ```
-python ./src/aggregate_crowdtangle_group_data.py 2020-07-31 4
-```
-
-### Plot the temporal evolution
-
-We can now plot the average popularity and number of posts for all the collected groups with the command:
-```
-python ./src/plot_mean_popularity.py 2020-07-31
+python src/clean_crowdtangle_group_data.py 2020-09-01 fake_group
 ```
 
 ### Create the article's figures and tables
@@ -90,3 +77,9 @@ You just need to precise the DATE of the Science Feedback data extraction, so yo
 python src/create_paper_figures_and_tables.py 2020-08-27
 ```
 
+### Plot the temporal evolution
+
+We can now plot the average popularity and number of posts for all the collected groups with the command:
+```
+python ./src/plot_mean_popularity.py 2020-07-31
+```

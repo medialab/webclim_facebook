@@ -102,8 +102,6 @@ def print_table_2(post_url_df, url_df):
         print(top_10_temp)
         print()
 
-    return
-
 
 def save_figure_2(post_url_df, DATE):
 
@@ -194,6 +192,23 @@ def save_figure_3(post_url_df, url_df, DATE):
     print(ranksums(nb_shares_per_topic[0], nb_shares_per_topic[2]))
 
 
+def clean_crowdtangle_group_data(fake_or_main):
+
+    posts_group_df = import_data(folder="data_crowdtangle_group", 
+                                 file_name="posts_" + fake_or_main + "_group.csv")
+    print('There are {} Facebook groups about {} news.'.format(posts_group_df.account_id.nunique(), fake_or_main))
+    posts_page_df = import_data(folder="data_crowdtangle_group", 
+                                file_name="posts_" + fake_or_main + "_page.csv")
+    print('There are {} Facebook pages about {} news.'.format(posts_page_df.account_id.nunique(), fake_or_main))
+
+    posts_df = pd.concat([posts_group_df, posts_page_df])
+
+    posts_df['date'] = pd.to_datetime(posts_df['date'])
+    posts_df = posts_df[posts_df['date'] < datetime.datetime.strptime(DATE, '%Y-%m-%d')]
+
+    return posts_df
+
+
 def details_temporal_evolution(posts_df):
 
     plt.axvline(x=np.datetime64("2020-06-09"), color='black', linestyle='--', linewidth=1)
@@ -215,7 +230,7 @@ def details_temporal_evolution(posts_df):
     plt.ylim(bottom=0)
 
 
-def plot_temporal_evolution(posts_df):
+def plot_temporal_evolution(posts_df, title_detail):
 
     plt.figure(figsize=(10, 8))
     plt.subplot(211)
@@ -230,7 +245,7 @@ def plot_temporal_evolution(posts_df):
             label="Mean number of comments per day")
 
     details_temporal_evolution(posts_df)
-    plt.title("The temporal evolution of the {} Facebook accounts spreading misinformation".format(posts_df["account_id"].nunique()))
+    plt.title("The temporal evolution of the {} Facebook accounts".format(posts_df["account_id"].nunique()) + title_detail)
 
     plt.subplot(212)
 
@@ -244,8 +259,14 @@ def plot_temporal_evolution(posts_df):
 
 def save_figure_6(posts_df):
 
-    plot_temporal_evolution(posts_df)
+    plot_temporal_evolution(posts_df, title_detail="spreading misinformation")
     save_figure('figure_6')
+
+
+def save_figure_7(posts_df):
+
+    plot_temporal_evolution(posts_df, title_detail="spreading main news")
+    save_figure('figure_7')
 
 
 def save_supplementary_figure_1(posts_df):
@@ -258,7 +279,7 @@ def save_supplementary_figure_1(posts_df):
             list_complete_groups_id.append(id)
     posts_df_temp = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
 
-    plot_temporal_evolution(posts_df_temp)
+    plot_temporal_evolution(posts_df_temp, title_detail="spreading misinformation")
 
     save_figure('supplementary_figure_1')
 
@@ -281,11 +302,10 @@ if __name__ == "__main__":
     # save_figure_2(post_url_df, DATE)
     # save_figure_3(post_url_df, url_df, DATE)
 
-    posts_fake_group_df = import_data(folder="data_crowdtangle_group", file_name="posts_fake_group.csv")
-    posts_fake_page_df = import_data(folder="data_crowdtangle_group", file_name="posts_fake_page.csv")
-    posts_fake_df = pd.concat([posts_fake_group_df, posts_fake_page_df])
-    posts_fake_df['date'] = pd.to_datetime(posts_fake_df['date'])
-    posts_fake_df = posts_fake_df[posts_fake_df['date'] < datetime.datetime.strptime(DATE, '%Y-%m-%d')]
-
+    posts_fake_df = clean_crowdtangle_group_data("fake")
     save_figure_6(posts_fake_df)
     save_supplementary_figure_1(posts_fake_df)
+
+    posts_main_df = clean_crowdtangle_group_data("main")
+    save_figure_7(posts_main_df)
+    
