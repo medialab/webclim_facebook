@@ -9,6 +9,9 @@ import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib_venn import venn3
 
+import warnings
+warnings.filterwarnings("ignore")
+
 
 pd.options.display.max_colwidth = 300
 
@@ -196,7 +199,7 @@ def clean_crowdtangle_group_data(fake_or_main):
 
     posts_group_df = import_data(folder="data_crowdtangle_group", 
                                  file_name="posts_" + fake_or_main + "_group.csv")
-    print('There are {} Facebook groups about {} news.'.format(posts_group_df.account_id.nunique(), fake_or_main))
+    print('\nThere are {} Facebook groups about {} news.'.format(posts_group_df.account_id.nunique(), fake_or_main))
     posts_page_df = import_data(folder="data_crowdtangle_group", 
                                 file_name="posts_" + fake_or_main + "_page.csv")
     print('There are {} Facebook pages about {} news.'.format(posts_page_df.account_id.nunique(), fake_or_main))
@@ -284,6 +287,45 @@ def save_supplementary_figure_1(posts_df):
     save_figure('supplementary_figure_1')
 
 
+def plot_one_group(posts_df, group_index):
+    
+    account_id = posts_df['account_id'].unique()[group_index]
+    posts_df_group = posts_df[posts_df["account_id"] == account_id]
+    
+    plt.plot(posts_df_group.groupby(by=["date"])["reaction"].mean(), 
+            label="Mean number of reactions per post")
+
+    plt.plot(posts_df_group.groupby(by=["date"])["comment"].mean(), 
+            label="Mean number of comments per post")
+    
+    details_temporal_evolution(posts_df)
+    plt.title(posts_df_group['account_name'].unique()[0])
+
+
+
+def plot_the_groups_one_by_one(posts_df, figure_index):
+
+    for group_index in range(posts_df['account_id'].nunique()):
+
+        if group_index % 10 == 0:
+            plt.figure(figsize=(12, 15))
+
+        plt.subplot(5, 2, group_index % 10 + 1)
+        plot_one_group(posts_df, group_index)
+
+        if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
+            plt.tight_layout()
+            save_figure('supplementary_figure_{}_{}'.format(figure_index, int(group_index / 10)))
+
+
+def save_supplementary_figure_2(posts_df):
+    plot_the_groups_one_by_one(posts_df, figure_index=2)
+
+
+def save_supplementary_figure_3(posts_df):
+    plot_the_groups_one_by_one(posts_df, figure_index=3)
+
+
 if __name__ == "__main__":
 
     DATE = sys.argv[1] if len(sys.argv) >= 2 else "2020-08-27"
@@ -292,20 +334,23 @@ if __name__ == "__main__":
         DATE_URL_REQUEST = "2020-08-31"
         DATE_GROUP_REQUEST = "2020-09-01"
 
-    # url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
-    # print_table_1(url_df)
-    # save_figure_1(url_df, DATE)
+    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
+    print_table_1(url_df)
+    save_figure_1(url_df, DATE)
 
-    # post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
-    # post_url_df = clean_crowdtangle_url_data(post_url_df)
-    # print_table_2(post_url_df, url_df)
-    # save_figure_2(post_url_df, DATE)
-    # save_figure_3(post_url_df, url_df, DATE)
+    post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
+    post_url_df = clean_crowdtangle_url_data(post_url_df)
+    print_table_2(post_url_df, url_df)
+    save_figure_2(post_url_df, DATE)
+    save_figure_3(post_url_df, url_df, DATE)
 
     posts_fake_df = clean_crowdtangle_group_data("fake")
     save_figure_6(posts_fake_df)
     save_supplementary_figure_1(posts_fake_df)
+    save_supplementary_figure_2(posts_fake_df)
 
     posts_main_df = clean_crowdtangle_group_data("main")
     save_figure_7(posts_main_df)
+    save_supplementary_figure_3(posts_main_df)
+    
     
