@@ -3,9 +3,11 @@ import sys
 
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib_venn import venn3
 from scipy.stats import ranksums
+import datetime
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from matplotlib_venn import venn3
 
 
 pd.options.display.max_colwidth = 300
@@ -196,6 +198,77 @@ def save_figure_3(post_url_df, url_df, DATE):
     print("\nWilcoxon rank-test between health and climate:")
     print(ranksums(nb_shares_per_topic[0], nb_shares_per_topic[2]))
 
+
+def details_temporal_evolution(posts_df):
+
+    plt.axvline(x=np.datetime64("2020-06-09"), color='black', linestyle='--', linewidth=1)
+
+    plt.legend()
+
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+    if (datetime.datetime.strptime(DATE, '%Y-%m-%d') - 
+        datetime.datetime.strptime(np.min(posts_df["date"]).strftime("%Y-%m-%d"), '%Y-%m-%d')).days < 365:
+        plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2)) 
+    else:
+        plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=4))
+
+    plt.xlim(
+        np.datetime64(datetime.datetime.strptime(np.min(posts_df["date"]).strftime("%Y-%m-%d"), '%Y-%m-%d') -
+                      datetime.timedelta(days=4)), 
+        np.datetime64(datetime.datetime.strptime(DATE, '%Y-%m-%d') + datetime.timedelta(days=4))
+    )
+    plt.ylim(bottom=0)
+
+
+def save_figure_6(posts_df, plot_only_complete_groups=False):
+
+    print('\n\nFIGURE 6')
+
+    posts_df['date'] = pd.to_datetime(posts_df['date'])
+    posts_df = posts_df[posts_df['date'] < datetime.datetime.strptime(DATE, '%Y-%m-%d')]
+
+    if plot_only_complete_groups == True: 
+        list_complete_groups_id = []
+        for id in posts_df['account_id'].unique():
+            posts_df_group = posts_df[posts_df["account_id"] == id]
+            if ((np.min(posts_df_group['date']) == np.min(posts_df['date'])) & 
+                (np.max(posts_df_group['date']) == datetime.datetime.strptime(DATE, '%Y-%m-%d') - datetime.timedelta(days=1))):
+                list_complete_groups_id.append(id)
+        posts_df = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
+
+    plt.figure(figsize=(10, 8))
+    plt.subplot(211)
+
+    plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Mean number of reactions per day")
+
+    plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Mean number of shares per day")
+
+    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Mean number of comments per day")
+
+    details_temporal_evolution(posts_df)
+    plt.title("The temporal evolution of the {} Facebook accounts spreading misinformation".format(posts_df["account_id"].nunique()))
+
+    plt.subplot(212)
+
+    plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+        label="Mean number of posts per day", color="grey")
+
+    details_temporal_evolution(posts_df)
+
+    plt.tight_layout()
+
+    if plot_only_complete_groups == False:
+        figure_path = os.path.join('.', 'figure', 'temporal_evolution.png')
+    else:
+        figure_path = os.path.join('.', 'figure', 'temporal_evolution_only_complete_groups.png')
+    plt.savefig(figure_path)
+    print("The '{}' graph has been saved in the '{}' folder."
+            .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
+
+
 if __name__ == "__main__":
 
     DATE = sys.argv[1] if len(sys.argv) >= 2 else "2020-08-27"
@@ -204,12 +277,17 @@ if __name__ == "__main__":
         DATE_URL_REQUEST = "2020-08-31"
         DATE_GROUP_REQUEST = "2020-09-01"
 
-    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
-    print_table_1(url_df)
-    save_figure_1(url_df, DATE)
+    # url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
+    # print_table_1(url_df)
+    # save_figure_1(url_df, DATE)
 
-    post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
-    post_url_df = clean_crowdtangle_url_data(post_url_df)
-    print_table_2(post_url_df, url_df)
-    save_figure_2(post_url_df, DATE)
-    save_figure_3(post_url_df, url_df, DATE)
+    # post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
+    # post_url_df = clean_crowdtangle_url_data(post_url_df)
+    # print_table_2(post_url_df, url_df)
+    # save_figure_2(post_url_df, DATE)
+    # save_figure_3(post_url_df, url_df, DATE)
+
+    posts_fake_group_df = import_data(folder="data_crowdtangle_group", file_name="posts_fake_group.csv")
+    posts_fake_page_df = import_data(folder="data_crowdtangle_group", file_name="posts_fake_page.csv")
+    posts_fake_df = pd.concat([posts_fake_group_df, posts_fake_page_df])
+    save_figure_6(posts_fake_df)
