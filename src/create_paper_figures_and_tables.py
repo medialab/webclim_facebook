@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import ranksums
 import datetime
+import networkx as nx
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib_venn import venn3
@@ -22,10 +23,10 @@ def import_data(folder, file_name):
     return df
 
 
-def save_figure(figure_name):
+def save_figure(figure_name, **kwargs):
 
     figure_path = os.path.join('.', 'figure', figure_name + '.png')
-    plt.savefig(figure_path)
+    plt.savefig(figure_path, **kwargs)
 
     print('\n\n' + figure_name.upper())
     print("The '{}' figure has been saved in the '{}' folder."\
@@ -76,7 +77,7 @@ def save_figure_1(url_df, DATE):
         print(ele, end=', ')
 
 
-def clean_crowdtangle_url_data(post_url_df):
+def clean_crowdtangle_url_data(post_url_df, url_df):
 
     post_url_df = post_url_df[post_url_df["platform"] == "Facebook"]
     post_url_df = post_url_df.dropna(subset=['account_id', 'url'])
@@ -193,6 +194,42 @@ def save_figure_3(post_url_df, url_df, DATE):
 
     print("\nWilcoxon rank-test between health and climate:")
     print(ranksums(nb_shares_per_topic[0], nb_shares_per_topic[2]))
+
+
+def save_figure_4(post_url_df):
+
+    vc = post_url_df['account_id'].value_counts()
+    post_url_df = post_url_df[post_url_df['account_id'].isin(vc[vc > 3].index)]
+
+    bipartite_graph = nx.Graph()
+
+    fb_group_df = post_url_df.drop_duplicates(subset=['account_id'])
+    print('\nThere are {} Facebook accounts sharing more than 3 articles.'.format(len(fb_group_df)))
+
+    for _, row in fb_group_df.iterrows():
+        bipartite_graph.add_node(int(row['account_id']),
+                                 label=row['account_name']
+                                 )
+
+    bipartite_graph.add_nodes_from(post_url_df["url"].tolist())
+    
+    bipartite_graph.add_edges_from(list(post_url_df[['account_id', 'url']]\
+                                   .itertuples(index=False, name=None)))
+
+    monopartite_graph = nx.algorithms.bipartite.projected_graph(
+        bipartite_graph, fb_group_df['account_id'].unique().tolist()
+    )
+
+    pos = nx.spring_layout(monopartite_graph)
+    fig = plt.figure()
+
+    nx.draw_networkx_nodes(monopartite_graph, pos=pos, node_color="grey", node_size=20)
+    nx.draw_networkx_edges(monopartite_graph, pos=pos, alpha=0.1, edge_color="white")
+
+    fig.set_facecolor("#000000")
+    plt.axis("off")
+
+    save_figure('figure_4', facecolor=fig.get_facecolor(), edgecolor='none')
 
 
 def clean_crowdtangle_group_data(fake_or_main):
@@ -332,17 +369,17 @@ if __name__ == "__main__":
 
     if DATE == "2020-08-27":
         DATE_URL_REQUEST = "2020-08-31"
-        DATE_GROUP_REQUEST = "2020-09-01"
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
     print_table_1(url_df)
     save_figure_1(url_df, DATE)
 
     post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
-    post_url_df = clean_crowdtangle_url_data(post_url_df)
+    post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
     print_table_2(post_url_df, url_df)
     save_figure_2(post_url_df, DATE)
     save_figure_3(post_url_df, url_df, DATE)
+    save_figure_4(post_url_df)
 
     posts_fake_df = clean_crowdtangle_group_data("fake")
     save_figure_6(posts_fake_df)
