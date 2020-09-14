@@ -1,3 +1,4 @@
+fa2==0.3.5
 jupyter==1.0.0
 matplotlib==3.2.2
 matplotlib_venn==0.11.5

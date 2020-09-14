@@ -9,6 +9,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib_venn import venn3
+from fa2 import ForceAtlas2
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -222,13 +223,31 @@ def save_figure_4(post_url_df):
         bipartite_graph, fb_group_df['account_id'].unique().tolist()
     )
 
-    pos = nx.fruchterman_reingold_layout(monopartite_graph)
+    forceatlas2 = ForceAtlas2(# Behavior alternatives
+                            outboundAttractionDistribution=False,  # Dissuade hubs
+                            linLogMode=False,  # NOT IMPLEMENTED
+                            adjustSizes=False,  # Prevent overlap (NOT IMPLEMENTED)
+                            edgeWeightInfluence=0,
+
+                            # Performance
+                            jitterTolerance=1.0,  # Tolerance
+                            barnesHutOptimize=False,
+                            barnesHutTheta=0.5,
+                            multiThreaded=False,  # NOT IMPLEMENTED
+
+                            # Tuning
+                            scalingRatio=10,
+                            strongGravityMode=True,
+                            gravity=0.05)
+
+    pos = forceatlas2.forceatlas2_networkx_layout(monopartite_graph, pos=None, iterations=2000)
+
     plt.figure(figsize=(15, 12))
 
     node_size = [np.log(data["subscriber_number"]) * 4 for v, data in monopartite_graph.nodes(data=True)]
 
     nx.draw_networkx_nodes(monopartite_graph, pos=pos, node_color="grey", node_size=node_size)
-    nx.draw_networkx_edges(monopartite_graph, pos=pos, alpha=0.2, edge_color='black')
+    nx.draw_networkx_edges(monopartite_graph, pos=pos, alpha=0.2, edge_color='lightgrey')
 
     nodes_to_label = fb_group_df.sort_values(by='account_subscriber_count', ascending=False).head(10)\
                         ['account_id'].tolist()
@@ -237,7 +256,7 @@ def save_figure_4(post_url_df):
             for node in nodes_to_label}
 
     nx.draw_networkx_labels(
-        monopartite_graph, labels=labels, font_color='green', pos=pos_to_label
+        monopartite_graph, labels=labels, font_color='red', pos=pos_to_label
     )
 
     plt.axis("off")
