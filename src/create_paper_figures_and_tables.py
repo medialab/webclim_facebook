@@ -82,7 +82,7 @@ def clean_crowdtangle_url_data(post_url_df, url_df):
     post_url_df = post_url_df[post_url_df["platform"] == "Facebook"]
     post_url_df = post_url_df.dropna(subset=['account_id', 'url'])
     post_url_df = post_url_df.drop_duplicates(subset=['account_id', 'url'], keep='first')
-    post_url_df = post_url_df[['url', 'account_id', 'account_name']]
+    post_url_df = post_url_df[['url', 'account_id', 'account_name', 'account_subscriber_count']]
 
     post_url_df = post_url_df.merge(url_df[['url', 'scientific_topic']], on='url', how='left')
 
@@ -208,11 +208,12 @@ def save_figure_4(post_url_df):
 
     for _, row in fb_group_df.iterrows():
         bipartite_graph.add_node(int(row['account_id']),
-                                 label=row['account_name']
-                                 )
+                                label=row['account_name'],
+                                subscriber_number=row['account_subscriber_count']
+                                )
 
     bipartite_graph.add_nodes_from(post_url_df["url"].tolist())
-    
+
     bipartite_graph.add_edges_from(list(post_url_df[['account_id', 'url']]\
                                    .itertuples(index=False, name=None)))
 
@@ -221,10 +222,12 @@ def save_figure_4(post_url_df):
     )
 
     pos = nx.spring_layout(monopartite_graph)
-    fig = plt.figure()
+    fig = plt.figure(figsize=(15, 12))
 
-    nx.draw_networkx_nodes(monopartite_graph, pos=pos, node_color="grey", node_size=20)
-    nx.draw_networkx_edges(monopartite_graph, pos=pos, alpha=0.1, edge_color="white")
+    node_size = [np.log(data["subscriber_number"]) * 4 for v, data in monopartite_graph.nodes(data=True)]
+
+    nx.draw_networkx_nodes(monopartite_graph, pos=pos, node_color="grey", node_size=node_size)
+    nx.draw_networkx_edges(monopartite_graph, pos=pos, alpha=0.2, edge_color="white")
 
     fig.set_facecolor("#000000")
     plt.axis("off")
