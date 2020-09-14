@@ -229,6 +229,16 @@ def save_figure_4(post_url_df):
     nx.draw_networkx_nodes(monopartite_graph, pos=pos, node_color="grey", node_size=node_size)
     nx.draw_networkx_edges(monopartite_graph, pos=pos, alpha=0.2, edge_color="white")
 
+    nodes_to_label = fb_group_df.sort_values(by='account_subscriber_count', ascending=False).head(10)\
+                        ['account_id'].tolist()
+    pos_to_label = {node: pos[node] for node in nodes_to_label}
+    labels = {node: fb_group_df[fb_group_df['account_id']==node].iloc[0]['account_name'] 
+            for node in nodes_to_label}
+
+    nx.draw_networkx_labels(
+        monopartite_graph, labels=labels, font_color='red', pos=pos_to_label
+    )
+
     fig.set_facecolor("#000000")
     plt.axis("off")
 
