@@ -204,6 +204,7 @@ def save_figure_4(post_url_df):
     bipartite_graph = nx.Graph()
 
     fb_group_df = post_url_df.drop_duplicates(subset=['account_id'])
+
     print('\nThere are {} Facebook accounts sharing more than 3 articles.'.format(len(fb_group_df)))
 
     for _, row in fb_group_df.iterrows():
@@ -221,13 +222,13 @@ def save_figure_4(post_url_df):
         bipartite_graph, fb_group_df['account_id'].unique().tolist()
     )
 
-    pos = nx.spring_layout(monopartite_graph)
-    fig = plt.figure(figsize=(15, 12))
+    pos = nx.fruchterman_reingold_layout(monopartite_graph)
+    plt.figure(figsize=(15, 12))
 
     node_size = [np.log(data["subscriber_number"]) * 4 for v, data in monopartite_graph.nodes(data=True)]
 
     nx.draw_networkx_nodes(monopartite_graph, pos=pos, node_color="grey", node_size=node_size)
-    nx.draw_networkx_edges(monopartite_graph, pos=pos, alpha=0.2, edge_color="white")
+    nx.draw_networkx_edges(monopartite_graph, pos=pos, alpha=0.2, edge_color='black')
 
     nodes_to_label = fb_group_df.sort_values(by='account_subscriber_count', ascending=False).head(10)\
                         ['account_id'].tolist()
@@ -236,13 +237,11 @@ def save_figure_4(post_url_df):
             for node in nodes_to_label}
 
     nx.draw_networkx_labels(
-        monopartite_graph, labels=labels, font_color='red', pos=pos_to_label
+        monopartite_graph, labels=labels, font_color='green', pos=pos_to_label
     )
 
-    fig.set_facecolor("#000000")
     plt.axis("off")
-
-    save_figure('figure_4', facecolor=fig.get_facecolor(), edgecolor='none')
+    save_figure('figure_4')
 
 
 def clean_crowdtangle_group_data(fake_or_main):
