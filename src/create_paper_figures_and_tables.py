@@ -49,33 +49,31 @@ def print_table_1(url_df):
         print()
 
 
-def save_figure_1(url_df, DATE):
+def create_venn_diagram(df, topic_color, column_name, name):
 
-    # Create a list with the 3 domain names sets
-    domain_name_subsets = []
-    for topic in url_df["scientific_topic"].unique():
-        url_df_temp = url_df[url_df["scientific_topic"]==topic]
-        domain_name_subsets.append(set(url_df_temp["domain_name"].unique()))
+    subsets = []
+    for topic in df["scientific_topic"].unique():
+        df_temp = df[df["scientific_topic"]==topic]
+        subsets.append(set(df_temp[column_name].unique()))
 
-    # Save the Venn diagram figure
     plt.figure()
 
-    v = venn3(subsets=domain_name_subsets, 
-            set_labels=('health', 'climate', 'covid'),
-            set_colors=([1, 1, 0.6, 1], [0.4, 0.4, 1, 1], [1, 0.4, 0.4, 1]),
-            alpha=1)
+    venn3(subsets=subsets, 
+          set_labels=('health', 'climate', 'covid'),
+          set_colors=(topic_color['health'], topic_color['climate'], topic_color['covid']),
+          alpha=1)
 
-    v.get_patch_by_id('110').set_color([0.5, 1, 0.5, 1])
-    v.get_patch_by_id('101').set_color([1, 0.75, 0.5, 1])
-    v.get_patch_by_id('011').set_color([1, 0.4, 1, 1])
-    v.get_patch_by_id('111').set_color([0.95, 0.95, 0.95, 1])
+    save_figure(name)
 
-    save_figure('figure_1')
+    if name == 'figure_1':
+        print('\n\nLIST INTERSECTION DOMAIN NAMES')
+        l = list(subsets[0] & subsets[1] & subsets[2])
+        for ele in sorted(l): 
+            print(ele, end=', ')
 
-    print('\n\nLIST INTERSECTION DOMAIN NAMES')
-    l = list(domain_name_subsets[0] & domain_name_subsets[1] & domain_name_subsets[2])
-    for ele in sorted(l): 
-        print(ele, end=', ')
+
+def save_figure_1(url_df, topic_color):
+    create_venn_diagram(url_df, topic_color, 'domain_name', 'figure_1')
 
 
 def clean_crowdtangle_url_data(post_url_df, url_df):
@@ -108,31 +106,11 @@ def print_table_2(post_url_df, url_df):
         print()
 
 
-def save_figure_2(post_url_df, DATE):
-
-    # Create a list with the 3 domain names sets
-    accounts_subsets = []
-    for topic in url_df["scientific_topic"].unique():
-        post_url_df_temp = post_url_df[post_url_df["scientific_topic"]==topic]
-        accounts_subsets.append(set(post_url_df_temp["account_id"].unique()))
-
-    # Save the Venn diagram figure
-    plt.figure()
-
-    v = venn3(subsets=accounts_subsets, 
-            set_labels=('health', 'climate', 'covid'),
-            set_colors=([1, 1, 0.6, 1], [0.4, 0.4, 1, 1], [1, 0.4, 0.4, 1]),
-            alpha=1)
-
-    v.get_patch_by_id('110').set_color([0.5, 1, 0.5, 1])
-    v.get_patch_by_id('101').set_color([1, 0.75, 0.5, 1])
-    v.get_patch_by_id('011').set_color([1, 0.4, 1, 1])
-    v.get_patch_by_id('111').set_color([0.95, 0.95, 0.95, 1])
-
-    save_figure('figure_2')
+def save_figure_2(post_url_df, topic_color):
+    create_venn_diagram(post_url_df,  topic_color, 'account_id', 'figure_2')
 
 
-def save_figure_3(post_url_df, url_df, DATE):
+def save_figure_3(post_url_df, url_df, topic_color):
 
     url_share_df = post_url_df['url'].value_counts().rename_axis('url').to_frame('nb_shares')
 
@@ -150,8 +128,6 @@ def save_figure_3(post_url_df, url_df, DATE):
     url_share_df['url'] = url_share_df.index
     url_share_df = url_share_df.merge(url_df[['url', 'scientific_topic']], on='url', how='left')
 
-    colors = ['y', 'r', 'b']
-
     plt.figure(figsize=(6, 6))
 
     nb_shares_per_topic = []
@@ -166,7 +142,7 @@ def save_figure_3(post_url_df, url_df, DATE):
         plt.hist(
             nb_shares_temp,
             bins=np.arange(0, 100, 1),
-            color=colors[i]
+            color=list(topic_color.values())[i]
         )
         
         mean_temp = np.mean(nb_shares_temp)
@@ -197,7 +173,7 @@ def save_figure_3(post_url_df, url_df, DATE):
     print(ranksums(nb_shares_per_topic[0], nb_shares_per_topic[2]))
 
 
-def save_figure_4(post_url_df):
+def save_figure_4(post_url_df, topic_color):
 
     vc = post_url_df['account_id'].value_counts()
     post_url_df = post_url_df[post_url_df['account_id'].isin(vc[vc > 3].index)]
@@ -249,7 +225,7 @@ def save_figure_4(post_url_df):
         scalingRatio=10,
         strongGravityMode=True,
         gravity=0.05
-        )
+    )
 
     pos = forceatlas2.forceatlas2_networkx_layout(monopartite_graph, pos=None, iterations=2000)
 
@@ -257,11 +233,6 @@ def save_figure_4(post_url_df):
 
     node_size = [data["subscriber_number"] / 10000 + 10 for v, data in monopartite_graph.nodes(data=True)]
 
-    topic_color = {
-        "covid": "salmon",
-        "health": "mediumseagreen",
-        "climate": "dodgerblue"
-    }
     node_color = [topic_color[data["main_topic"]] for v, data in monopartite_graph.nodes(data=True)]
 
     nx.draw_networkx_nodes(monopartite_graph, pos=pos, node_color=node_color, node_size=node_size)
@@ -419,24 +390,30 @@ if __name__ == "__main__":
     if DATE == "2020-08-27":
         DATE_URL_REQUEST = "2020-08-31"
 
+    topic_color = {
+        "health": "mediumseagreen",
+        "covid": "salmon",
+        "climate": "dodgerblue"
+    }
+
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
-    # print_table_1(url_df)
-    # save_figure_1(url_df, DATE)
+    print_table_1(url_df)
+    save_figure_1(url_df, topic_color)
 
     post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
     post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
-    # print_table_2(post_url_df, url_df)
-    # save_figure_2(post_url_df, DATE)
-    # save_figure_3(post_url_df, url_df, DATE)
-    save_figure_4(post_url_df)
+    print_table_2(post_url_df, url_df)
+    save_figure_2(post_url_df, topic_color)
+    save_figure_3(post_url_df, url_df, topic_color)
+    save_figure_4(post_url_df, topic_color)
 
-    # posts_fake_df = clean_crowdtangle_group_data("fake")
-    # save_figure_6(posts_fake_df)
-    # save_supplementary_figure_1(posts_fake_df)
-    # save_supplementary_figure_2(posts_fake_df)
+    posts_fake_df = clean_crowdtangle_group_data("fake")
+    save_figure_6(posts_fake_df)
+    save_supplementary_figure_1(posts_fake_df)
+    save_supplementary_figure_2(posts_fake_df)
 
-    # posts_main_df = clean_crowdtangle_group_data("main")
-    # save_figure_7(posts_main_df)
-    # save_supplementary_figure_3(posts_main_df)
+    posts_main_df = clean_crowdtangle_group_data("main")
+    save_figure_7(posts_main_df)
+    save_supplementary_figure_3(posts_main_df)
     
     
