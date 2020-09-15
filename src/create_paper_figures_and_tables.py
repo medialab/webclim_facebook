@@ -34,6 +34,16 @@ def save_figure(figure_name, **kwargs):
         .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
 
 
+def save_table(df, table_name):
+
+    table_path = os.path.join('.', 'table', table_name + '.csv')
+    df.to_csv(table_path, index=False, header=True)
+
+    print('\n\n' + table_name.upper())
+    print("The '{}' table has been saved in the '{}' folder."\
+        .format(table_path.split('/')[-1], table_path.split('/')[-2]))
+
+
 def print_table_1(url_df):
 
     print()
@@ -41,12 +51,17 @@ def print_table_1(url_df):
 
     print('\nThere are {} domain names.'.format(url_df["domain_name"].nunique()))
 
-    print('\nTABLE 1')
+    table_1 = []
     for topic in url_df["scientific_topic"].unique():
-        print(topic.upper())
+
         url_df_temp = url_df[url_df["scientific_topic"]==topic]
-        print(url_df_temp['domain_name'].value_counts(dropna=False).nlargest(10))
-        print()
+        url_df_temp = url_df_temp['domain_name'].value_counts(dropna=False).nlargest(10).to_frame()
+        url_df_temp['top 10 ' + topic] = url_df_temp.index + ' (' + url_df_temp['domain_name'].astype(str) + ')'
+        table_1.append(url_df_temp['top 10 ' + topic].reset_index(drop=True))
+        
+    table_1 = pd.concat(table_1, axis=1, sort=False)
+    print(table_1.to_string(index=False))
+    save_table(table_1, 'table_1')
 
 
 def create_venn_diagram(df, topic_color, column_name, name):
@@ -89,21 +104,23 @@ def clean_crowdtangle_url_data(post_url_df, url_df):
 
 
 def print_table_2(post_url_df, url_df):
-    print('\n\n\nThere are {} Facebook accounts.'.format(post_url_df["account_id"].nunique()))
 
-    print('\nTABLE 2')
+    print('\n\n\nThere are {} Facebook accounts.'.format(post_url_df["account_id"].nunique()))
+    table_2 = []
+
     for topic in post_url_df["scientific_topic"].unique():
-        print(topic.upper())
         post_url_df_temp = post_url_df[post_url_df["scientific_topic"]==topic]
         top_10_temp = post_url_df_temp['account_id'].value_counts(dropna=False).nlargest(10)\
             .rename_axis('account_id').to_frame('nb_fake_news_share')
         top_10_temp = top_10_temp.reset_index()
         top_10_temp = top_10_temp.merge(post_url_df[['account_id', 'account_name']].drop_duplicates(), 
                                         on='account_id', how='left')
-        top_10_temp.index = top_10_temp['account_name']
-        top_10_temp = top_10_temp[['nb_fake_news_share']]
-        print(top_10_temp)
-        print()
+        top_10_temp['top 10 ' + topic] = top_10_temp['account_name'] + ' (' + top_10_temp['nb_fake_news_share'].astype(str) + ')'
+        table_2.append(top_10_temp['top 10 ' + topic].reset_index(drop=True))
+
+    table_2 = pd.concat(table_2, axis=1, sort=False)
+    print(table_2.to_string(index=False))
+    save_table(table_2, 'table_2')
 
 
 def save_figure_2(post_url_df, topic_color):
