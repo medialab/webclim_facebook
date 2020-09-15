@@ -204,14 +204,28 @@ def save_figure_4(post_url_df):
 
     bipartite_graph = nx.Graph()
 
-    fb_group_df = post_url_df.drop_duplicates(subset=['account_id'])
+    fb_group_df = post_url_df.drop_duplicates(subset=['account_id'])\
+        [['account_id', 'account_name', 'account_subscriber_count']]
+
+    list_topic = post_url_df.groupby('account_id')['scientific_topic'].apply(list)\
+        .to_frame().reset_index()
+    list_topic['nb_fake_news_shared'] = list_topic['scientific_topic'].apply(lambda x:len(x))
+
+    list_topic['covid'] = list_topic['scientific_topic'].apply(lambda x:x.count("covid"))
+    list_topic['climate'] = list_topic['scientific_topic'].apply(lambda x:x.count("climate"))
+    list_topic['health'] = list_topic['scientific_topic'].apply(lambda x:x.count("health"))
+    list_topic['main_topic'] = list_topic[['covid', 'climate', 'health']].idxmax(axis=1)
+
+    fb_group_df = fb_group_df.merge(list_topic[['account_id', 'main_topic', 'nb_fake_news_shared']], 
+                                    on='account_id', how='left')
 
     print('\nThere are {} Facebook accounts sharing more than 3 articles.'.format(len(fb_group_df)))
 
     for _, row in fb_group_df.iterrows():
         bipartite_graph.add_node(int(row['account_id']),
                                 label=row['account_name'],
-                                subscriber_number=row['account_subscriber_count']
+                                subscriber_number=row['account_subscriber_count'],
+                                main_topic=row['main_topic']
                                 )
 
     bipartite_graph.add_nodes_from(post_url_df["url"].tolist())
@@ -223,30 +237,34 @@ def save_figure_4(post_url_df):
         bipartite_graph, fb_group_df['account_id'].unique().tolist()
     )
 
-    forceatlas2 = ForceAtlas2(# Behavior alternatives
-                            outboundAttractionDistribution=False,  # Dissuade hubs
-                            linLogMode=False,  # NOT IMPLEMENTED
-                            adjustSizes=False,  # Prevent overlap (NOT IMPLEMENTED)
-                            edgeWeightInfluence=0,
-
-                            # Performance
-                            jitterTolerance=1.0,  # Tolerance
-                            barnesHutOptimize=False,
-                            barnesHutTheta=0.5,
-                            multiThreaded=False,  # NOT IMPLEMENTED
-
-                            # Tuning
-                            scalingRatio=10,
-                            strongGravityMode=True,
-                            gravity=0.05)
+    forceatlas2 = ForceAtlas2(
+        outboundAttractionDistribution=False,
+        linLogMode=False,
+        adjustSizes=False,
+        edgeWeightInfluence=0,
+        jitterTolerance=1.0,
+        barnesHutOptimize=False,
+        barnesHutTheta=0.5,
+        multiThreaded=False,
+        scalingRatio=10,
+        strongGravityMode=True,
+        gravity=0.05
+        )
 
     pos = forceatlas2.forceatlas2_networkx_layout(monopartite_graph, pos=None, iterations=2000)
 
     plt.figure(figsize=(15, 12))
 
-    node_size = [np.log(data["subscriber_number"]) * 4 for v, data in monopartite_graph.nodes(data=True)]
+    node_size = [data["subscriber_number"] / 10000 + 10 for v, data in monopartite_graph.nodes(data=True)]
 
-    nx.draw_networkx_nodes(monopartite_graph, pos=pos, node_color="grey", node_size=node_size)
+    topic_color = {
+        "covid": "salmon",
+        "health": "mediumseagreen",
+        "climate": "dodgerblue"
+    }
+    node_color = [topic_color[data["main_topic"]] for v, data in monopartite_graph.nodes(data=True)]
+
+    nx.draw_networkx_nodes(monopartite_graph, pos=pos, node_color=node_color, node_size=node_size)
     nx.draw_networkx_edges(monopartite_graph, pos=pos, alpha=0.2, edge_color='lightgrey')
 
     nodes_to_label = fb_group_df.sort_values(by='account_subscriber_count', ascending=False).head(10)\
@@ -256,7 +274,7 @@ def save_figure_4(post_url_df):
             for node in nodes_to_label}
 
     nx.draw_networkx_labels(
-        monopartite_graph, labels=labels, font_color='red', pos=pos_to_label
+        monopartite_graph, labels=labels, font_color='black', pos=pos_to_label
     )
 
     plt.axis("off")
@@ -402,23 +420,23 @@ if __name__ == "__main__":
         DATE_URL_REQUEST = "2020-08-31"
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
-    print_table_1(url_df)
-    save_figure_1(url_df, DATE)
+    # print_table_1(url_df)
+    # save_figure_1(url_df, DATE)
 
     post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
     post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
-    print_table_2(post_url_df, url_df)
-    save_figure_2(post_url_df, DATE)
-    save_figure_3(post_url_df, url_df, DATE)
+    # print_table_2(post_url_df, url_df)
+    # save_figure_2(post_url_df, DATE)
+    # save_figure_3(post_url_df, url_df, DATE)
     save_figure_4(post_url_df)
 
-    posts_fake_df = clean_crowdtangle_group_data("fake")
-    save_figure_6(posts_fake_df)
-    save_supplementary_figure_1(posts_fake_df)
-    save_supplementary_figure_2(posts_fake_df)
+    # posts_fake_df = clean_crowdtangle_group_data("fake")
+    # save_figure_6(posts_fake_df)
+    # save_supplementary_figure_1(posts_fake_df)
+    # save_supplementary_figure_2(posts_fake_df)
 
-    posts_main_df = clean_crowdtangle_group_data("main")
-    save_figure_7(posts_main_df)
-    save_supplementary_figure_3(posts_main_df)
+    # posts_main_df = clean_crowdtangle_group_data("main")
+    # save_figure_7(posts_main_df)
+    # save_supplementary_figure_3(posts_main_df)
     
     
