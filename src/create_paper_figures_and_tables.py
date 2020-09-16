@@ -1,20 +1,20 @@
 import os
 import sys
+import warnings
 
 import pandas as pd
 import numpy as np
 from scipy.stats import ranksums
 import datetime
 import networkx as nx
+from networkx.drawing.nx_agraph import to_agraph 
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib_venn import venn3
 from fa2 import ForceAtlas2
 
-import warnings
+
 warnings.filterwarnings("ignore")
-
-
 pd.options.display.max_colwidth = 300
 
 
@@ -24,10 +24,13 @@ def import_data(folder, file_name):
     return df
 
 
-def save_figure(figure_name, **kwargs):
+def save_figure(figure_name, how='matplotlib', A=None, **kwargs):
 
     figure_path = os.path.join('.', 'figure', figure_name + '.png')
-    plt.savefig(figure_path, **kwargs)
+    if how == 'matplotlib':
+        plt.savefig(figure_path, **kwargs)
+    elif how == 'graphviz':
+        A.draw(figure_path)
 
     print('\n\n' + figure_name.upper())
     print("The '{}' figure has been saved in the '{}' folder."\
@@ -269,6 +272,27 @@ def save_figure_4(post_url_df, topic_color):
     save_figure('figure_4')
 
 
+def save_figure_5(topic_color):
+
+    G = nx.Graph()
+
+    G.add_nodes_from([0], label='health\nX0 nodes', style='filled', fillcolor=topic_color['health'], width=2)
+    G.add_nodes_from([1], label='covid\nX1 nodes', style='filled', fillcolor=topic_color['covid'], width=4)
+    G.add_nodes_from([2], label='climate\nX2 nodes', style='filled', fillcolor=topic_color['climate'])
+
+    G.add_edge(0, 1, label='  X01 edges')
+    G.add_edge(0, 2, label='  X02 edges')
+    G.add_edge(1, 2, label='  X12 edges')
+    G.add_edge(0, 0, label='   X00 edges', penwidth=10)
+    G.add_edge(1, 1, label='   X11 edges', penwidth=2)
+    G.add_edge(2, 2, label='   X22 edges', penwidth=1)
+
+    G.graph['node']={'shape':'circle'}
+    A = to_agraph(G) 
+    A.layout('dot')
+    save_figure('figure_5', how='graphviz', A=A)
+
+
 def clean_crowdtangle_group_data(fake_or_main):
 
     posts_group_df = import_data(folder="data_crowdtangle_group", 
@@ -413,24 +437,25 @@ if __name__ == "__main__":
         "climate": "dodgerblue"
     }
 
-    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
-    print_table_1(url_df)
-    save_figure_1(url_df, topic_color)
+    # url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
+    # print_table_1(url_df)
+    # save_figure_1(url_df, topic_color)
 
-    post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
-    post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
-    print_table_2(post_url_df, url_df)
-    save_figure_2(post_url_df, topic_color)
-    save_figure_3(post_url_df, url_df, topic_color)
-    save_figure_4(post_url_df, topic_color)
+    # post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
+    # post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
+    # print_table_2(post_url_df, url_df)
+    # save_figure_2(post_url_df, topic_color)
+    # save_figure_3(post_url_df, url_df, topic_color)
+    # save_figure_4(post_url_df, topic_color)
+    save_figure_5(topic_color)
 
-    posts_fake_df = clean_crowdtangle_group_data("fake")
-    save_figure_6(posts_fake_df)
-    save_supplementary_figure_1(posts_fake_df)
-    save_supplementary_figure_2(posts_fake_df)
+    # posts_fake_df = clean_crowdtangle_group_data("fake")
+    # save_figure_6(posts_fake_df)
+    # save_supplementary_figure_1(posts_fake_df)
+    # save_supplementary_figure_2(posts_fake_df)
 
-    posts_main_df = clean_crowdtangle_group_data("main")
-    save_figure_7(posts_main_df)
-    save_supplementary_figure_3(posts_main_df)
+    # posts_main_df = clean_crowdtangle_group_data("main")
+    # save_figure_7(posts_main_df)
+    # save_supplementary_figure_3(posts_main_df)
     
     
