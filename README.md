@@ -77,6 +77,8 @@ You just need to precise the DATE of the Science Feedback data extraction, so yo
 python src/create_paper_figures_and_tables.py 2020-08-27
 ```
 
+It will create one PNG file for each figure in the `figure` folder and one CSV file for each table in the `table` folder.
+
 ### Plot the temporal evolution
 
 We can now plot the average popularity and number of posts for all the collected groups with the command:
