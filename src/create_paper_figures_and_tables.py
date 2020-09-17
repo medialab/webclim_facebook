@@ -269,57 +269,6 @@ def save_figure_4(post_url_df, topic_color):
     plt.axis("off")
     save_figure('figure_4')
 
-    return G
-
-
-def save_figure_5(G, topic_color):
-
-    summary_G = nx.Graph()
-    
-    node_topic = [data["main_topic"] for v, data in G.nodes(data=True)]
-    nodes_covid = node_topic.count('covid')
-    nodes_health = node_topic.count('health')
-    nodes_climate = node_topic.count('climate')
-
-    summary_G.add_nodes_from([0], label='health\n{} nodes'.format(nodes_health), 
-                             style='filled', fillcolor=topic_color['health'], 
-                             width=nodes_health/200)
-    summary_G.add_nodes_from([1], label='covid\n{} nodes'.format(nodes_covid), 
-                             style='filled', fillcolor=topic_color['covid'], 
-                             width=nodes_covid/200)
-    summary_G.add_nodes_from([2], label='climate\n{} nodes'.format(nodes_climate), 
-                             style='filled', fillcolor=topic_color['climate'], 
-                             width=nodes_climate/200)
-
-    edge_topic = [(G.nodes[e[0]]['main_topic'], G.nodes[e[1]]['main_topic']) for e in G.edges]
-    edges_health_covid = edge_topic.count(('health', 'covid')) + edge_topic.count(('covid', 'health'))
-    edges_health_climate = edge_topic.count(('health', 'climate')) + edge_topic.count(('climate', 'health'))
-    edges_covid_climate = edge_topic.count(('covid', 'climate')) + edge_topic.count(('climate', 'covid'))
-    
-    summary_G.add_edge(0, 1, label='  {} edges'.format(edges_health_covid), 
-                       penwidth=edges_health_covid/5000)
-    summary_G.add_edge(0, 2, label='  {} edges'.format(edges_health_climate), 
-                       penwidth=edges_health_climate/5000)
-    summary_G.add_edge(1, 2, label='  {} edges'.format(edges_covid_climate), 
-                       penwidth=edges_covid_climate/5000)
-    
-    edges_health_health = edge_topic.count(('health', 'health'))
-    edges_covid_covid = edge_topic.count(('covid', 'covid'))
-    edges_climate_climate = edge_topic.count(('climate', 'climate'))
-    
-    summary_G.add_edge(0, 0, label='  {} edges'.format(edges_health_health), 
-                       penwidth=edges_health_health/5000)
-    summary_G.add_edge(1, 1, label='  {} edges'.format(edges_covid_covid), 
-                       penwidth=edges_covid_covid/5000)
-    summary_G.add_edge(2, 2, label='  {} edges'.format(edges_climate_climate), 
-                       penwidth=edges_climate_climate/5000)
-
-    summary_G.graph['node']={'shape':'circle'}
-
-    A = to_agraph(summary_G) 
-    A.layout('dot')
-    save_figure('figure_5', how='graphviz', A=A)
-
 
 def clean_crowdtangle_group_data(fake_or_main):
 
@@ -386,16 +335,16 @@ def plot_temporal_evolution(posts_df, title_detail):
     plt.tight_layout()
 
 
-def save_figure_6(posts_df):
+def save_figure_5(posts_df):
 
     plot_temporal_evolution(posts_df, title_detail="spreading misinformation")
-    save_figure('figure_6')
+    save_figure('figure_5')
 
 
-def save_figure_7(posts_df):
+def save_figure_6(posts_df):
 
     plot_temporal_evolution(posts_df, title_detail="spreading main news")
-    save_figure('figure_7')
+    save_figure('figure_6')
 
 
 def save_supplementary_figure_1(posts_df):
@@ -474,16 +423,13 @@ if __name__ == "__main__":
     print_table_2(post_url_df, url_df)
     save_figure_2(post_url_df, topic_color)
     save_figure_3(post_url_df, url_df, topic_color)
-    G = save_figure_4(post_url_df, topic_color)
-    save_figure_5(G, topic_color)
+    save_figure_4(post_url_df, topic_color)
 
     posts_fake_df = clean_crowdtangle_group_data("fake")
-    save_figure_6(posts_fake_df)
+    save_figure_5(posts_fake_df)
     save_supplementary_figure_1(posts_fake_df)
     save_supplementary_figure_2(posts_fake_df)
 
     posts_main_df = clean_crowdtangle_group_data("main")
-    save_figure_7(posts_main_df)
+    save_figure_6(posts_main_df)
     save_supplementary_figure_3(posts_main_df)
-    
-    
