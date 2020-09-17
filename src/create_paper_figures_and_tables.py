@@ -229,7 +229,7 @@ def save_figure_4(post_url_df, topic_color):
     bipartite_graph.add_edges_from(list(post_url_df[['account_id', 'url']]\
                                    .itertuples(index=False, name=None)))
 
-    monopartite_graph = nx.algorithms.bipartite.projected_graph(
+    G = nx.algorithms.bipartite.projected_graph(
         bipartite_graph, fb_group_df['account_id'].unique().tolist()
     )
 
@@ -247,16 +247,16 @@ def save_figure_4(post_url_df, topic_color):
         gravity=0.05
     )
 
-    pos = forceatlas2.forceatlas2_networkx_layout(monopartite_graph, pos=None, iterations=2000)
+    pos = forceatlas2.forceatlas2_networkx_layout(G, pos=None, iterations=2000)
 
     plt.figure(figsize=(15, 12))
 
-    node_size = [data["subscriber_number"] / 10000 + 10 for v, data in monopartite_graph.nodes(data=True)]
+    node_size = [data["subscriber_number"] / 10000 + 10 for v, data in G.nodes(data=True)]
 
-    node_color = [topic_color[data["main_topic"]] for v, data in monopartite_graph.nodes(data=True)]
+    node_color = [topic_color[data["main_topic"]] for v, data in G.nodes(data=True)]
 
-    nx.draw_networkx_nodes(monopartite_graph, pos=pos, node_color=node_color, node_size=node_size)
-    nx.draw_networkx_edges(monopartite_graph, pos=pos, alpha=0.2, edge_color='lightgrey')
+    nx.draw_networkx_nodes(G, pos=pos, node_color=node_color, node_size=node_size)
+    nx.draw_networkx_edges(G, pos=pos, alpha=0.2, edge_color='lightgrey')
 
     nodes_to_label = fb_group_df.sort_values(by='account_subscriber_count', ascending=False).head(10)\
                         ['account_id'].tolist()
@@ -265,30 +265,48 @@ def save_figure_4(post_url_df, topic_color):
             for node in nodes_to_label}
 
     nx.draw_networkx_labels(
-        monopartite_graph, labels=labels, font_color='black', pos=pos_to_label
+        G, labels=labels, font_color='black', pos=pos_to_label
     )
 
     plt.axis("off")
     save_figure('figure_4')
 
+    return G
 
-def save_figure_5(topic_color):
 
-    G = nx.Graph()
+def save_figure_5(G, topic_color):
 
-    G.add_nodes_from([0], label='health\nX0 nodes', style='filled', fillcolor=topic_color['health'], width=2)
-    G.add_nodes_from([1], label='covid\nX1 nodes', style='filled', fillcolor=topic_color['covid'], width=4)
-    G.add_nodes_from([2], label='climate\nX2 nodes', style='filled', fillcolor=topic_color['climate'])
+    summary_G = nx.Graph()
+    
+    node_topic = [data["main_topic"] for v, data in G.nodes(data=True)]
+    nodes_covid = node_topic.count('covid')
+    nodes_health = node_topic.count('health')
+    nodes_climate = node_topic.count('climate')
 
-    G.add_edge(0, 1, label='  X01 edges')
-    G.add_edge(0, 2, label='  X02 edges')
-    G.add_edge(1, 2, label='  X12 edges')
-    G.add_edge(0, 0, label='   X00 edges', penwidth=10)
-    G.add_edge(1, 1, label='   X11 edges', penwidth=2)
-    G.add_edge(2, 2, label='   X22 edges', penwidth=1)
+    summary_G.add_nodes_from([0], label='health\n{} nodes'.format(nodes_health), 
+                             style='filled', fillcolor=topic_color['health'], 
+                             width=nodes_health/200)
+    summary_G.add_nodes_from([1], label='covid\n{} nodes'.format(nodes_covid), 
+                             style='filled', fillcolor=topic_color['covid'], 
+                             width=nodes_covid/200)
+    summary_G.add_nodes_from([2], label='climate\n{} nodes'.format(nodes_climate), 
+                             style='filled', fillcolor=topic_color['climate'], 
+                             width=nodes_climate/200)
 
-    G.graph['node']={'shape':'circle'}
-    A = to_agraph(G) 
+    edges_health_covid = 3
+    
+    summary_G.add_edge(0, 1, label='  {} edges'.format(edges_health_covid), penwidth=edges_health_covid)
+    summary_G.add_edge(0, 2, label='  X02 edges')
+    summary_G.add_edge(1, 2, label='  X12 edges')
+    
+    
+    summary_G.add_edge(0, 0, label='  X00 edges', penwidth=10)
+    summary_G.add_edge(1, 1, label='  X11 edges', penwidth=2)
+    summary_G.add_edge(2, 2, label='  X22 edges', penwidth=1)
+
+    summary_G.graph['node']={'shape':'circle'}
+
+    A = to_agraph(summary_G) 
     A.layout('dot')
     save_figure('figure_5', how='graphviz', A=A)
 
@@ -437,17 +455,17 @@ if __name__ == "__main__":
         "climate": "dodgerblue"
     }
 
-    # url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
+    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
     # print_table_1(url_df)
     # save_figure_1(url_df, topic_color)
 
-    # post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
-    # post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
+    post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
+    post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
     # print_table_2(post_url_df, url_df)
     # save_figure_2(post_url_df, topic_color)
     # save_figure_3(post_url_df, url_df, topic_color)
-    # save_figure_4(post_url_df, topic_color)
-    save_figure_5(topic_color)
+    G = save_figure_4(post_url_df, topic_color)
+    save_figure_5(G, topic_color)
 
     # posts_fake_df = clean_crowdtangle_group_data("fake")
     # save_figure_6(posts_fake_df)
