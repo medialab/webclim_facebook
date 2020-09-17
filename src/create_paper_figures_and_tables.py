@@ -7,7 +7,8 @@ import numpy as np
 from scipy.stats import ranksums
 import datetime
 import networkx as nx
-from networkx.drawing.nx_agraph import to_agraph 
+from networkx.drawing.nx_agraph import to_agraph
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from matplotlib_venn import venn3
@@ -191,6 +192,16 @@ def save_figure_3(post_url_df, url_df, topic_color):
     print(ranksums(nb_shares_per_topic[0], nb_shares_per_topic[2]))
 
 
+def color_gradient(ratio_climate, ratio_health, topic_color):
+    climate_color = np.array(mpl.colors.to_rgb(topic_color["climate"]))
+    health_color = np.array(mpl.colors.to_rgb(topic_color["health"]))
+    covid_color = np.array(mpl.colors.to_rgb(topic_color["covid"]))
+
+    gradient_color =  (ratio_climate * climate_color + ratio_health * health_color + 
+                       (1 - ratio_climate - ratio_health) * covid_color)
+    return mpl.colors.to_hex(gradient_color)
+
+
 def save_figure_4(post_url_df, topic_color):
 
     vc = post_url_df['account_id'].value_counts()
@@ -210,7 +221,10 @@ def save_figure_4(post_url_df, topic_color):
     list_topic['health'] = list_topic['scientific_topic'].apply(lambda x:x.count("health"))
     list_topic['main_topic'] = list_topic[['covid', 'climate', 'health']].idxmax(axis=1)
 
-    fb_group_df = fb_group_df.merge(list_topic[['account_id', 'main_topic', 'nb_fake_news_shared']], 
+    list_topic['ratio_climate'] = list_topic['climate'] / list_topic['nb_fake_news_shared']
+    list_topic['ratio_health'] = list_topic['health'] / list_topic['nb_fake_news_shared']
+
+    fb_group_df = fb_group_df.merge(list_topic[['account_id', 'ratio_climate', 'ratio_health']], 
                                     on='account_id', how='left')
 
     print('\nThere are {} Facebook accounts sharing more than 3 articles.'.format(len(fb_group_df)))
@@ -219,7 +233,8 @@ def save_figure_4(post_url_df, topic_color):
         bipartite_graph.add_node(int(row['account_id']),
                                 label=row['account_name'],
                                 subscriber_number=row['account_subscriber_count'],
-                                main_topic=row['main_topic']
+                                ratio_climate=row['ratio_climate'],
+                                ratio_health=row['ratio_health']
                                 )
 
     bipartite_graph.add_nodes_from(post_url_df["url"].tolist())
@@ -251,12 +266,13 @@ def save_figure_4(post_url_df, topic_color):
 
     node_size = [data["subscriber_number"] / 10000 + 10 for v, data in G.nodes(data=True)]
 
-    node_color = [topic_color[data["main_topic"]] for v, data in G.nodes(data=True)]
+    node_color = [color_gradient(data["ratio_climate"], data["ratio_health"], topic_color) 
+                  for v, data in G.nodes(data=True)]
 
     nx.draw_networkx_nodes(G, pos=pos, node_color=node_color, node_size=node_size)
     nx.draw_networkx_edges(G, pos=pos, alpha=0.2, edge_color='lightgrey')
 
-    nodes_to_label = fb_group_df.sort_values(by='account_subscriber_count', ascending=False).head(10)\
+    nodes_to_label = fb_group_df.sort_values(by='account_subscriber_count', ascending=False).head(15)\
                         ['account_id'].tolist()
     pos_to_label = {node: pos[node] for node in nodes_to_label}
     labels = {node: fb_group_df[fb_group_df['account_id']==node].iloc[0]['account_name'] 
@@ -323,7 +339,7 @@ def plot_temporal_evolution(posts_df, title_detail):
             label="Mean number of comments per day")
 
     details_temporal_evolution(posts_df)
-    plt.title("The temporal evolution of the {} Facebook accounts".format(posts_df["account_id"].nunique()) + title_detail)
+    plt.title("The temporal evolution of the {} Facebook accounts ".format(posts_df["account_id"].nunique()) + title_detail)
 
     plt.subplot(212)
 
