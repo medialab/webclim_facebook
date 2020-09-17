@@ -63,7 +63,6 @@ def print_table_1(url_df):
         table_1.append(url_df_temp['top 10 ' + topic].reset_index(drop=True))
         
     table_1 = pd.concat(table_1, axis=1, sort=False)
-    print(table_1.to_string(index=False))
     save_table(table_1, 'table_1')
 
 
@@ -122,7 +121,6 @@ def print_table_2(post_url_df, url_df):
         table_2.append(top_10_temp['top 10 ' + topic].reset_index(drop=True))
 
     table_2 = pd.concat(table_2, axis=1, sort=False)
-    print(table_2.to_string(index=False))
     save_table(table_2, 'table_2')
 
 
@@ -293,16 +291,28 @@ def save_figure_5(G, topic_color):
                              style='filled', fillcolor=topic_color['climate'], 
                              width=nodes_climate/200)
 
-    edges_health_covid = 3
+    edge_topic = [(G.nodes[e[0]]['main_topic'], G.nodes[e[1]]['main_topic']) for e in G.edges]
+    edges_health_covid = edge_topic.count(('health', 'covid')) + edge_topic.count(('covid', 'health'))
+    edges_health_climate = edge_topic.count(('health', 'climate')) + edge_topic.count(('climate', 'health'))
+    edges_covid_climate = edge_topic.count(('covid', 'climate')) + edge_topic.count(('climate', 'covid'))
     
-    summary_G.add_edge(0, 1, label='  {} edges'.format(edges_health_covid), penwidth=edges_health_covid)
-    summary_G.add_edge(0, 2, label='  X02 edges')
-    summary_G.add_edge(1, 2, label='  X12 edges')
+    summary_G.add_edge(0, 1, label='  {} edges'.format(edges_health_covid), 
+                       penwidth=edges_health_covid/5000)
+    summary_G.add_edge(0, 2, label='  {} edges'.format(edges_health_climate), 
+                       penwidth=edges_health_climate/5000)
+    summary_G.add_edge(1, 2, label='  {} edges'.format(edges_covid_climate), 
+                       penwidth=edges_covid_climate/5000)
     
+    edges_health_health = edge_topic.count(('health', 'health'))
+    edges_covid_covid = edge_topic.count(('covid', 'covid'))
+    edges_climate_climate = edge_topic.count(('climate', 'climate'))
     
-    summary_G.add_edge(0, 0, label='  X00 edges', penwidth=10)
-    summary_G.add_edge(1, 1, label='  X11 edges', penwidth=2)
-    summary_G.add_edge(2, 2, label='  X22 edges', penwidth=1)
+    summary_G.add_edge(0, 0, label='  {} edges'.format(edges_health_health), 
+                       penwidth=edges_health_health/5000)
+    summary_G.add_edge(1, 1, label='  {} edges'.format(edges_covid_covid), 
+                       penwidth=edges_covid_covid/5000)
+    summary_G.add_edge(2, 2, label='  {} edges'.format(edges_climate_climate), 
+                       penwidth=edges_climate_climate/5000)
 
     summary_G.graph['node']={'shape':'circle'}
 
@@ -456,24 +466,24 @@ if __name__ == "__main__":
     }
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
-    # print_table_1(url_df)
-    # save_figure_1(url_df, topic_color)
+    print_table_1(url_df)
+    save_figure_1(url_df, topic_color)
 
     post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
     post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
-    # print_table_2(post_url_df, url_df)
-    # save_figure_2(post_url_df, topic_color)
-    # save_figure_3(post_url_df, url_df, topic_color)
+    print_table_2(post_url_df, url_df)
+    save_figure_2(post_url_df, topic_color)
+    save_figure_3(post_url_df, url_df, topic_color)
     G = save_figure_4(post_url_df, topic_color)
     save_figure_5(G, topic_color)
 
-    # posts_fake_df = clean_crowdtangle_group_data("fake")
-    # save_figure_6(posts_fake_df)
-    # save_supplementary_figure_1(posts_fake_df)
-    # save_supplementary_figure_2(posts_fake_df)
+    posts_fake_df = clean_crowdtangle_group_data("fake")
+    save_figure_6(posts_fake_df)
+    save_supplementary_figure_1(posts_fake_df)
+    save_supplementary_figure_2(posts_fake_df)
 
-    # posts_main_df = clean_crowdtangle_group_data("main")
-    # save_figure_7(posts_main_df)
-    # save_supplementary_figure_3(posts_main_df)
+    posts_main_df = clean_crowdtangle_group_data("main")
+    save_figure_7(posts_main_df)
+    save_supplementary_figure_3(posts_main_df)
     
     
