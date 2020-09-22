@@ -6,5 +6,6 @@ __pycache__/*
 config.json
 
 *.csv
+*.txt
 
 *.png
