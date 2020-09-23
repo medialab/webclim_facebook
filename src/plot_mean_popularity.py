@@ -60,7 +60,7 @@ def plot_date_markers(post_url_df, url_df, account_id):
         plt.axvline(x=date_to_plot, color='black')
         dates_to_plot.append(date_to_plot)
     
-    return dates_to_plot
+    return dates_to_plot.sort()
 
 
 def plot_repeat_offenders_zone(dates_to_plot):
@@ -198,5 +198,5 @@ if __name__=="__main__":
     DATE = sys.argv[1]
     posts_df, post_url_df, url_df = import_data(DATE)
     plot_the_groups_one_by_one(posts_df, post_url_df, url_df, DATE, plot_also_date_markers=True)
-    plot_all_the_groups(posts_df, DATE, plot_only_complete_groups=False)
-    plot_all_the_groups(posts_df, DATE, plot_only_complete_groups=True)
+    # plot_all_the_groups(posts_df, DATE, plot_only_complete_groups=False)
+    # plot_all_the_groups(posts_df, DATE, plot_only_complete_groups=True)

@@ -98,8 +98,11 @@ def clean_crowdtangle_url_data(post_url_df, url_df):
 
     post_url_df = post_url_df[post_url_df["platform"] == "Facebook"]
     post_url_df = post_url_df.dropna(subset=['account_id', 'url'])
+
+    post_url_df = post_url_df.sort_values(by=['datetime'], ascending=True)
     post_url_df = post_url_df.drop_duplicates(subset=['account_id', 'url'], keep='first')
-    post_url_df = post_url_df[['url', 'account_id', 'account_name', 'account_subscriber_count']]
+
+    post_url_df = post_url_df[['url', 'account_id', 'account_name', 'account_subscriber_count', 'date']]
 
     post_url_df = post_url_df.merge(url_df[['url', 'scientific_topic']], on='url', how='left')
 
@@ -286,14 +289,15 @@ def save_figure_4(post_url_df, topic_color):
     save_figure('figure_4')
 
 
-def clean_crowdtangle_group_data(fake_or_main):
+def clean_crowdtangle_group_data(suffix):
 
     posts_group_df = import_data(folder="data_crowdtangle_group", 
-                                 file_name="posts_" + fake_or_main + "_group.csv")
-    print('\nThere are {} Facebook groups about {} news.'.format(posts_group_df.account_id.nunique(), fake_or_main))
+                                 file_name="posts_" + suffix + "_group.csv")
+    print('\nThere are {} Facebook groups about {}.'.format(posts_group_df.account_id.nunique(), suffix))
+
     posts_page_df = import_data(folder="data_crowdtangle_group", 
-                                file_name="posts_" + fake_or_main + "_page.csv")
-    print('There are {} Facebook pages about {} news.'.format(posts_page_df.account_id.nunique(), fake_or_main))
+                                file_name="posts_" + suffix + "_page.csv")
+    print('There are {} Facebook pages about {}.'.format(posts_page_df.account_id.nunique(), suffix))
 
     posts_df = pd.concat([posts_group_df, posts_page_df])
 
@@ -303,9 +307,10 @@ def clean_crowdtangle_group_data(fake_or_main):
     return posts_df
 
 
-def details_temporal_evolution(posts_df):
+def details_temporal_evolution(posts_df, plot_special_date):
 
-    plt.axvline(x=np.datetime64("2020-06-09"), color='black', linestyle='--', linewidth=1)
+    if plot_special_date:
+        plt.axvline(x=np.datetime64("2020-06-09"), color='black', linestyle='--', linewidth=1)
 
     plt.legend()
 
@@ -324,7 +329,7 @@ def details_temporal_evolution(posts_df):
     plt.ylim(bottom=0)
 
 
-def plot_temporal_evolution(posts_df, title_detail):
+def plot_all_groups(posts_df, title_detail, plot_special_date=True):
 
     plt.figure(figsize=(10, 8))
     plt.subplot(211)
@@ -338,7 +343,7 @@ def plot_temporal_evolution(posts_df, title_detail):
     plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
             label="Mean number of comments per day")
 
-    details_temporal_evolution(posts_df)
+    details_temporal_evolution(posts_df, plot_special_date)
     plt.title("The temporal evolution of the {} Facebook accounts ".format(posts_df["account_id"].nunique()) + title_detail)
 
     plt.subplot(212)
@@ -346,20 +351,20 @@ def plot_temporal_evolution(posts_df, title_detail):
     plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
         label="Mean number of posts per day", color="grey")
 
-    details_temporal_evolution(posts_df)
+    details_temporal_evolution(posts_df, plot_special_date)
 
     plt.tight_layout()
 
 
 def save_figure_5(posts_df):
 
-    plot_temporal_evolution(posts_df, title_detail="spreading misinformation")
+    plot_all_groups(posts_df, title_detail="spreading misinformation")
     save_figure('figure_5')
 
 
 def save_figure_6(posts_df):
 
-    plot_temporal_evolution(posts_df, title_detail="spreading main news")
+    plot_all_groups(posts_df, title_detail="spreading main news")
     save_figure('figure_6')
 
 
@@ -373,12 +378,12 @@ def save_supplementary_figure_1(posts_df):
             list_complete_groups_id.append(id)
     posts_df_temp = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
 
-    plot_temporal_evolution(posts_df_temp, title_detail="spreading misinformation")
+    plot_all_groups(posts_df_temp, title_detail="spreading misinformation")
 
     save_figure('supplementary_figure_1')
 
 
-def plot_one_group(posts_df, group_index):
+def plot_one_group(posts_df, group_index, plot_special_date):
     
     account_id = posts_df['account_id'].unique()[group_index]
     posts_df_group = posts_df[posts_df["account_id"] == account_id]
@@ -389,12 +394,12 @@ def plot_one_group(posts_df, group_index):
     plt.plot(posts_df_group.groupby(by=["date"])["comment"].mean(), 
             label="Mean number of comments per post")
     
-    details_temporal_evolution(posts_df)
+    details_temporal_evolution(posts_df, plot_special_date)
     plt.title(posts_df_group['account_name'].unique()[0])
 
 
 
-def plot_the_groups_one_by_one(posts_df, figure_index):
+def plot_the_groups_one_by_one(posts_df, figure_index, plot_special_date=True):
 
     for group_index in range(posts_df['account_id'].nunique()):
 
@@ -402,7 +407,7 @@ def plot_the_groups_one_by_one(posts_df, figure_index):
             plt.figure(figsize=(12, 15))
 
         plt.subplot(5, 2, group_index % 10 + 1)
-        plot_one_group(posts_df, group_index)
+        plot_one_group(posts_df, group_index, plot_special_date)
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
@@ -415,6 +420,10 @@ def save_supplementary_figure_2(posts_df):
 
 def save_supplementary_figure_3(posts_df):
     plot_the_groups_one_by_one(posts_df, figure_index=3)
+
+
+def save_supplementary_figure_4(posts_df):
+    plot_the_groups_one_by_one(posts_df, figure_index=4, plot_special_date=False)
 
 
 if __name__ == "__main__":
@@ -441,11 +450,14 @@ if __name__ == "__main__":
     save_figure_3(post_url_df, url_df, topic_color)
     save_figure_4(post_url_df, topic_color)
 
-    posts_fake_df = clean_crowdtangle_group_data("fake")
+    posts_fake_df = clean_crowdtangle_group_data("fake_news")
     save_figure_5(posts_fake_df)
     save_supplementary_figure_1(posts_fake_df)
     save_supplementary_figure_2(posts_fake_df)
 
-    posts_main_df = clean_crowdtangle_group_data("main")
+    posts_main_df = clean_crowdtangle_group_data("main_news")
     save_figure_6(posts_main_df)
     save_supplementary_figure_3(posts_main_df)
+
+    posts_offenders_df = clean_crowdtangle_group_data("repeat_offenders")
+    save_supplementary_figure_4(posts_offenders_df)
