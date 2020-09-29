@@ -27,7 +27,7 @@ def import_data(folder, file_name):
 
 def save_figure(figure_name, how='matplotlib', A=None, **kwargs):
 
-    figure_path = os.path.join('.', 'figure', figure_name + '.png')
+    figure_path = os.path.join('.', 'figure_methodo', figure_name + '.png')
     if how == 'matplotlib':
         plt.savefig(figure_path, **kwargs)
     elif how == 'graphviz':
