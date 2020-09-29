@@ -8,5 +8,6 @@ config.json
 
 *.csv
 *.txt
+!requirements.txt
 
 *.png
