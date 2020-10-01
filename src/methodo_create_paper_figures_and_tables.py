@@ -17,6 +17,7 @@ from fa2 import ForceAtlas2
 
 warnings.filterwarnings("ignore")
 pd.options.display.max_colwidth = 300
+pd.set_option('display.max_rows', None)
 
 
 def import_data(folder, file_name):
@@ -289,7 +290,7 @@ def save_figure_4(post_url_df, topic_color):
     save_figure('figure_4')
 
 
-def clean_crowdtangle_group_data(suffix):
+def clean_crowdtangle_group_data(suffix, DATE):
 
     posts_group_df = import_data(folder="data_crowdtangle_group", 
                                  file_name="posts_" + suffix + "_group.csv")
@@ -307,7 +308,7 @@ def clean_crowdtangle_group_data(suffix):
     return posts_df
 
 
-def details_temporal_evolution(posts_df, plot_special_date):
+def details_temporal_evolution(posts_df, plot_special_date, DATE):
 
     if plot_special_date:
         plt.axvline(x=np.datetime64("2020-06-09"), color='black', linestyle='--', linewidth=1)
@@ -329,7 +330,7 @@ def details_temporal_evolution(posts_df, plot_special_date):
     plt.ylim(bottom=0)
 
 
-def plot_all_groups(posts_df, title_detail, plot_special_date=True):
+def plot_all_groups(posts_df, title_detail, DATE, plot_special_date=True):
 
     plt.figure(figsize=(10, 8))
     plt.subplot(211)
@@ -343,7 +344,7 @@ def plot_all_groups(posts_df, title_detail, plot_special_date=True):
     plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
             label="Mean number of comments per day")
 
-    details_temporal_evolution(posts_df, plot_special_date)
+    details_temporal_evolution(posts_df, plot_special_date, DATE)
     plt.title("The temporal evolution of the {} Facebook accounts ".format(posts_df["account_id"].nunique()) + title_detail)
 
     plt.subplot(212)
@@ -351,24 +352,24 @@ def plot_all_groups(posts_df, title_detail, plot_special_date=True):
     plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
         label="Mean number of posts per day", color="grey")
 
-    details_temporal_evolution(posts_df, plot_special_date)
+    details_temporal_evolution(posts_df, plot_special_date, DATE)
 
     plt.tight_layout()
 
 
-def save_figure_5(posts_df):
+def save_figure_5(posts_df, DATE):
 
-    plot_all_groups(posts_df, title_detail="spreading misinformation")
+    plot_all_groups(posts_df, title_detail="spreading misinformation", DATE=DATE)
     save_figure('figure_5')
 
 
-def save_figure_6(posts_df):
+def save_figure_6(posts_df, DATE):
 
-    plot_all_groups(posts_df, title_detail="spreading main news")
+    plot_all_groups(posts_df, title_detail="spreading main news", DATE=DATE)
     save_figure('figure_6')
 
 
-def save_supplementary_figure_1(posts_df):
+def save_supplementary_figure_1(posts_df, DATE):
 
     list_complete_groups_id = []
     for id in posts_df['account_id'].unique():
@@ -378,12 +379,12 @@ def save_supplementary_figure_1(posts_df):
             list_complete_groups_id.append(id)
     posts_df_temp = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
 
-    plot_all_groups(posts_df_temp, title_detail="spreading misinformation")
+    plot_all_groups(posts_df_temp, title_detail="spreading misinformation", DATE=DATE)
 
     save_figure('supplementary_figure_1')
 
 
-def plot_one_group(posts_df, account_id, plot_special_date):
+def plot_one_group(posts_df, account_id, plot_special_date, DATE):
     
     posts_df_group = posts_df[posts_df["account_id"] == account_id]
     
@@ -393,7 +394,7 @@ def plot_one_group(posts_df, account_id, plot_special_date):
     plt.plot(posts_df_group.groupby(by=["date"])["comment"].mean(), 
             label="Mean number of comments per post")
     
-    details_temporal_evolution(posts_df, plot_special_date)
+    details_temporal_evolution(posts_df, plot_special_date, DATE)
     plt.title(posts_df_group['account_name'].unique()[0])
 
 
@@ -459,7 +460,7 @@ def merge_overlapping_periods(overlapping_periods):
         return merged_periods
 
 
-def plot_the_groups_one_by_one(posts_df, figure_index,
+def plot_the_groups_one_by_one(posts_df, figure_index, DATE,
                                plot_special_date=True,
                                post_url_df=None, url_df=None,
                                plot_fake_news_lines=False,
@@ -472,7 +473,7 @@ def plot_the_groups_one_by_one(posts_df, figure_index,
 
         plt.subplot(5, 2, group_index % 10 + 1)
         account_id = posts_df['account_id'].unique()[group_index]
-        plot_one_group(posts_df, account_id, plot_special_date)
+        plot_one_group(posts_df, account_id, plot_special_date, DATE=DATE)
 
         if plot_fake_news_lines:
 
@@ -494,16 +495,16 @@ def plot_the_groups_one_by_one(posts_df, figure_index,
             save_figure('supplementary_figure_{}_{}'.format(figure_index, int(group_index / 10)))
 
 
-def save_supplementary_figure_2(posts_df):
-    plot_the_groups_one_by_one(posts_df, figure_index=2)
+def save_supplementary_figure_2(posts_df, DATE):
+    plot_the_groups_one_by_one(posts_df, figure_index=2, DATE=DATE)
 
 
-def save_supplementary_figure_3(posts_df):
-    plot_the_groups_one_by_one(posts_df, figure_index=3)
+def save_supplementary_figure_3(posts_df, DATE):
+    plot_the_groups_one_by_one(posts_df, figure_index=3, DATE=DATE)
 
 
-def save_supplementary_figure_4(posts_df, post_url_df, url_df):
-    plot_the_groups_one_by_one(posts_df, figure_index=4, plot_special_date=False, 
+def save_supplementary_figure_4(posts_df, post_url_df, url_df, DATE):
+    plot_the_groups_one_by_one(posts_df, figure_index=4, DATE=DATE, plot_special_date=False, 
                                post_url_df=post_url_df, url_df=url_df, 
                                plot_fake_news_lines=True, plot_repeat_offender_periods=True)
 
@@ -527,19 +528,19 @@ if __name__ == "__main__":
 
     post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
     post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
-    # print_table_2(post_url_df, url_df)
+    print_table_2(post_url_df, url_df)
     # save_figure_2(post_url_df, topic_color)
     # save_figure_3(post_url_df, url_df, topic_color)
     # save_figure_4(post_url_df, topic_color)
 
-    # posts_fake_df = clean_crowdtangle_group_data("fake_news")
-    # save_figure_5(posts_fake_df)
-    # save_supplementary_figure_1(posts_fake_df)
-    # save_supplementary_figure_2(posts_fake_df)
+    posts_fake_df = clean_crowdtangle_group_data("fake_news", DATE)
+    save_figure_5(posts_fake_df, DATE)
+    save_supplementary_figure_1(posts_fake_df, DATE)
+    save_supplementary_figure_2(posts_fake_df, DATE)
 
-    # posts_main_df = clean_crowdtangle_group_data("main_news")
-    # save_figure_6(posts_main_df)
-    # save_supplementary_figure_3(posts_main_df)
+    posts_main_df = clean_crowdtangle_group_data("main_news", DATE)
+    save_figure_6(posts_main_df, DATE)
+    save_supplementary_figure_3(posts_main_df, DATE)
 
-    posts_offenders_df = clean_crowdtangle_group_data("repeat_offenders")
-    save_supplementary_figure_4(posts_offenders_df, post_url_df, url_df)
+    posts_offenders_df = clean_crowdtangle_group_data("repeat_offenders", DATE)
+    save_supplementary_figure_4(posts_offenders_df, post_url_df, url_df, DATE)
