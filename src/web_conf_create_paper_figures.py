@@ -141,7 +141,6 @@ def plot_one_group(posts_df, account_id, plot_special_date, DATE):
             label="Mean number of comments per post")
     
     details_temporal_evolution(posts_df, plot_special_date, DATE)
-    plt.title(posts_df_group['account_name'].unique()[0])
 
 
 def compute_fake_news_dates(post_url_df, url_df, account_id):
@@ -207,6 +206,19 @@ def save_figure_1(posts_df, post_url_df, url_df, DATE):
             plt.ylim([0, 20])
         else:
             ax.get_legend().set_visible(False)
+
+        if group_index == 0:
+            plt.ylabel('REDUCED PERIODS\n', fontsize='large')
+        elif group_index == 2:
+            plt.ylabel('STABLE REACH\n', fontsize='large')
+
+        if group_index == 0:
+            plt.title('ACCOUNTS SHARING MANY MISINFORMATION LINKS\n\n' + accounts_to_plot[group_index], fontsize='large')
+        elif group_index == 1:
+            plt.title('ACCOUNTS SHARING FEW MISINFORMATION LINKS\n\n' + accounts_to_plot[group_index], fontsize='large')
+        else:
+            plt.title(accounts_to_plot[group_index], fontsize='large')
+
 
         plt.xlim(
             np.datetime64(datetime.datetime.fromisoformat('2019-09-01') - datetime.timedelta(days=4)),
@@ -276,8 +288,8 @@ if __name__ == "__main__":
     DATE = "2020-08-27"
     DATE_URL_REQUEST = "2020-08-31"
 
-    df_before, df_after = clean_comparison_data(before_date="02_06_2020", after_date="2020-08-31")
-    print_table_1(df_before, df_after)
+    # df_before, df_after = clean_comparison_data(before_date="02_06_2020", after_date="2020-08-31")
+    # print_table_1(df_before, df_after)
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
 
@@ -290,8 +302,8 @@ if __name__ == "__main__":
 
     save_figure_1(posts_groups_df, post_url_df, url_df, DATE)
 
-    save_figure_3(posts_fake_df, DATE)
-    save_figure_4(posts_fake_df, DATE)
+    # save_figure_3(posts_fake_df, DATE)
+    # save_figure_4(posts_fake_df, DATE)
 
-    posts_main_df = clean_crowdtangle_group_data("main_news", DATE)
-    save_figure_5(posts_main_df, DATE)
+    # posts_main_df = clean_crowdtangle_group_data("main_news", DATE)
+    # save_figure_5(posts_main_df, DATE)
