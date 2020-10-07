@@ -262,7 +262,19 @@ def save_figure_3(posts_df, DATE):
     save_figure('figure_3')
 
 
-def save_figure_4(posts_df, DATE):
+def print_drop_percentages(posts_df):
+    print('\nFor the {} Facebook accounts about fake news:'.format(posts_df.account_id.nunique()))
+
+    for metric in ['reaction', 'share', 'comment']:
+        serie = posts_df.groupby(by=["date"])[metric].sum()/posts_df.groupby(by=["date"])["account_id"].nunique()
+        print('The ' + metric +'s have dropped by {}% between June 8 and 10, 2020.'.format(
+            int(np.around((serie.loc['2020-06-08'] - serie.loc['2020-06-10']) * 100 / serie.loc['2020-06-08'], decimals=0))
+        ))
+
+
+def print_figure_3_statistics(posts_df):
+
+    print_drop_percentages(posts_df)
 
     list_complete_groups_id = []
     for id in posts_df['account_id'].unique():
@@ -272,15 +284,13 @@ def save_figure_4(posts_df, DATE):
             list_complete_groups_id.append(id)
     posts_df_temp = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
 
-    plot_all_groups(posts_df_temp, title_detail="spreading misinformation", DATE=DATE)
-
-    save_figure('figure_4')
+    print_drop_percentages(posts_df_temp)
 
 
-def save_figure_5(posts_df, DATE):
+def save_figure_4(posts_df, DATE):
 
     plot_all_groups(posts_df, title_detail="spreading main news", DATE=DATE)
-    save_figure('figure_5')
+    save_figure('figure_4')
 
 
 if __name__ == "__main__":
@@ -288,8 +298,8 @@ if __name__ == "__main__":
     DATE = "2020-08-27"
     DATE_URL_REQUEST = "2020-08-31"
 
-    # df_before, df_after = clean_comparison_data(before_date="02_06_2020", after_date="2020-08-31")
-    # print_table_1(df_before, df_after)
+    df_before, df_after = clean_comparison_data(before_date="02_06_2020", after_date="2020-08-31")
+    print_table_1(df_before, df_after)
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
 
@@ -302,8 +312,8 @@ if __name__ == "__main__":
 
     save_figure_1(posts_groups_df, post_url_df, url_df, DATE)
 
-    # save_figure_3(posts_fake_df, DATE)
-    # save_figure_4(posts_fake_df, DATE)
+    save_figure_3(posts_fake_df, DATE)
+    print_figure_3_statistics(posts_fake_df)
 
-    # posts_main_df = clean_crowdtangle_group_data("main_news", DATE)
-    # save_figure_5(posts_main_df, DATE)
+    posts_main_df = clean_crowdtangle_group_data("main_news", DATE)
+    save_figure_4(posts_main_df, DATE)
