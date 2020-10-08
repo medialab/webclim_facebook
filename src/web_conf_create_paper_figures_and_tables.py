@@ -240,6 +240,41 @@ def compute_fake_news_dates(post_url_df, url_df, account_id):
     return fake_news_dates
 
 
+def compute_repeat_offender_periods(fake_news_dates):
+
+    repeat_offender_periods = []
+
+    if len(fake_news_dates) > 1:
+        for index in range(1, len(fake_news_dates)):
+            if fake_news_dates[index] - fake_news_dates[index - 1] < np.timedelta64(90, 'D'):
+
+                repeat_offender_periods.append([
+                    fake_news_dates[index],
+                    fake_news_dates[index - 1] + np.timedelta64(90, 'D')
+                ])
+
+    return repeat_offender_periods
+
+
+def merge_overlapping_periods(overlapping_periods):
+    
+    if len(overlapping_periods) == 0:
+        return []
+    
+    else:
+        overlapping_periods.sort(key=lambda interval: interval[0])
+        merged_periods = [overlapping_periods[0]]
+
+        for current in overlapping_periods:
+            previous = merged_periods[-1]
+            if current[0] <= previous[1]:
+                previous[1] = max(previous[1], current[1])
+            else:
+                merged_periods.append(current)
+
+        return merged_periods
+
+
 def save_figure(figure_name):
 
     figure_path = os.path.join('.', 'figure_web_conference', figure_name + '.png')
@@ -250,7 +285,7 @@ def save_figure(figure_name):
         .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
 
 
-def save_figure_1(posts_df, post_url_df, url_df, DATE):
+def save_figure_1(posts_df, post_url_df, url_df, DATE, plot_repeat_offender_periods=False):
 
     accounts_to_plot = [
         'Humanity vs Insanity - The CRANE Report',
@@ -269,6 +304,12 @@ def save_figure_1(posts_df, post_url_df, url_df, DATE):
         fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
         for date in fake_news_dates:
             plt.axvline(x=date, color='C7', linestyle='-')
+
+        if plot_repeat_offender_periods:
+            repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
+            repeat_offender_periods = merge_overlapping_periods(repeat_offender_periods)
+            for period in repeat_offender_periods:
+                plt.axvspan(period[0], period[1], facecolor='r', alpha=0.2)
 
         plot_one_group(posts_df, account_id, plot_special_date=False, DATE=DATE)
         
@@ -381,7 +422,7 @@ if __name__ == "__main__":
     posts_offenders_df = clean_crowdtangle_group_data("repeat_offenders", DATE)
     posts_groups_df = pd.concat([posts_fake_df, posts_offenders_df])
 
-    save_figure_1(posts_groups_df, post_url_df, url_df, DATE)
+    save_figure_1(posts_groups_df, post_url_df, url_df, DATE, plot_repeat_offender_periods=False)
 
     save_figure_3(posts_fake_df, DATE)
     print_figure_3_statistics(posts_fake_df)
