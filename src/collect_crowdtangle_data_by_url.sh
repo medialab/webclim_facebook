@@ -20,5 +20,5 @@ else
     echo "Nothing to do, the output file already exists"
 fi
 
-## 576 url (only COVID): 1h57 (29 June 2020)
-## 334 url (only climate): 1h01 (30 July 2020)
+## 576 url (only COVID): 1h57 (June 29, 2020)
+## 1958 url (all): 5h (October 7, 2020)
