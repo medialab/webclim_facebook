@@ -67,7 +67,8 @@ def print_table_1(df_before, df_after):
     list_qanon_before = [name for name in list(df_before_filtered.account_name.value_counts().index) if 'Q' in name]
     print('The list of the {} QAnon related accounts in the June data:'.format(len(list_qanon_before)))
     print(df_before_filtered[df_before_filtered['account_name'].isin(list_qanon_before)]\
-        [['account_name', 'account_subscriber_count']].drop_duplicates())
+        [['account_name', 'account_subscriber_count']].drop_duplicates()\
+        .sort_values(by='account_subscriber_count', ascending=False).to_string(index=False))
     print('Total number of follower: {}'.format(np.sum(df_before_filtered[df_before_filtered['account_name'].isin(list_qanon_before)]\
         [['account_name', 'account_subscriber_count']].drop_duplicates()[['account_subscriber_count']].values)))
 
@@ -79,7 +80,8 @@ def print_table_1(df_before, df_after):
     list_qanon_after = [name for name in list(df_after_filtered.account_name.value_counts().index) if 'Q' in name]
     print('The list of the {} QAnon related accounts in the Augsut data:'.format(len(list_qanon_after)))
     print(df_after_filtered[df_after_filtered['account_name'].isin(list_qanon_after)]\
-        [['account_name', 'account_subscriber_count']].drop_duplicates())
+        [['account_name', 'account_subscriber_count']].drop_duplicates()\
+        .sort_values(by='account_subscriber_count', ascending=False).to_string(index=False))
     print('Total number of follower: {}'.format(np.sum(df_after_filtered[df_after_filtered['account_name'].isin(list_qanon_after)]\
         [['account_name', 'account_subscriber_count']].drop_duplicates()[['account_subscriber_count']].values)))
 
@@ -109,7 +111,7 @@ def print_table_2(df_before, df_after):
     ]
     list_qanon_before = [x for x in list_qanon_before if x not in accounts_to_remove_before]
 
-    print('There are {} accounts with Q in their names in the June data:'.format(len(list_qanon_before)))
+    print('There are {} accounts with Q in their names in the June data.'.format(len(list_qanon_before)))
     print('Total number of follower: {}'.format(np.sum(df_before_filtered[df_before_filtered['account_name'].isin(list_qanon_before)]\
         [['account_name', 'account_subscriber_count']].drop_duplicates()[['account_subscriber_count']].values)))
 
@@ -140,7 +142,7 @@ def print_table_2(df_before, df_after):
     ]
     list_qanon_after = [x for x in list_qanon_after if x not in accounts_to_remove_after]
 
-    print('There are {} accounts with Q in their names in the June data:'.format(len(list_qanon_after)))
+    print('There are {} accounts with Q in their names in the August data.'.format(len(list_qanon_after)))
     print('Total number of follower: {}'.format(np.sum(df_after_filtered[df_after_filtered['account_name'].isin(list_qanon_after)]\
         [['account_name', 'account_subscriber_count']].drop_duplicates()[['account_subscriber_count']].values)))
 
