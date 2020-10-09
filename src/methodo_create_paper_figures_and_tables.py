@@ -460,11 +460,60 @@ def merge_overlapping_periods(overlapping_periods):
         return merged_periods
 
 
+def compute_drastic_change_dates(df):
+    
+    df['metrics'] = df['reaction'] + df['comment']
+    df['date'] = df['date'] - pd.to_timedelta(4, unit='d')
+    df_temp = df[['date', 'metrics']].resample('W-Mon', on='date').mean().reset_index()
+
+    decreasing_dates = []
+    increasing_dates = []
+
+    for index in df_temp.index[3:]:
+        before_serie = df_temp[(index-3):(index-1)]['metrics'].values
+        after_serie = df_temp[index:index+2]['metrics'].values
+
+        if np.max(after_serie) < np.min(before_serie)/2:
+            decreasing_dates.append(df_temp.iloc[index]['date'])
+        elif np.max(before_serie) < np.min(after_serie)/2:
+            increasing_dates.append(df_temp.iloc[index]['date'])
+            
+    return decreasing_dates, increasing_dates
+
+
+def compute_periods_from_date_lists(decreasing_dates, increasing_dates, DATE):
+    
+    reduced_periods = []
+    for each_decreasing_date in decreasing_dates:
+        
+        next_increasing_date = [date for date in increasing_dates if date > each_decreasing_date]
+        if len(next_increasing_date) > 0:
+            next_increasing_date = np.min(next_increasing_date)
+        else:
+            next_increasing_date = np.datetime64(DATE)
+            
+        reduced_periods.append([each_decreasing_date, next_increasing_date])
+        
+    return reduced_periods
+
+
+def compute_reduced_periods(posts_df, account_id, DATE='2020-08-31'):
+    
+    posts_df_group = posts_df[posts_df["account_id"] == account_id]
+    
+    decreasing_dates, increasing_dates = compute_drastic_change_dates(posts_df_group)
+    reduced_periods = compute_periods_from_date_lists(decreasing_dates, increasing_dates, DATE)
+    reduced_periods = merge_overlapping_periods(reduced_periods)
+    
+    return reduced_periods
+
+
 def plot_the_groups_one_by_one(posts_df, figure_index, DATE,
                                plot_special_date=True,
                                post_url_df=None, url_df=None,
                                plot_fake_news_lines=False,
-                               plot_repeat_offender_periods=False):
+                               plot_repeat_offender_periods=False,
+                               plot_reduced_periods=False):
 
     for group_index in range(posts_df['account_id'].nunique()):
 
@@ -490,13 +539,18 @@ def plot_the_groups_one_by_one(posts_df, figure_index, DATE,
             for period in repeat_offender_periods:
                 plt.axvspan(period[0], period[1], facecolor='r', alpha=0.2)
 
+        if plot_reduced_periods:
+            reduced_periods = compute_reduced_periods(posts_df, account_id, DATE=DATE)
+            for period in reduced_periods:
+                plt.axvspan(np.datetime64(period[0]), np.datetime64(period[1]), facecolor='y', alpha=0.2)
+
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
             save_figure('supplementary_figure_{}_{}'.format(figure_index, int(group_index / 10)))
 
 
 def save_supplementary_figure_2(posts_df, DATE):
-    plot_the_groups_one_by_one(posts_df, figure_index=2, DATE=DATE)
+    plot_the_groups_one_by_one(posts_df, figure_index=2, DATE=DATE, plot_reduced_periods=True)
 
 
 def save_supplementary_figure_3(posts_df, DATE):
@@ -506,7 +560,8 @@ def save_supplementary_figure_3(posts_df, DATE):
 def save_supplementary_figure_4(posts_df, post_url_df, url_df, DATE):
     plot_the_groups_one_by_one(posts_df, figure_index=4, DATE=DATE, plot_special_date=False, 
                                post_url_df=post_url_df, url_df=url_df, 
-                               plot_fake_news_lines=True, plot_repeat_offender_periods=True)
+                               plot_fake_news_lines=False, plot_repeat_offender_periods=False,
+                               plot_reduced_periods=True)
 
 
 if __name__ == "__main__":
@@ -528,19 +583,19 @@ if __name__ == "__main__":
 
     post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
     post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
-    print_table_2(post_url_df, url_df)
+    # print_table_2(post_url_df, url_df)
     # save_figure_2(post_url_df, topic_color)
     # save_figure_3(post_url_df, url_df, topic_color)
     # save_figure_4(post_url_df, topic_color)
 
     posts_fake_df = clean_crowdtangle_group_data("fake_news", DATE)
-    save_figure_5(posts_fake_df, DATE)
-    save_supplementary_figure_1(posts_fake_df, DATE)
+    # save_figure_5(posts_fake_df, DATE)
+    # save_supplementary_figure_1(posts_fake_df, DATE)
     save_supplementary_figure_2(posts_fake_df, DATE)
 
     posts_main_df = clean_crowdtangle_group_data("main_news", DATE)
-    save_figure_6(posts_main_df, DATE)
-    save_supplementary_figure_3(posts_main_df, DATE)
+    # save_figure_6(posts_main_df, DATE)
+    # save_supplementary_figure_3(posts_main_df, DATE)
 
     posts_offenders_df = clean_crowdtangle_group_data("repeat_offenders", DATE)
     save_supplementary_figure_4(posts_offenders_df, post_url_df, url_df, DATE)
