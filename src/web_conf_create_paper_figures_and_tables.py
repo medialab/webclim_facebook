@@ -162,7 +162,7 @@ def clean_crowdtangle_url_data(post_url_df, url_df):
     return post_url_df
 
 
-def clean_crowdtangle_group_data(suffix, DATE):
+def clean_crowdtangle_group_data(suffix):
 
     posts_group_df = import_data(folder="data_crowdtangle_group", 
                                  file_name="posts_" + suffix + "_group.csv")
@@ -175,12 +175,13 @@ def clean_crowdtangle_group_data(suffix, DATE):
     posts_df = pd.concat([posts_group_df, posts_page_df])
 
     posts_df['date'] = pd.to_datetime(posts_df['date'])
-    posts_df = posts_df[posts_df['date'] < datetime.datetime.strptime(DATE, '%Y-%m-%d')]
+    posts_df = posts_df[posts_df['date'] >= datetime.datetime.strptime('2019-09-01', '%Y-%m-%d')]
+    posts_df = posts_df[posts_df['date'] <= datetime.datetime.strptime('2020-08-31', '%Y-%m-%d')]
 
     return posts_df
 
 
-def details_temporal_evolution(posts_df, plot_special_date, DATE):
+def details_temporal_evolution(posts_df, plot_special_date):
 
     if plot_special_date:
         plt.axvline(x=np.datetime64("2020-06-09"), color='black', linestyle='--', linewidth=1)
@@ -188,21 +189,16 @@ def details_temporal_evolution(posts_df, plot_special_date, DATE):
     plt.legend()
 
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
-    if (datetime.datetime.strptime(DATE, '%Y-%m-%d') - 
-        datetime.datetime.strptime(np.min(posts_df["date"]).strftime("%Y-%m-%d"), '%Y-%m-%d')).days < 365:
-        plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2)) 
-    else:
-        plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=4))
+    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2))
 
     plt.xlim(
-        np.datetime64(datetime.datetime.strptime(np.min(posts_df["date"]).strftime("%Y-%m-%d"), '%Y-%m-%d') -
-                      datetime.timedelta(days=4)), 
-        np.datetime64(datetime.datetime.strptime(DATE, '%Y-%m-%d') + datetime.timedelta(days=4))
+        np.datetime64(datetime.datetime.strptime('2019-09-01', '%Y-%m-%d') - datetime.timedelta(days=4)), 
+        np.datetime64(datetime.datetime.strptime('2020-08-31', '%Y-%m-%d') + datetime.timedelta(days=4))
     )
     plt.ylim(bottom=0)
 
 
-def plot_one_group(posts_df, account_id, plot_special_date, DATE):
+def plot_one_group(posts_df, account_id, plot_special_date):
     
     posts_df_group = posts_df[posts_df["account_id"] == account_id]
     
@@ -212,7 +208,7 @@ def plot_one_group(posts_df, account_id, plot_special_date, DATE):
     plt.plot(posts_df_group.groupby(by=["date"])["comment"].mean(), 
             label="Mean number of comments per post")
     
-    details_temporal_evolution(posts_df, plot_special_date, DATE)
+    details_temporal_evolution(posts_df, plot_special_date)
 
 
 def compute_fake_news_dates(post_url_df, url_df, account_id):
@@ -287,7 +283,7 @@ def save_figure(figure_name):
         .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
 
 
-def save_figure_1(posts_df, post_url_df, url_df, DATE, plot_repeat_offender_periods=False):
+def save_figure_1(posts_df, post_url_df, url_df, plot_repeat_offender_periods=False):
 
     accounts_to_plot = [
         'Humanity vs Insanity - The CRANE Report',
@@ -313,7 +309,7 @@ def save_figure_1(posts_df, post_url_df, url_df, DATE, plot_repeat_offender_peri
             for period in repeat_offender_periods:
                 plt.axvspan(period[0], period[1], facecolor='r', alpha=0.2)
 
-        plot_one_group(posts_df, account_id, plot_special_date=False, DATE=DATE)
+        plot_one_group(posts_df, account_id, plot_special_date=False)
         
         if group_index == 0: 
             plt.ylim([0, 20])
@@ -332,17 +328,11 @@ def save_figure_1(posts_df, post_url_df, url_df, DATE, plot_repeat_offender_peri
         else:
             plt.title(accounts_to_plot[group_index], fontsize='large')
 
-
-        plt.xlim(
-            np.datetime64(datetime.datetime.fromisoformat('2019-09-01') - datetime.timedelta(days=4)),
-            np.datetime64(datetime.datetime.strptime(DATE, '%Y-%m-%d') + datetime.timedelta(days=4))
-        )
-
     plt.tight_layout()
     save_figure('figure_1')
 
 
-def plot_all_groups(posts_df, title_detail, DATE, plot_special_date=True):
+def plot_all_groups(posts_df, title_detail, plot_special_date=True):
 
     plt.figure(figsize=(10, 8))
     plt.subplot(211)
@@ -356,7 +346,7 @@ def plot_all_groups(posts_df, title_detail, DATE, plot_special_date=True):
     plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
             label="Mean number of comments per day")
 
-    details_temporal_evolution(posts_df, plot_special_date, DATE)
+    details_temporal_evolution(posts_df, plot_special_date)
     plt.title("The temporal evolution of the {} Facebook accounts ".format(posts_df["account_id"].nunique()) + title_detail)
 
     plt.subplot(212)
@@ -364,14 +354,14 @@ def plot_all_groups(posts_df, title_detail, DATE, plot_special_date=True):
     plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
         label="Mean number of posts per day", color="grey")
 
-    details_temporal_evolution(posts_df, plot_special_date, DATE)
+    details_temporal_evolution(posts_df, plot_special_date)
 
     plt.tight_layout()
 
 
-def save_figure_3(posts_df, DATE):
+def save_figure_3(posts_df):
 
-    plot_all_groups(posts_df, title_detail="spreading misinformation", DATE=DATE)
+    plot_all_groups(posts_df, title_detail="spreading misinformation")
     save_figure('figure_3')
 
 
@@ -393,16 +383,16 @@ def print_figure_3_statistics(posts_df):
     for id in posts_df['account_id'].unique():
         posts_df_group = posts_df[posts_df["account_id"] == id]
         if ((np.min(posts_df_group['date']) == np.min(posts_df['date'])) & 
-            (np.max(posts_df_group['date']) == datetime.datetime.strptime(DATE, '%Y-%m-%d') - datetime.timedelta(days=1))):
+            (np.max(posts_df_group['date']) == np.max(posts_df['date']))):
             list_complete_groups_id.append(id)
     posts_df_temp = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
 
     print_drop_percentages(posts_df_temp)
 
 
-def save_figure_4(posts_df, DATE):
+def save_figure_4(posts_df):
 
-    plot_all_groups(posts_df, title_detail="spreading main news", DATE=DATE)
+    plot_all_groups(posts_df, title_detail="spreading main news")
     save_figure('figure_4')
 
 
@@ -420,14 +410,14 @@ if __name__ == "__main__":
     post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
     post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
 
-    posts_fake_df = clean_crowdtangle_group_data("fake_news", DATE)
-    posts_offenders_df = clean_crowdtangle_group_data("repeat_offenders", DATE)
+    posts_fake_df = clean_crowdtangle_group_data("fake_news")
+    posts_offenders_df = clean_crowdtangle_group_data("repeat_offenders")
     posts_groups_df = pd.concat([posts_fake_df, posts_offenders_df])
 
-    save_figure_1(posts_groups_df, post_url_df, url_df, DATE, plot_repeat_offender_periods=False)
+    save_figure_1(posts_groups_df, post_url_df, url_df, plot_repeat_offender_periods=False)
 
-    save_figure_3(posts_fake_df, DATE)
+    save_figure_3(posts_fake_df)
     print_figure_3_statistics(posts_fake_df)
 
-    posts_main_df = clean_crowdtangle_group_data("main_news", DATE)
-    save_figure_4(posts_main_df, DATE)
+    posts_main_df = clean_crowdtangle_group_data("main_news")
+    save_figure_4(posts_main_df)
