@@ -254,6 +254,27 @@ def compute_repeat_offender_periods(fake_news_dates):
     return repeat_offender_periods
 
 
+def compute_reduced_periods(posts_df, account_id):
+    posts_df_group = posts_df[posts_df["account_id"] == account_id]
+    posts_df_group = posts_df_group.sort_values(by=['date'])
+    posts_df_group['metrics'] = posts_df_group['reaction'] + posts_df_group['comment']
+    
+    time_series = posts_df_group.groupby(by=["date"])["metrics"].mean()
+    global_mean = np.mean(time_series.values)
+    global_std = np.std(time_series.values)
+    time_series = (time_series - global_mean)/global_std
+    
+    reduced_periods = []
+    for index in range(len(time_series.index) - 30):
+        sample_time_series = time_series[index:index + 30]
+        if (np.sum(sample_time_series) < - 20) & (np.sum(sample_time_series) < global_mean/1.5):
+            if len(sample_time_series[sample_time_series<-1]) > 1:
+                reduced_periods.append([sample_time_series[sample_time_series<-1].index[0], 
+                                        sample_time_series[sample_time_series<-1].index[-1]])
+
+    return reduced_periods
+
+
 def merge_overlapping_periods(overlapping_periods):
     
     if len(overlapping_periods) == 0:
@@ -286,47 +307,41 @@ def save_figure(figure_name):
 def save_figure_1(posts_df, post_url_df, url_df, plot_repeat_offender_periods=False):
 
     accounts_to_plot = [
-        'Humanity vs Insanity - The CRANE Report',
-        'Vaccination Information Network - UK (VINE UK)',
-        'Exposing The New World Order',
-        'People Concerned About Corruption in Our Government'
+        'Chemtrails Global Skywatch',
+        'Drain The Swamp',
+        'Q The Greatest Story Ever Told',
+        'Australian Climate Sceptics Group',
+        'Conspiracy Theory & Alternative News',
+        'S5GG - STOP 5G Global'
     ]
 
-    plt.figure(figsize=(12, 5))
+    plt.figure(figsize=(12, 10))
 
-    for group_index in range(4):
+    for group_index in range(len(accounts_to_plot)):
         account_id = posts_df[posts_df['account_name']==accounts_to_plot[group_index]].account_id.unique()[0]
 
-        ax = plt.subplot(2, 2, group_index + 1)
+        ax = plt.subplot(3, 2, group_index + 1)
 
         fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
         for date in fake_news_dates:
-            plt.axvline(x=date, color='C7', linestyle='-')
+            plt.axvline(x=date, color='C3', linestyle='-')
 
-        if plot_repeat_offender_periods:
-            repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
-            repeat_offender_periods = merge_overlapping_periods(repeat_offender_periods)
-            for period in repeat_offender_periods:
-                plt.axvspan(period[0], period[1], facecolor='r', alpha=0.2)
+        repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
+        repeat_offender_periods = merge_overlapping_periods(repeat_offender_periods)
+        for period in repeat_offender_periods:
+            plt.axvspan(period[0], period[1], facecolor='r', alpha=0.2)
+
+        reduced_periods = compute_reduced_periods(posts_df, account_id)
+        reduced_periods = merge_overlapping_periods(reduced_periods)
+        for period in reduced_periods:
+            plt.axvspan(period[0], period[1], facecolor='y', alpha=0.2)
 
         plot_one_group(posts_df, account_id, plot_special_date=False)
         
-        if group_index == 0: 
-            plt.ylim([0, 20])
-        else:
+        if group_index > 0: 
             ax.get_legend().set_visible(False)
 
-        if group_index == 0:
-            plt.ylabel('REDUCED PERIODS\n', fontsize='large')
-        elif group_index == 2:
-            plt.ylabel('STABLE REACH\n', fontsize='large')
-
-        if group_index == 0:
-            plt.title('ACCOUNTS SHARING MANY MISINFORMATION LINKS\n\n' + accounts_to_plot[group_index], fontsize='large')
-        elif group_index == 1:
-            plt.title('ACCOUNTS SHARING FEW MISINFORMATION LINKS\n\n' + accounts_to_plot[group_index], fontsize='large')
-        else:
-            plt.title(accounts_to_plot[group_index], fontsize='large')
+        plt.title(accounts_to_plot[group_index])
 
     plt.tight_layout()
     save_figure('figure_1')
@@ -402,8 +417,8 @@ if __name__ == "__main__":
     DATE_URL_REQUEST = "2020-08-31"
 
     df_before, df_after = clean_comparison_data(before_date="02_06_2020", after_date="2020-08-31")
-    print_table_1(df_before, df_after)
-    print_table_2(df_before, df_after)
+    # print_table_1(df_before, df_after)
+    # print_table_2(df_before, df_after)
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
 
@@ -411,11 +426,7 @@ if __name__ == "__main__":
     post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
 
     posts_fake_df = clean_crowdtangle_group_data("fake_news")
-    posts_offenders_df = clean_crowdtangle_group_data("repeat_offenders")
-    posts_groups_df = pd.concat([posts_fake_df, posts_offenders_df])
-
-    save_figure_1(posts_groups_df, post_url_df, url_df, plot_repeat_offender_periods=False)
-
+    save_figure_1(posts_fake_df, post_url_df, url_df, plot_repeat_offender_periods=False)
     save_figure_3(posts_fake_df)
     print_figure_3_statistics(posts_fake_df)
 
