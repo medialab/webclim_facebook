@@ -214,10 +214,11 @@ def plot_one_group(posts_df, account_id, plot_special_date,
 
     for date in fake_news_dates:
         plt.arrow(x=date, y=0, dx=0, dy=-scale_y, color='C3')
-    plt.hlines(0, xmin=np.datetime64('2019-08-28'), xmax=np.datetime64('2020-09-04'), linewidths=1)
+    
     for period in repeat_offender_periods:
         plt.axvspan(period[0], period[1], ymin=0, ymax=1/11, facecolor='C3', alpha=0.2)
 
+    plt.hlines(0, xmin=np.datetime64('2019-08-28'), xmax=np.datetime64('2020-09-04'), linewidths=1)
     plt.ylim(bottom=-scale_y)
 
 
@@ -272,15 +273,15 @@ def compute_reduced_periods(posts_df, account_id):
     time_series = posts_df_group.groupby(by=["date"])["metrics"].mean()
     global_mean = np.mean(time_series.values)
     global_std = np.std(time_series.values)
-    time_series = (time_series - global_mean)/global_std
+    zscores = (time_series - global_mean)/global_std
     
     reduced_periods = []
-    for index in range(len(time_series.index) - 30):
-        sample_time_series = time_series[index:index + 30]
-        if (np.sum(sample_time_series) < - 20) & (np.sum(sample_time_series) < global_mean/1.5):
-            if len(sample_time_series[sample_time_series<-1]) > 1:
-                reduced_periods.append([sample_time_series[sample_time_series<-1].index[0], 
-                                        sample_time_series[sample_time_series<-1].index[-1]])
+    for index in range(len(time_series.index) - 14):
+        sample_zscores = zscores[index:index + 14]
+        if (np.sum(sample_zscores) < - 14) & (np.mean(time_series[index:index + 14]) < global_mean/1.5):
+            if len(sample_zscores[sample_zscores<-1]) > 1:
+                reduced_periods.append([sample_zscores[sample_zscores<-1].index[0], 
+                                        sample_zscores[sample_zscores<-1].index[-1]])
 
     return reduced_periods
 
@@ -318,19 +319,23 @@ def save_figure_1(posts_df, post_url_df, url_df, plot_repeat_offender_periods=Fa
 
     accounts_to_plot = [
         'Chemtrails Global Skywatch',
-        'Drain The Swamp',
-        'Q The Greatest Story Ever Told',
-        'Australian Climate Sceptics Group',
         'Conspiracy Theory & Alternative News',
+        'Q The Greatest Story Ever Told',
+        'Women SCOUTS for TRUMP (c)',
+        'The Rush Limbaugh Facebook Group',
+        'THRIVE MOVEMENT',
+        'Drain The Swamp',
+        'The Shift - Being the Change',
+        'Australian Climate Sceptics Group',
         'S5GG - STOP 5G Global'
     ]
 
-    plt.figure(figsize=(12, 10))
+    plt.figure(figsize=(12, 14))
 
     for group_index in range(len(accounts_to_plot)):
         account_id = posts_df[posts_df['account_name']==accounts_to_plot[group_index]].account_id.unique()[0]
 
-        ax = plt.subplot(3, 2, group_index + 1)
+        ax = plt.subplot(len(accounts_to_plot)/2, 2, group_index + 1)
 
         fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
 
