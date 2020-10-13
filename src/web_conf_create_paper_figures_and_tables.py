@@ -195,10 +195,10 @@ def details_temporal_evolution(posts_df, plot_special_date):
         np.datetime64(datetime.datetime.strptime('2019-09-01', '%Y-%m-%d') - datetime.timedelta(days=4)), 
         np.datetime64(datetime.datetime.strptime('2020-08-31', '%Y-%m-%d') + datetime.timedelta(days=4))
     )
-    plt.ylim(bottom=0)
 
 
-def plot_one_group(posts_df, account_id, plot_special_date):
+def plot_one_group(posts_df, account_id, plot_special_date, 
+                   fake_news_dates, repeat_offender_periods):
     
     posts_df_group = posts_df[posts_df["account_id"] == account_id]
     
@@ -209,6 +209,16 @@ def plot_one_group(posts_df, account_id, plot_special_date):
             label="Mean number of comments per post")
     
     details_temporal_evolution(posts_df, plot_special_date)
+
+    scale_y = np.max(posts_df_group.groupby(by=["date"])["reaction"].mean())/10
+
+    for date in fake_news_dates:
+        plt.arrow(x=date, y=0, dx=0, dy=-scale_y, color='C3')
+    plt.hlines(0, xmin=np.datetime64('2019-08-28'), xmax=np.datetime64('2020-09-04'), linewidths=1)
+    for period in repeat_offender_periods:
+        plt.axvspan(period[0], period[1], ymin=0, ymax=1/11, facecolor='C3', alpha=0.2)
+
+    plt.ylim(bottom=-scale_y)
 
 
 def compute_fake_news_dates(post_url_df, url_df, account_id):
@@ -229,10 +239,9 @@ def compute_fake_news_dates(post_url_df, url_df, account_id):
 
         potential_dates = [datetime.datetime.strptime(date, '%Y-%m-%d') for date in potential_dates]
         date_to_plot = np.datetime64(np.max(potential_dates))
-
-        plt.axvline(x=date_to_plot, color='black')
         fake_news_dates.append(date_to_plot)
         
+    fake_news_dates = [date for date in fake_news_dates if date >= np.datetime64('2019-09-01')]
     fake_news_dates.sort()
 
     return fake_news_dates
@@ -255,6 +264,7 @@ def compute_repeat_offender_periods(fake_news_dates):
 
 
 def compute_reduced_periods(posts_df, account_id):
+
     posts_df_group = posts_df[posts_df["account_id"] == account_id]
     posts_df_group = posts_df_group.sort_values(by=['date'])
     posts_df_group['metrics'] = posts_df_group['reaction'] + posts_df_group['comment']
@@ -323,20 +333,17 @@ def save_figure_1(posts_df, post_url_df, url_df, plot_repeat_offender_periods=Fa
         ax = plt.subplot(3, 2, group_index + 1)
 
         fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
-        for date in fake_news_dates:
-            plt.axvline(x=date, color='C3', linestyle='-')
 
         repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
         repeat_offender_periods = merge_overlapping_periods(repeat_offender_periods)
-        for period in repeat_offender_periods:
-            plt.axvspan(period[0], period[1], facecolor='r', alpha=0.2)
 
         reduced_periods = compute_reduced_periods(posts_df, account_id)
         reduced_periods = merge_overlapping_periods(reduced_periods)
         for period in reduced_periods:
-            plt.axvspan(period[0], period[1], facecolor='y', alpha=0.2)
+            plt.axvspan(period[0], period[1], ymin=1/11, facecolor='C2', alpha=0.2)
 
-        plot_one_group(posts_df, account_id, plot_special_date=False)
+        plot_one_group(posts_df, account_id, plot_special_date=False, 
+                       fake_news_dates=fake_news_dates, repeat_offender_periods=repeat_offender_periods)
         
         if group_index > 0: 
             ax.get_legend().set_visible(False)
@@ -347,7 +354,7 @@ def save_figure_1(posts_df, post_url_df, url_df, plot_repeat_offender_periods=Fa
     save_figure('figure_1')
 
 
-def plot_all_groups(posts_df, title_detail, plot_special_date=True):
+def plot_all_groups(posts_df, title_detail):
 
     plt.figure(figsize=(10, 8))
     plt.subplot(211)
@@ -361,7 +368,7 @@ def plot_all_groups(posts_df, title_detail, plot_special_date=True):
     plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
             label="Mean number of comments per day")
 
-    details_temporal_evolution(posts_df, plot_special_date)
+    details_temporal_evolution(posts_df, plot_special_date=True)
     plt.title("The temporal evolution of the {} Facebook accounts ".format(posts_df["account_id"].nunique()) + title_detail)
 
     plt.subplot(212)
@@ -369,7 +376,8 @@ def plot_all_groups(posts_df, title_detail, plot_special_date=True):
     plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
         label="Mean number of posts per day", color="grey")
 
-    details_temporal_evolution(posts_df, plot_special_date)
+    details_temporal_evolution(posts_df, plot_special_date=True)
+    plt.ylim(bottom=0)
 
     plt.tight_layout()
 
@@ -427,8 +435,8 @@ if __name__ == "__main__":
 
     posts_fake_df = clean_crowdtangle_group_data("fake_news")
     save_figure_1(posts_fake_df, post_url_df, url_df, plot_repeat_offender_periods=False)
-    save_figure_3(posts_fake_df)
-    print_figure_3_statistics(posts_fake_df)
+    # save_figure_3(posts_fake_df)
+    # print_figure_3_statistics(posts_fake_df)
 
-    posts_main_df = clean_crowdtangle_group_data("main_news")
-    save_figure_4(posts_main_df)
+    # posts_main_df = clean_crowdtangle_group_data("main_news")
+    # save_figure_4(posts_main_df)
