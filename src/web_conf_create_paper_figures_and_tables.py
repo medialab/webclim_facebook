@@ -211,14 +211,14 @@ def plot_all_groups(posts_df, title_detail):
     plt.figure(figsize=(10, 8))
     plt.subplot(211)
 
-    plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Mean number of reactions per day")
+    plt.plot(posts_df.groupby(by=["date", 'account_id'])['reaction'].mean().groupby(by=['date']).mean(), 
+            label="Mean number of reactions per post")
 
-    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Mean number of comments per day")
+    plt.plot(posts_df.groupby(by=["date", 'account_id'])['comment'].mean().groupby(by=['date']).mean(), 
+            label="Mean number of comments per post")
 
-    plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Mean number of shares per day")
+    plt.plot(posts_df.groupby(by=["date", 'account_id'])['share'].mean().groupby(by=['date']).mean(), 
+            label="Mean number of shares per post")
 
     details_temporal_evolution(posts_df, plot_special_date=True)
     plt.title("The temporal evolution of the {} Facebook accounts ".format(posts_df["account_id"].nunique()) + title_detail)
@@ -244,7 +244,7 @@ def print_drop_percentages(posts_df):
     print('\nFor the {} Facebook accounts about fake news:'.format(posts_df.account_id.nunique()))
 
     for metric in ['reaction', 'share', 'comment']:
-        serie = posts_df.groupby(by=["date"])[metric].sum()/posts_df.groupby(by=["date"])["account_id"].nunique()
+        serie = posts_df.groupby(by=["date", 'account_id'])[metric].mean().groupby(by=['date']).mean()
         print('The ' + metric +'s have dropped by {}% between June 8 and 10, 2020.'.format(
             int(np.around((serie.loc['2020-06-08'] - serie.loc['2020-06-10']) * 100 / serie.loc['2020-06-08'], decimals=0))
         ))
