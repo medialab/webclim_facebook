@@ -208,7 +208,7 @@ def details_temporal_evolution(posts_df, plot_special_date):
 
 def plot_all_groups(posts_df, title_detail):
 
-    plt.figure(figsize=(10, 8))
+    plt.figure(figsize=(8, 7))
     plt.subplot(211)
 
     plt.plot(posts_df.groupby(by=["date", 'account_id'])['reaction'].mean().groupby(by=['date']).mean(), 
@@ -240,19 +240,19 @@ def save_figure_1(posts_df):
     save_figure('figure_1')
 
 
-def print_drop_percentages(posts_df):
+def print_evolution_percentages(posts_df):
     print('\nFor the {} Facebook accounts about fake news:'.format(posts_df.account_id.nunique()))
 
     for metric in ['reaction', 'share', 'comment']:
         serie = posts_df.groupby(by=["date", 'account_id'])[metric].mean().groupby(by=['date']).mean()
-        print('The ' + metric +'s have dropped by {}% between June 8 and 10, 2020.'.format(
-            int(np.around((serie.loc['2020-06-08'] - serie.loc['2020-06-10']) * 100 / serie.loc['2020-06-08'], decimals=0))
+        print('The ' + metric +'s has evolved by {}% between June 8 and 10, 2020.'.format(
+            int(np.around((serie.loc['2020-06-10'] - serie.loc['2020-06-08']) * 100 / serie.loc['2020-06-08'], decimals=0))
         ))
 
 
 def print_figure_1_statistics(posts_df):
 
-    print_drop_percentages(posts_df)
+    print_evolution_percentages(posts_df)
 
     list_complete_groups_id = []
     for id in posts_df['account_id'].unique():
@@ -262,13 +262,86 @@ def print_figure_1_statistics(posts_df):
             list_complete_groups_id.append(id)
     posts_df_temp = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
 
-    print_drop_percentages(posts_df_temp)
+    print_evolution_percentages(posts_df_temp)
 
 
 def save_figure_2(posts_df):
 
     plot_all_groups(posts_df, title_detail="spreading main news")
     save_figure('figure_2')
+
+
+def save_figure_3(posts_fake_df, post_url_df):
+
+    follower_number = post_url_df[['account_id', 'account_subscriber_count']].drop_duplicates().dropna()
+
+    link_number = post_url_df[['account_id', 'url']].drop_duplicates().dropna()
+    link_number = link_number.account_id.value_counts().to_frame(name="link_number")\
+        .reset_index().rename(columns={"index": "account_id"})
+
+    posts_fake_df['metric'] = posts_fake_df['share'] + posts_fake_df['comment'] + posts_fake_df['reaction']
+    popularity = posts_fake_df.groupby(by=["account_id"])['metric'].mean().to_frame(name="mean_popularity")\
+        .reset_index().rename(columns={"index": "account_id"})
+
+    evolution_percentage = pd.Series([])
+    for account_id in posts_fake_df['account_id'].unique():
+        posts_group_df = posts_fake_df[posts_fake_df['account_id']==account_id]
+        serie = posts_group_df.groupby(by=["date"])['metric'].mean()
+        if len(posts_group_df[posts_group_df['date']=='2020-06-08']) > 10 and len(posts_group_df[posts_group_df['date']=='2020-06-10']) > 10:
+            percentage = (serie.loc['2020-06-10'] - serie.loc['2020-06-08']) * 100 / serie.loc['2020-06-08']
+            evolution_percentage = evolution_percentage.append(pd.Series([percentage], index=[account_id]))
+    evolution_percentage = evolution_percentage.to_frame(name="percentage_evolution")\
+        .reset_index().rename(columns={"index": "account_id"})
+
+    evolution_percentage = evolution_percentage.merge(link_number, how='left', on='account_id')
+    evolution_percentage = evolution_percentage.merge(follower_number, how='left', on='account_id')
+    evolution_percentage = evolution_percentage.merge(popularity, how='left', on='account_id')
+
+    plt.figure(figsize=(12, 4))
+
+    plt.subplot(131)
+    plt.scatter(evolution_percentage['account_subscriber_count'], evolution_percentage['percentage_evolution'])
+
+    plt.xscale('log')
+    plt.gca().invert_yaxis()
+    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['+150%', '+100%', '+50%', '0%', '-50%', '-100%'])
+
+    plt.xlabel('Number of followers\n(in log scale)')
+    plt.ylabel("Evolution rate of each account's popularity\n between June 8 and 10, 2020")
+
+    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
+                list(evolution_percentage['mean_popularity'].values))[0, 1]
+    plt.text(80000, 150, 'r = ' + str(np.around(coef, decimals=2)))
+
+    plt.subplot(132)
+    plt.scatter(evolution_percentage['mean_popularity'], evolution_percentage['percentage_evolution'])
+
+    plt.gca().invert_yaxis()
+    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['', '', '', '', '', ''])
+
+    plt.xscale('log')
+    plt.xlabel('Mean popularity per post\n(in log scale)')
+
+    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
+                list(evolution_percentage['mean_popularity'].values))[0, 1]
+    plt.text(90, 150, 'r = ' + str(np.around(coef, decimals=2)))
+
+    plt.subplot(133)
+    plt.scatter(evolution_percentage['link_number'], evolution_percentage['percentage_evolution'])
+
+    plt.gca().invert_yaxis()
+    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['', '', '', '', '', ''])
+
+    plt.xscale('log')
+    plt.xticks(ticks=[20, 30, 40, 60, 100], labels=['20', '30', '40', '60', '100'])
+    plt.xlabel('Number of shared misinformation links\n(in log scale)')
+
+    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
+                list(evolution_percentage['link_number'].values))[0, 1]
+    plt.text(80, 150, 'r = ' + str(np.around(coef, decimals=2)))
+
+    plt.tight_layout()
+    save_figure('figure_3')
 
 
 def plot_one_group(posts_df, account_id, plot_special_date, 
@@ -431,11 +504,6 @@ if __name__ == "__main__":
     print_table_1(df_before, df_after)
     print_table_2(df_before, df_after)
 
-    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
-
-    post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
-    post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
-
     posts_fake_df = clean_crowdtangle_group_data("fake_news")
     save_figure_1(posts_fake_df)
     print_figure_1_statistics(posts_fake_df)
@@ -443,5 +511,10 @@ if __name__ == "__main__":
     posts_main_df = clean_crowdtangle_group_data("main_news")
     save_figure_2(posts_main_df)
 
+    post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
+    save_figure_3(posts_fake_df, post_url_df)
+
+    post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
+    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")    
     save_figure_4(posts_fake_df, post_url_df, url_df, plot_repeat_offender_periods=False)
 
