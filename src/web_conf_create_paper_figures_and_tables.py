@@ -181,6 +181,16 @@ def clean_crowdtangle_group_data(suffix):
     return posts_df
 
 
+def save_figure(figure_name):
+
+    figure_path = os.path.join('.', 'figure_web_conference', figure_name + '.png')
+    plt.savefig(figure_path)
+
+    print('\n\n' + figure_name.upper())
+    print("The '{}' figure has been saved in the '{}' folder."\
+        .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
+
+
 def details_temporal_evolution(posts_df, plot_special_date):
 
     if plot_special_date:
@@ -195,6 +205,70 @@ def details_temporal_evolution(posts_df, plot_special_date):
         np.datetime64(datetime.datetime.strptime('2019-09-01', '%Y-%m-%d') - datetime.timedelta(days=4)), 
         np.datetime64(datetime.datetime.strptime('2020-08-31', '%Y-%m-%d') + datetime.timedelta(days=4))
     )
+
+def plot_all_groups(posts_df, title_detail):
+
+    plt.figure(figsize=(10, 8))
+    plt.subplot(211)
+
+    plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Mean number of reactions per day")
+
+    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Mean number of comments per day")
+
+    plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Mean number of shares per day")
+
+    details_temporal_evolution(posts_df, plot_special_date=True)
+    plt.title("The temporal evolution of the {} Facebook accounts ".format(posts_df["account_id"].nunique()) + title_detail)
+
+    plt.subplot(212)
+
+    plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+        label="Mean number of posts per day", color="grey")
+
+    details_temporal_evolution(posts_df, plot_special_date=True)
+    plt.ylim(bottom=0)
+
+    plt.tight_layout()
+
+
+def save_figure_1(posts_df):
+
+    plot_all_groups(posts_df, title_detail="spreading misinformation")
+    save_figure('figure_1')
+
+
+def print_drop_percentages(posts_df):
+    print('\nFor the {} Facebook accounts about fake news:'.format(posts_df.account_id.nunique()))
+
+    for metric in ['reaction', 'share', 'comment']:
+        serie = posts_df.groupby(by=["date"])[metric].sum()/posts_df.groupby(by=["date"])["account_id"].nunique()
+        print('The ' + metric +'s have dropped by {}% between June 8 and 10, 2020.'.format(
+            int(np.around((serie.loc['2020-06-08'] - serie.loc['2020-06-10']) * 100 / serie.loc['2020-06-08'], decimals=0))
+        ))
+
+
+def print_figure_1_statistics(posts_df):
+
+    print_drop_percentages(posts_df)
+
+    list_complete_groups_id = []
+    for id in posts_df['account_id'].unique():
+        posts_df_group = posts_df[posts_df["account_id"] == id]
+        if ((np.min(posts_df_group['date']) == np.min(posts_df['date'])) & 
+            (np.max(posts_df_group['date']) == np.max(posts_df['date']))):
+            list_complete_groups_id.append(id)
+    posts_df_temp = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
+
+    print_drop_percentages(posts_df_temp)
+
+
+def save_figure_2(posts_df):
+
+    plot_all_groups(posts_df, title_detail="spreading main news")
+    save_figure('figure_2')
 
 
 def plot_one_group(posts_df, account_id, plot_special_date, 
@@ -236,7 +310,6 @@ def compute_fake_news_dates(post_url_df, url_df, account_id):
         potential_dates.append(post_url_group_df[post_url_group_df["url"] == url]["date"].values[0])
         # We consider the date of the fact-check:
         potential_dates.append(url_df[url_df['url']==url]["Date of publication"].values[0])
-        # TODO: We need to add the date coming from the 'data_sciencefeedback/Rated Archive (06-01-2020 to 07-02-2020).csv' file
 
         potential_dates = [datetime.datetime.strptime(date, '%Y-%m-%d') for date in potential_dates]
         date_to_plot = np.datetime64(np.max(potential_dates))
@@ -305,17 +378,7 @@ def merge_overlapping_periods(overlapping_periods):
         return merged_periods
 
 
-def save_figure(figure_name):
-
-    figure_path = os.path.join('.', 'figure_web_conference', figure_name + '.png')
-    plt.savefig(figure_path)
-
-    print('\n\n' + figure_name.upper())
-    print("The '{}' figure has been saved in the '{}' folder."\
-        .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
-
-
-def save_figure_1(posts_df, post_url_df, url_df, plot_repeat_offender_periods=False):
+def save_figure_4(posts_df, post_url_df, url_df, plot_repeat_offender_periods=False):
 
     accounts_to_plot = [
         'Chemtrails Global Skywatch',
@@ -356,71 +419,6 @@ def save_figure_1(posts_df, post_url_df, url_df, plot_repeat_offender_periods=Fa
         plt.title(accounts_to_plot[group_index])
 
     plt.tight_layout()
-    save_figure('figure_1')
-
-
-def plot_all_groups(posts_df, title_detail):
-
-    plt.figure(figsize=(10, 8))
-    plt.subplot(211)
-
-    plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Mean number of reactions per day")
-
-    plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Mean number of shares per day")
-
-    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Mean number of comments per day")
-
-    details_temporal_evolution(posts_df, plot_special_date=True)
-    plt.title("The temporal evolution of the {} Facebook accounts ".format(posts_df["account_id"].nunique()) + title_detail)
-
-    plt.subplot(212)
-
-    plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-        label="Mean number of posts per day", color="grey")
-
-    details_temporal_evolution(posts_df, plot_special_date=True)
-    plt.ylim(bottom=0)
-
-    plt.tight_layout()
-
-
-def save_figure_3(posts_df):
-
-    plot_all_groups(posts_df, title_detail="spreading misinformation")
-    save_figure('figure_3')
-
-
-def print_drop_percentages(posts_df):
-    print('\nFor the {} Facebook accounts about fake news:'.format(posts_df.account_id.nunique()))
-
-    for metric in ['reaction', 'share', 'comment']:
-        serie = posts_df.groupby(by=["date"])[metric].sum()/posts_df.groupby(by=["date"])["account_id"].nunique()
-        print('The ' + metric +'s have dropped by {}% between June 8 and 10, 2020.'.format(
-            int(np.around((serie.loc['2020-06-08'] - serie.loc['2020-06-10']) * 100 / serie.loc['2020-06-08'], decimals=0))
-        ))
-
-
-def print_figure_3_statistics(posts_df):
-
-    print_drop_percentages(posts_df)
-
-    list_complete_groups_id = []
-    for id in posts_df['account_id'].unique():
-        posts_df_group = posts_df[posts_df["account_id"] == id]
-        if ((np.min(posts_df_group['date']) == np.min(posts_df['date'])) & 
-            (np.max(posts_df_group['date']) == np.max(posts_df['date']))):
-            list_complete_groups_id.append(id)
-    posts_df_temp = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
-
-    print_drop_percentages(posts_df_temp)
-
-
-def save_figure_4(posts_df):
-
-    plot_all_groups(posts_df, title_detail="spreading main news")
     save_figure('figure_4')
 
 
@@ -430,8 +428,8 @@ if __name__ == "__main__":
     DATE_URL_REQUEST = "2020-08-31"
 
     df_before, df_after = clean_comparison_data(before_date="02_06_2020", after_date="2020-08-31")
-    # print_table_1(df_before, df_after)
-    # print_table_2(df_before, df_after)
+    print_table_1(df_before, df_after)
+    print_table_2(df_before, df_after)
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
 
@@ -439,9 +437,11 @@ if __name__ == "__main__":
     post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
 
     posts_fake_df = clean_crowdtangle_group_data("fake_news")
-    save_figure_1(posts_fake_df, post_url_df, url_df, plot_repeat_offender_periods=False)
-    # save_figure_3(posts_fake_df)
-    # print_figure_3_statistics(posts_fake_df)
+    save_figure_1(posts_fake_df)
+    print_figure_1_statistics(posts_fake_df)
 
-    # posts_main_df = clean_crowdtangle_group_data("main_news")
-    # save_figure_4(posts_main_df)
+    posts_main_df = clean_crowdtangle_group_data("main_news")
+    save_figure_2(posts_main_df)
+
+    save_figure_4(posts_fake_df, post_url_df, url_df, plot_repeat_offender_periods=False)
+
