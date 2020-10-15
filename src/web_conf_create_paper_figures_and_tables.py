@@ -271,7 +271,7 @@ def save_figure_2(posts_df):
     save_figure('figure_2')
 
 
-def save_figure_3(posts_fake_df, post_url_df):
+def compute_evolution_and_its_predictors(posts_fake_df, post_url_df):
 
     follower_number = post_url_df[['account_id', 'account_subscriber_count']].drop_duplicates().dropna()
 
@@ -296,6 +296,13 @@ def save_figure_3(posts_fake_df, post_url_df):
     evolution_percentage = evolution_percentage.merge(link_number, how='left', on='account_id')
     evolution_percentage = evolution_percentage.merge(follower_number, how='left', on='account_id')
     evolution_percentage = evolution_percentage.merge(popularity, how='left', on='account_id')
+
+    return evolution_percentage
+
+
+def save_figure_3(posts_fake_df, post_url_df):
+
+    evolution_percentage = compute_evolution_and_its_predictors(posts_fake_df, post_url_df)
 
     plt.figure(figsize=(12, 4))
 
@@ -514,7 +521,7 @@ if __name__ == "__main__":
     post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
     save_figure_3(posts_fake_df, post_url_df)
 
-    post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
-    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")    
+    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
+    post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)    
     save_figure_4(posts_fake_df, post_url_df, url_df, plot_repeat_offender_periods=False)
 
