@@ -290,7 +290,7 @@ def save_figure_2(posts_df):
     save_figure('figure_2')
 
 
-def compute_evolution_and_its_predictors(posts_fake_df, post_url_df):
+def compute_main_metrics_and_their_predictors(posts_fake_df, post_url_df):
 
     follower_number = post_url_df[['account_id', 'account_subscriber_count']].drop_duplicates().dropna()
 
@@ -298,30 +298,53 @@ def compute_evolution_and_its_predictors(posts_fake_df, post_url_df):
     link_number = link_number.account_id.value_counts().to_frame(name="link_number")\
         .reset_index().rename(columns={"index": "account_id"})
 
+    vc = posts_fake_df['account_id'].value_counts()
+    posts_fake_df = posts_fake_df[posts_fake_df['account_id'].isin(vc[vc > 14].index)]
+
     posts_fake_df['metric'] = posts_fake_df['share'] + posts_fake_df['comment'] + posts_fake_df['reaction']
     popularity = posts_fake_df.groupby(by=["account_id"])['metric'].mean().to_frame(name="mean_popularity")\
         .reset_index().rename(columns={"index": "account_id"})
 
     evolution_percentage = pd.Series([])
+    reduced_periods_percentage = pd.Series([])
+    total_days = (np.datetime64('2020-06-09') - np.datetime64('2019-09-01'))/ np.timedelta64(1, 'D')
+
     for account_id in posts_fake_df['account_id'].unique():
+
         posts_group_df = posts_fake_df[posts_fake_df['account_id']==account_id]
         serie = posts_group_df.groupby(by=["date"])['metric'].mean()
         if len(posts_group_df[posts_group_df['date']=='2020-06-08']) > 10 and len(posts_group_df[posts_group_df['date']=='2020-06-10']) > 10:
             percentage = (serie.loc['2020-06-10'] - serie.loc['2020-06-08']) * 100 / serie.loc['2020-06-08']
             evolution_percentage = evolution_percentage.append(pd.Series([percentage], index=[account_id]))
+        
+        reduced_periods = compute_reduced_periods(posts_fake_df, account_id)
+        reduced_periods = merge_overlapping_periods(reduced_periods)
+        reduced_period_length = 0
+        for period in reduced_periods:
+            if period[1] < np.datetime64('2020-06-09'):
+                reduced_period_length += (period[1] - period[0]).days
+            elif period[0] < np.datetime64('2020-06-09'):
+                reduced_period_length += (np.datetime64('2020-06-09') - period[0]).days
+        reduced_periods_percentage = reduced_periods_percentage.append(pd.Series([reduced_period_length/total_days], 
+                                                                                 index=[account_id]))
+
     evolution_percentage = evolution_percentage.to_frame(name="percentage_evolution")\
+        .reset_index().rename(columns={"index": "account_id"})
+    reduced_periods_percentage = reduced_periods_percentage.to_frame(name="reduced_periods_percentage")\
         .reset_index().rename(columns={"index": "account_id"})
 
     evolution_percentage = evolution_percentage.merge(link_number, how='left', on='account_id')
     evolution_percentage = evolution_percentage.merge(follower_number, how='left', on='account_id')
     evolution_percentage = evolution_percentage.merge(popularity, how='left', on='account_id')
 
-    return evolution_percentage
+    reduced_periods_percentage = reduced_periods_percentage.merge(link_number, how='left', on='account_id')
+    reduced_periods_percentage = reduced_periods_percentage.merge(follower_number, how='left', on='account_id')
+    reduced_periods_percentage = reduced_periods_percentage.merge(popularity, how='left', on='account_id')
+
+    return evolution_percentage, reduced_periods_percentage
 
 
-def save_figure_3(posts_fake_df, post_url_df):
-
-    evolution_percentage = compute_evolution_and_its_predictors(posts_fake_df, post_url_df)
+def save_figure_3(evolution_percentage):
 
     plt.figure(figsize=(12, 4))
 
@@ -443,8 +466,8 @@ def compute_reduced_periods(posts_df, account_id):
     posts_df_group['metrics'] = posts_df_group['reaction'] + posts_df_group['comment']
     
     time_series = posts_df_group.groupby(by=["date"])["metrics"].mean()
-    global_mean = np.mean(time_series.values)
-    global_std = np.std(time_series.values)
+    global_mean = np.mean(time_series[time_series.index < np.datetime64("2020-06-09")].values)
+    global_std = np.std(time_series[time_series.index < np.datetime64("2020-06-09")].values)
     zscores = (time_series - global_mean)/global_std
     
     reduced_periods = []
@@ -538,7 +561,8 @@ if __name__ == "__main__":
     save_figure_2(posts_main_df)
 
     post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
-    save_figure_3(posts_fake_df, post_url_df)
+    evolution_percentage, reduced_periods_percentage = compute_main_metrics_and_their_predictors(posts_fake_df, post_url_df)
+    save_figure_3(evolution_percentage)
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
     post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)    
