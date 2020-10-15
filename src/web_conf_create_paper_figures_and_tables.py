@@ -208,11 +208,11 @@ def details_temporal_evolution(posts_df, plot_special_date):
 
 def plot_all_groups(posts_df, title_detail):
 
-    # plt.figure(figsize=(8, 10))
-    plt.figure(figsize=(8, 7))
+    plt.figure(figsize=(8, 10))
+    # plt.figure(figsize=(8, 7))
 
-    # plt.subplot(311)
-    plt.subplot(211)
+    plt.subplot(311)
+    # plt.subplot(211)
     plt.title('The temporal evolution of the {} '.format(posts_df["account_id"].nunique()) + title_detail + ' Facebook accounts')
 
     plt.plot(posts_df.groupby(by=["date", 'account_id'])['reaction'].mean().groupby(by=['date']).mean(), 
@@ -227,8 +227,8 @@ def plot_all_groups(posts_df, title_detail):
     details_temporal_evolution(posts_df, plot_special_date=True)
     plt.ylim(bottom=0)
 
-    # plt.subplot(312)
-    plt.subplot(212)
+    plt.subplot(312)
+    # plt.subplot(212)
 
     plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
         label="Mean number of posts per day", color="grey")
@@ -236,19 +236,19 @@ def plot_all_groups(posts_df, title_detail):
     details_temporal_evolution(posts_df, plot_special_date=True)
     plt.ylim(bottom=0)
 
-    # plt.subplot(313)
+    plt.subplot(313)
 
-    # plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-    #         label="Mean number of reactions per day")
+    plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Mean number of reactions per day")
 
-    # plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-    #         label="Mean number of comments per day")
+    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Mean number of comments per day")
 
-    # plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-    #         label="Mean number of shares per day")
+    plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Mean number of shares per day")
 
-    # details_temporal_evolution(posts_df, plot_special_date=True)
-    # plt.ylim(bottom=0)
+    details_temporal_evolution(posts_df, plot_special_date=True)
+    plt.ylim(bottom=0)
 
     plt.tight_layout()
 
@@ -407,7 +407,8 @@ def plot_one_group(posts_df, account_id, plot_special_date,
     
     details_temporal_evolution(posts_df, plot_special_date)
 
-    scale_y = np.max(posts_df_group.groupby(by=["date"])["reaction"].mean())/10
+    scale_y = np.max([np.max(posts_df_group.groupby(by=["date"])["reaction"].mean()),
+                     np.max(posts_df_group.groupby(by=["date"])["comment"].mean())])/10
 
     for date in fake_news_dates:
         plt.arrow(x=date, y=0, dx=0, dy=-scale_y, color='C3')
@@ -501,7 +502,7 @@ def merge_overlapping_periods(overlapping_periods):
         return merged_periods
 
 
-def save_figure_4(posts_df, post_url_df, url_df, plot_repeat_offender_periods=False):
+def save_figure_4(posts_df, post_url_df, url_df):
 
     accounts_to_plot = [
         'Chemtrails Global Skywatch',
@@ -543,6 +544,47 @@ def save_figure_4(posts_df, post_url_df, url_df, plot_repeat_offender_periods=Fa
 
     plt.tight_layout()
     save_figure('figure_4')
+
+
+def plot_the_groups_one_by_one(posts_df, post_url_df, url_df):
+
+    group_index = 0
+    for account_id in posts_df['account_id'].unique():
+
+        posts_df_group = posts_df[posts_df["account_id"] == account_id]
+        time_series = posts_df_group.groupby(by=["date"])["reaction"].mean()
+
+        if len(time_series) > 350:
+
+            if group_index % 10 == 0:
+                plt.figure(figsize=(12, 14))
+
+            ax = plt.subplot(5, 2, group_index % 10 + 1)
+
+            fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
+
+            repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
+            repeat_offender_periods = merge_overlapping_periods(repeat_offender_periods)
+
+            reduced_periods = compute_reduced_periods(posts_df, account_id)
+            reduced_periods = merge_overlapping_periods(reduced_periods)
+            for period in reduced_periods:
+                plt.axvspan(period[0], period[1], ymin=1/11, facecolor='C2', alpha=0.2)
+
+            plot_one_group(posts_df, account_id, plot_special_date=False, 
+                        fake_news_dates=fake_news_dates, repeat_offender_periods=repeat_offender_periods)
+            plt.title(posts_df[posts_df['account_id']==account_id].account_name.unique()[0])
+
+            if group_index % 10 != 0: 
+                ax.get_legend().set_visible(False)
+
+            if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
+                plt.tight_layout()
+                save_figure('supplementary_figure_1_{}'.format(int(group_index / 10) + 1))
+            
+            group_index += 1
+
+
 
 
 def save_figure_5(reduced_periods_percentage):
@@ -611,6 +653,8 @@ if __name__ == "__main__":
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
     post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)    
-    save_figure_4(posts_fake_df, post_url_df, url_df, plot_repeat_offender_periods=False)
+    save_figure_4(posts_fake_df, post_url_df, url_df)
 
     save_figure_5(reduced_periods_percentage)
+
+    # plot_the_groups_one_by_one(posts_fake_df, post_url_df, url_df)
