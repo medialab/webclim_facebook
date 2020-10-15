@@ -213,7 +213,7 @@ def plot_all_groups(posts_df, title_detail):
 
     # plt.subplot(311)
     plt.subplot(211)
-    plt.title("The temporal evolution of the {} Facebook accounts ".format(posts_df["account_id"].nunique()) + title_detail)
+    plt.title('The temporal evolution of the {} '.format(posts_df["account_id"].nunique()) + title_detail + ' Facebook accounts')
 
     plt.plot(posts_df.groupby(by=["date", 'account_id'])['reaction'].mean().groupby(by=['date']).mean(), 
             label="Mean number of reactions per post")
@@ -255,7 +255,7 @@ def plot_all_groups(posts_df, title_detail):
 
 def save_figure_1(posts_df):
 
-    plot_all_groups(posts_df, title_detail="spreading misinformation")
+    plot_all_groups(posts_df, title_detail="misinformation")
     save_figure('figure_1')
 
 
@@ -286,7 +286,7 @@ def print_figure_1_statistics(posts_df):
 
 def save_figure_2(posts_df):
 
-    plot_all_groups(posts_df, title_detail="spreading main news")
+    plot_all_groups(posts_df, title_detail="mainstream news")
     save_figure('figure_2')
 
 
@@ -341,6 +341,7 @@ def compute_main_metrics_and_their_predictors(posts_fake_df, post_url_df):
     reduced_periods_percentage = reduced_periods_percentage.merge(follower_number, how='left', on='account_id')
     reduced_periods_percentage = reduced_periods_percentage.merge(popularity, how='left', on='account_id')
 
+    print(len(evolution_percentage))
     return evolution_percentage, reduced_periods_percentage
 
 
@@ -356,7 +357,7 @@ def save_figure_3(evolution_percentage):
     plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['+150%', '+100%', '+50%', '0%', '-50%', '-100%'])
 
     plt.xlabel('Number of followers\n(in log scale)')
-    plt.ylabel("Evolution rate of each account's popularity\n between June 8 and 10, 2020")
+    plt.ylabel("Evolution rate of each account's engagement\n between June 8 and 10, 2020")
 
     coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
                 list(evolution_percentage['account_subscriber_count'].values))[0, 1]
@@ -369,7 +370,7 @@ def save_figure_3(evolution_percentage):
     plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['', '', '', '', '', ''])
 
     plt.xscale('log')
-    plt.xlabel('Mean popularity per post\n(in log scale)')
+    plt.xlabel('Mean engagement per post\n(in log scale)')
 
     coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
                 list(evolution_percentage['mean_popularity'].values))[0, 1]
@@ -554,7 +555,7 @@ def save_figure_5(reduced_periods_percentage):
     plt.xscale('log')
 
     plt.xlabel('Number of followers\n(in log scale)')
-    plt.ylabel("Percentage of reduced popularity periods\n between September 1, 2019 and June 8, 2020")
+    plt.ylabel("Percentage of the predicted reduced periods\n between September 1, 2019 and June 8, 2020")
     plt.yticks(ticks=[0, 5, 10, 15, 20], labels=['0%', '5%', '10%', '15%', '20%'])
 
     coef = np.corrcoef(list(reduced_periods_percentage['reduced_periods_percentage'].values), 
@@ -565,7 +566,7 @@ def save_figure_5(reduced_periods_percentage):
     plt.scatter(reduced_periods_percentage['mean_popularity'], reduced_periods_percentage['reduced_periods_percentage'])
 
     plt.xscale('log')
-    plt.xlabel('Mean popularity per post\n(in log scale)')
+    plt.xlabel('Mean engagement per post\n(in log scale)')
     plt.yticks(ticks=[0, 5, 10, 15, 20], labels=['', '', '', '', ''])
 
     coef = np.corrcoef(list(reduced_periods_percentage['reduced_periods_percentage'].values), 
