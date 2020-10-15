@@ -208,8 +208,12 @@ def details_temporal_evolution(posts_df, plot_special_date):
 
 def plot_all_groups(posts_df, title_detail):
 
+    # plt.figure(figsize=(8, 10))
     plt.figure(figsize=(8, 7))
+
+    # plt.subplot(311)
     plt.subplot(211)
+    plt.title("The temporal evolution of the {} Facebook accounts ".format(posts_df["account_id"].nunique()) + title_detail)
 
     plt.plot(posts_df.groupby(by=["date", 'account_id'])['reaction'].mean().groupby(by=['date']).mean(), 
             label="Mean number of reactions per post")
@@ -221,8 +225,9 @@ def plot_all_groups(posts_df, title_detail):
             label="Mean number of shares per post")
 
     details_temporal_evolution(posts_df, plot_special_date=True)
-    plt.title("The temporal evolution of the {} Facebook accounts ".format(posts_df["account_id"].nunique()) + title_detail)
+    plt.ylim(bottom=0)
 
+    # plt.subplot(312)
     plt.subplot(212)
 
     plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
@@ -230,6 +235,20 @@ def plot_all_groups(posts_df, title_detail):
 
     details_temporal_evolution(posts_df, plot_special_date=True)
     plt.ylim(bottom=0)
+
+    # plt.subplot(313)
+
+    # plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+    #         label="Mean number of reactions per day")
+
+    # plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+    #         label="Mean number of comments per day")
+
+    # plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+    #         label="Mean number of shares per day")
+
+    # details_temporal_evolution(posts_df, plot_special_date=True)
+    # plt.ylim(bottom=0)
 
     plt.tight_layout()
 
