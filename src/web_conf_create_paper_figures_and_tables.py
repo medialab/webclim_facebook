@@ -313,7 +313,7 @@ def compute_main_metrics_and_their_predictors(posts_fake_df, post_url_df):
 
         posts_group_df = posts_fake_df[posts_fake_df['account_id']==account_id]
         serie = posts_group_df.groupby(by=["date"])['metric'].mean()
-        if len(posts_group_df[posts_group_df['date']=='2020-06-08']) > 10 and len(posts_group_df[posts_group_df['date']=='2020-06-10']) > 10:
+        if len(posts_group_df[posts_group_df['date']=='2020-06-08']) > 9 and len(posts_group_df[posts_group_df['date']=='2020-06-10']) > 9:
             percentage = (serie.loc['2020-06-10'] - serie.loc['2020-06-08']) * 100 / serie.loc['2020-06-08']
             evolution_percentage = evolution_percentage.append(pd.Series([percentage], index=[account_id]))
         
@@ -325,7 +325,7 @@ def compute_main_metrics_and_their_predictors(posts_fake_df, post_url_df):
                 reduced_period_length += (period[1] - period[0]).days
             elif period[0] < np.datetime64('2020-06-09'):
                 reduced_period_length += (np.datetime64('2020-06-09') - period[0]).days
-        reduced_periods_percentage = reduced_periods_percentage.append(pd.Series([reduced_period_length/total_days], 
+        reduced_periods_percentage = reduced_periods_percentage.append(pd.Series([reduced_period_length*100/total_days], 
                                                                                  index=[account_id]))
 
     evolution_percentage = evolution_percentage.to_frame(name="percentage_evolution")\
@@ -359,7 +359,7 @@ def save_figure_3(evolution_percentage):
     plt.ylabel("Evolution rate of each account's popularity\n between June 8 and 10, 2020")
 
     coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
-                list(evolution_percentage['mean_popularity'].values))[0, 1]
+                list(evolution_percentage['account_subscriber_count'].values))[0, 1]
     plt.text(80000, 150, 'r = ' + str(np.around(coef, decimals=2)))
 
     plt.subplot(132)
@@ -544,6 +544,50 @@ def save_figure_4(posts_df, post_url_df, url_df, plot_repeat_offender_periods=Fa
     save_figure('figure_4')
 
 
+def save_figure_5(reduced_periods_percentage):
+
+    plt.figure(figsize=(12, 4))
+
+    plt.subplot(131)
+    plt.scatter(reduced_periods_percentage['account_subscriber_count'], reduced_periods_percentage['reduced_periods_percentage'])
+
+    plt.xscale('log')
+
+    plt.xlabel('Number of followers\n(in log scale)')
+    plt.ylabel("Percentage of reduced popularity periods\n between September 1, 2019 and June 8, 2020")
+    plt.yticks(ticks=[0, 5, 10, 15, 20], labels=['0%', '5%', '10%', '15%', '20%'])
+
+    coef = np.corrcoef(list(reduced_periods_percentage['reduced_periods_percentage'].values), 
+                list(reduced_periods_percentage['account_subscriber_count'].values))[0, 1]
+    plt.text(80000, 1.5, 'r = ' + str(np.around(coef, decimals=2)))
+
+    plt.subplot(132)
+    plt.scatter(reduced_periods_percentage['mean_popularity'], reduced_periods_percentage['reduced_periods_percentage'])
+
+    plt.xscale('log')
+    plt.xlabel('Mean popularity per post\n(in log scale)')
+    plt.yticks(ticks=[0, 5, 10, 15, 20], labels=['', '', '', '', ''])
+
+    coef = np.corrcoef(list(reduced_periods_percentage['reduced_periods_percentage'].values), 
+                list(reduced_periods_percentage['mean_popularity'].values))[0, 1]
+    plt.text(90, 1.5, 'r = ' + str(np.around(coef, decimals=2)))
+
+    plt.subplot(133)
+    plt.scatter(reduced_periods_percentage['link_number'], reduced_periods_percentage['reduced_periods_percentage'])
+
+    plt.xscale('log')
+    plt.xticks(ticks=[20, 30, 40, 60, 100], labels=['20', '30', '40', '60', '100'])
+    plt.xlabel('Number of shared misinformation links\n(in log scale)')
+    plt.yticks(ticks=[0, 5, 10, 15, 20], labels=['', '', '', '', ''])
+
+    coef = np.corrcoef(list(reduced_periods_percentage['reduced_periods_percentage'].values), 
+                list(reduced_periods_percentage['link_number'].values))[0, 1]
+    plt.text(80, 1.5, 'r = ' + str(np.around(coef, decimals=2)))
+
+    plt.tight_layout()
+    save_figure('figure_5')
+
+
 if __name__ == "__main__":
 
     DATE = "2020-08-27"
@@ -568,3 +612,4 @@ if __name__ == "__main__":
     post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)    
     save_figure_4(posts_fake_df, post_url_df, url_df, plot_repeat_offender_periods=False)
 
+    save_figure_5(reduced_periods_percentage)
