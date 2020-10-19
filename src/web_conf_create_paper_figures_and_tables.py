@@ -516,7 +516,7 @@ def save_figure_3(posts_df, post_url_df, url_df):
         'S5GG - STOP 5G Global'
     ]
 
-    plt.figure(figsize=(12, 14))
+    plt.figure(figsize=(12, 13))
 
     for group_index in range(len(accounts_to_plot)):
         account_id = posts_df[posts_df['account_name']==accounts_to_plot[group_index]].account_id.unique()[0]
