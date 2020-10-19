@@ -209,12 +209,9 @@ def details_temporal_evolution(posts_df, plot_special_date):
 def plot_all_groups(posts_df, title_detail):
 
     plt.figure(figsize=(8, 10))
-    # plt.figure(figsize=(8, 7))
 
     plt.subplot(311)
-    # plt.subplot(211)
-    plt.title('The temporal evolution of the {} '.format(posts_df["account_id"].nunique()) + title_detail + ' Facebook accounts')
-
+    plt.title("Evolution of Facebook interaction metrics averaged for {} '".format(posts_df["account_id"].nunique()) + title_detail + "' accounts")
     plt.plot(posts_df.groupby(by=["date", 'account_id'])['reaction'].mean().groupby(by=['date']).mean(), 
             label="Mean number of reactions per post")
 
@@ -228,7 +225,6 @@ def plot_all_groups(posts_df, title_detail):
     plt.ylim(bottom=0)
 
     plt.subplot(312)
-    # plt.subplot(212)
 
     plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
         label="Mean number of posts per day", color="grey")
