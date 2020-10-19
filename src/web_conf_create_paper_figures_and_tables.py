@@ -345,53 +345,12 @@ def compute_main_metrics_and_their_predictors(posts_fake_df, post_url_df):
     return evolution_percentage, reduced_periods_percentage
 
 
-def save_figure_3(evolution_percentage):
-
-    plt.figure(figsize=(12, 4))
-
-    plt.subplot(131)
-    plt.scatter(evolution_percentage['account_subscriber_count'], evolution_percentage['percentage_evolution'])
-
-    plt.xscale('log')
-    plt.gca().invert_yaxis()
-    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['+150%', '+100%', '+50%', '0%', '-50%', '-100%'])
-
-    plt.xlabel('Number of followers\n(in log scale)')
-    plt.ylabel("Evolution rate of each account's engagement\n between June 8 and 10, 2020")
-
-    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
-                list(evolution_percentage['account_subscriber_count'].values))[0, 1]
-    plt.text(80000, 150, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.subplot(132)
-    plt.scatter(evolution_percentage['mean_popularity'], evolution_percentage['percentage_evolution'])
-
-    plt.gca().invert_yaxis()
-    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['', '', '', '', '', ''])
-
-    plt.xscale('log')
-    plt.xlabel('Mean engagement per post\n(in log scale)')
-
-    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
-                list(evolution_percentage['mean_popularity'].values))[0, 1]
-    plt.text(90, 150, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.subplot(133)
-    plt.scatter(evolution_percentage['link_number'], evolution_percentage['percentage_evolution'])
-
-    plt.gca().invert_yaxis()
-    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['', '', '', '', '', ''])
-
-    plt.xscale('log')
-    plt.xticks(ticks=[20, 30, 40, 60, 100], labels=['20', '30', '40', '60', '100'])
-    plt.xlabel('Number of shared misinformation links\n(in log scale)')
-
-    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
-                list(evolution_percentage['link_number'].values))[0, 1]
-    plt.text(80, 150, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.tight_layout()
-    save_figure('figure_3')
+def print_correlation_coefficients(df, column_to_predict):
+    print("\n\nFor the " + column_to_predict + " variable:")
+    for predictor in ['account_subscriber_count', 'mean_popularity', 'link_number']:
+        coef = np.corrcoef(list(df[column_to_predict].values), 
+                    list(df[predictor].values))[0, 1]
+        print("The correlation coefficient with {} is {}.".format(predictor, np.around(coef, decimals=2)))
 
 
 def plot_one_group(posts_df, account_id, plot_special_date, 
@@ -546,7 +505,7 @@ def compute_periods_from_date_lists(decreasing_dates, increasing_dates, DATE):
     return reduced_periods
 
 
-def save_figure_4(posts_df, post_url_df, url_df):
+def save_figure_3(posts_df, post_url_df, url_df):
 
     accounts_to_plot = [
         'Chemtrails Global Skywatch',
@@ -587,7 +546,7 @@ def save_figure_4(posts_df, post_url_df, url_df):
         plt.title(accounts_to_plot[group_index])
 
     plt.tight_layout()
-    save_figure('figure_4')
+    save_figure('figure_3')
 
 
 def plot_the_groups_one_by_one(posts_df, post_url_df, url_df):
@@ -629,50 +588,6 @@ def plot_the_groups_one_by_one(posts_df, post_url_df, url_df):
             group_index += 1
 
 
-def save_figure_5(reduced_periods_percentage):
-
-    plt.figure(figsize=(12, 4))
-
-    plt.subplot(131)
-    plt.scatter(reduced_periods_percentage['account_subscriber_count'], reduced_periods_percentage['reduced_periods_percentage'])
-
-    plt.xscale('log')
-
-    plt.xlabel('Number of followers\n(in log scale)')
-    plt.ylabel("Percentage of the predicted reduced periods\n between September 1, 2019 and June 8, 2020")
-    plt.yticks(ticks=[0, 5, 10, 15, 20], labels=['0%', '5%', '10%', '15%', '20%'])
-
-    coef = np.corrcoef(list(reduced_periods_percentage['reduced_periods_percentage'].values), 
-                list(reduced_periods_percentage['account_subscriber_count'].values))[0, 1]
-    plt.text(80000, 1.5, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.subplot(132)
-    plt.scatter(reduced_periods_percentage['mean_popularity'], reduced_periods_percentage['reduced_periods_percentage'])
-
-    plt.xscale('log')
-    plt.xlabel('Mean engagement per post\n(in log scale)')
-    plt.yticks(ticks=[0, 5, 10, 15, 20], labels=['', '', '', '', ''])
-
-    coef = np.corrcoef(list(reduced_periods_percentage['reduced_periods_percentage'].values), 
-                list(reduced_periods_percentage['mean_popularity'].values))[0, 1]
-    plt.text(90, 1.5, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.subplot(133)
-    plt.scatter(reduced_periods_percentage['link_number'], reduced_periods_percentage['reduced_periods_percentage'])
-
-    plt.xscale('log')
-    plt.xticks(ticks=[20, 30, 40, 60, 100], labels=['20', '30', '40', '60', '100'])
-    plt.xlabel('Number of shared misinformation links\n(in log scale)')
-    plt.yticks(ticks=[0, 5, 10, 15, 20], labels=['', '', '', '', ''])
-
-    coef = np.corrcoef(list(reduced_periods_percentage['reduced_periods_percentage'].values), 
-                list(reduced_periods_percentage['link_number'].values))[0, 1]
-    plt.text(80, 1.5, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.tight_layout()
-    save_figure('figure_5')
-
-
 if __name__ == "__main__":
 
     DATE = "2020-08-27"
@@ -691,12 +606,11 @@ if __name__ == "__main__":
 
     post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
     evolution_percentage, reduced_periods_percentage = compute_main_metrics_and_their_predictors(posts_fake_df, post_url_df)
-    save_figure_3(evolution_percentage)
+    print_correlation_coefficients(evolution_percentage, 'percentage_evolution')
+    print_correlation_coefficients(reduced_periods_percentage, 'reduced_periods_percentage')
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
     post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)    
-    save_figure_4(posts_fake_df, post_url_df, url_df)
-
-    save_figure_5(reduced_periods_percentage)
+    save_figure_3(posts_fake_df, post_url_df, url_df)
 
     # plot_the_groups_one_by_one(posts_fake_df, post_url_df, url_df)
