@@ -28,28 +28,6 @@ def keep_only_one_year_data(df):
     return df
 
 
-def clean_comparison_data(before_date, after_date):
-
-    df_before = list()
-    df_before.append(import_data(folder="comparison_data", file_name="fake_posts_climate_" + before_date + ".csv"))
-    df_before.append(import_data(folder="comparison_data", file_name="fake_posts_health_" + before_date + ".csv"))
-    df_before.append(import_data(folder="comparison_data", file_name="fake_posts_COVID-19_" + before_date + ".csv"))
-    df_before = pd.concat(df_before)
-
-    df_before = keep_only_one_year_data(df_before)
-
-    url_df = import_data(folder="comparison_data", file_name="Appearances-Grid view " + before_date + ".csv")
-    url_df = keep_only_the_urls_considered_fake_by_facebook(url_df)
-    url_df = clean_url_format(url_df)
-
-    df_before = df_before[df_before['url'].isin(url_df.url_cleaned.unique().tolist())]
-
-    df_after = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + after_date + "_.csv")
-    df_after = keep_only_one_year_data(df_after)
-
-    return df_before, df_after
-
-
 def filter_accounts_sharing_less_than_x_fake_news(df, x):
     value_count = df.drop_duplicates(subset=['account_id', 'url'], keep='first')['account_id'].value_counts()
     df_filtered = df[df['account_id'].isin(value_count[value_count >= x].index)]
@@ -147,7 +125,7 @@ def print_table_2(df_before, df_after):
         [['account_name', 'account_subscriber_count']].drop_duplicates()[['account_subscriber_count']].values)))
 
 
-def clean_crowdtangle_url_data(post_url_df, url_df):
+def clean_crowdtangle_url_data(post_url_df):
 
     post_url_df = post_url_df[post_url_df["platform"] == "Facebook"]
     post_url_df = post_url_df.dropna(subset=['account_id', 'url'])
@@ -156,8 +134,6 @@ def clean_crowdtangle_url_data(post_url_df, url_df):
     post_url_df = post_url_df.drop_duplicates(subset=['account_id', 'url'], keep='first')
 
     post_url_df = post_url_df[['url', 'account_id', 'account_name', 'account_subscriber_count', 'date']]
-
-    post_url_df = post_url_df.merge(url_df[['url', 'scientific_topic']], on='url', how='left')
 
     return post_url_df
 
@@ -390,8 +366,8 @@ def compute_fake_news_dates(post_url_df, url_df, account_id):
         # We consider the date of the fact-check:
         potential_dates.append(url_df[url_df['url']==url]["Date of publication"].values[0])
 
-        potential_dates = [datetime.datetime.strptime(date, '%Y-%m-%d') for date in potential_dates]
-        date_to_plot = np.datetime64(np.max(potential_dates))
+        potential_dates = [np.datetime64(date) for date in potential_dates]
+        date_to_plot = np.max(potential_dates)
         fake_news_dates.append(date_to_plot)
         
     fake_news_dates = [date for date in fake_news_dates if date >= np.datetime64('2019-09-01')]
@@ -457,48 +433,47 @@ def merge_overlapping_periods(overlapping_periods):
         return merged_periods
 
 
-def compute_drastic_change_dates(df):
-    
-    df['metrics'] = df['reaction'] + df['comment']
-    df['date'] = df['date'] - pd.to_timedelta(4, unit='d')
-    df_temp = df[['date', 'metrics']].resample('W-Mon', on='date').mean().reset_index()
-
-    decreasing_dates = []
-    increasing_dates = []
-
-    for index in df_temp.index[3:]:
-        before_serie = df_temp[(index-3):(index-1)]['metrics'].values
-        after_serie = df_temp[index:index+2]['metrics'].values
-
-        if np.max(after_serie) < np.min(before_serie)/2:
-            decreasing_dates.append(df_temp.iloc[index]['date'])
-        elif np.max(before_serie) < np.min(after_serie)/2:
-            increasing_dates.append(df_temp.iloc[index]['date'])
-            
-    return decreasing_dates, increasing_dates
-
-
-# example:
+# FORMER WAY OF COMPUTING THE REDUCED PERIODS:
 # posts_df_group = posts_df[posts_df["account_id"] == account_id]
 # decreasing_dates, increasing_dates = compute_drastic_change_dates(posts_df_group)
 # reduced_periods = compute_periods_from_date_lists(decreasing_dates, increasing_dates, DATE)
 # reduced_periods = merge_overlapping_periods(reduced_periods)
 
-
-def compute_periods_from_date_lists(decreasing_dates, increasing_dates, DATE):
+# def compute_drastic_change_dates(df):
     
-    reduced_periods = []
-    for each_decreasing_date in decreasing_dates:
-        
-        next_increasing_date = [date for date in increasing_dates if date > each_decreasing_date]
-        if len(next_increasing_date) > 0:
-            next_increasing_date = np.min(next_increasing_date)
-        else:
-            next_increasing_date = np.datetime64(DATE)
+#     df['metrics'] = df['reaction'] + df['comment']
+#     df['date'] = df['date'] - pd.to_timedelta(4, unit='d')
+#     df_temp = df[['date', 'metrics']].resample('W-Mon', on='date').mean().reset_index()
+
+#     decreasing_dates = []
+#     increasing_dates = []
+
+#     for index in df_temp.index[3:]:
+#         before_serie = df_temp[(index-3):(index-1)]['metrics'].values
+#         after_serie = df_temp[index:index+2]['metrics'].values
+
+#         if np.max(after_serie) < np.min(before_serie)/2:
+#             decreasing_dates.append(df_temp.iloc[index]['date'])
+#         elif np.max(before_serie) < np.min(after_serie)/2:
+#             increasing_dates.append(df_temp.iloc[index]['date'])
             
-        reduced_periods.append([each_decreasing_date, next_increasing_date])
+#     return decreasing_dates, increasing_dates
+
+
+# def compute_periods_from_date_lists(decreasing_dates, increasing_dates, DATE):
+    
+#     reduced_periods = []
+#     for each_decreasing_date in decreasing_dates:
         
-    return reduced_periods
+#         next_increasing_date = [date for date in increasing_dates if date > each_decreasing_date]
+#         if len(next_increasing_date) > 0:
+#             next_increasing_date = np.min(next_increasing_date)
+#         else:
+#             next_increasing_date = np.datetime64(DATE)
+            
+#         reduced_periods.append([each_decreasing_date, next_increasing_date])
+        
+#     return reduced_periods
 
 
 def save_figure_3(posts_df, post_url_df, url_df):
@@ -586,27 +561,29 @@ def plot_the_groups_one_by_one(posts_df, post_url_df, url_df):
 
 if __name__ == "__main__":
 
-    DATE = "2020-08-27"
-    DATE_URL_REQUEST = "2020-08-31"
+    posts_url_before = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-06-02_.csv")
+    posts_url_before = keep_only_one_year_data(posts_url_before)
+    posts_url_before = clean_crowdtangle_url_data(posts_url_before)
+    
+    posts_url_after  = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
+    posts_url_after  = keep_only_one_year_data(posts_url_after)
+    posts_url_after = clean_crowdtangle_url_data(posts_url_after)
 
-    df_before, df_after = clean_comparison_data(before_date="02_06_2020", after_date="2020-08-31")
-    print_table_1(df_before, df_after)
-    print_table_2(df_before, df_after)
+    print_table_1(posts_url_before, posts_url_after)
+    print_table_2(posts_url_before, posts_url_after)
 
-    posts_fake_df = clean_crowdtangle_group_data("fake_news")
-    save_figure_1(posts_fake_df)
-    print_figure_1_statistics(posts_fake_df)
+    posts_fake = clean_crowdtangle_group_data("fake_news")
+    save_figure_1(posts_fake)
+    print_figure_1_statistics(posts_fake)
 
-    posts_main_df = clean_crowdtangle_group_data("main_news")
-    save_figure_2(posts_main_df)
+    posts_main = clean_crowdtangle_group_data("main_news")
+    save_figure_2(posts_main)
 
-    post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
-    evolution_percentage, reduced_periods_percentage = compute_main_metrics_and_their_predictors(posts_fake_df, post_url_df)
+    evolution_percentage, reduced_periods_percentage = compute_main_metrics_and_their_predictors(posts_fake, posts_url_after)
     print_correlation_coefficients(evolution_percentage, 'percentage_evolution')
     print_correlation_coefficients(reduced_periods_percentage, 'reduced_periods_percentage')
 
-    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
-    post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)    
-    save_figure_3(posts_fake_df, post_url_df, url_df)
+    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_2020-08-27_.csv")    
+    save_figure_3(posts_fake, posts_url_after, url_df)
 
-    # plot_the_groups_one_by_one(posts_fake_df, post_url_df, url_df)
+    # plot_the_groups_one_by_one(posts_fake, posts_url_after, url_df)
