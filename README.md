@@ -1,19 +1,22 @@
 # WEBCLIM
 
-[WebClim](https://medialab.sciencespo.fr/activites/webclim/) is a research project in Sciences Po's medialab. Our goal is to analyze the fake news ecosystem about climate change, and other scientific topics, on Facebook, Twitter, Youtube, and other platforms.
+[WebClim](https://medialab.sciencespo.fr/activites/webclim/) is a research project in Sciences Po's medialab. Our goal is to analyze the fake news ecosystem about climate change, and other scientific topics, on Facebook, Twitter, Youtube, and other platforms. This repo is about Facebook data collection and analysis.
 
-python src/clean_sciencefeedback_data.py
+## Set up
 
-### Set up
+All the commands described in this README were run on Ubuntu 18.04.5.
 
-This project was developed on Python 3.8.3, so you should first install Python. 
-Then run these commands in your terminal (in a virtualenv if you prefer):
+This project was developed on Python 3.8.3, so you should first install Python. Then run these commands in your terminal (in a virtualenv if you prefer):
 
 ```
 git clone https://github.com/medialab/webclim_facebook
 cd webclim_facebook
 pip install -r requirements.txt
 ```
+
+To collect data from CrowdTangle, a CrowdTangle token is needed, and you should write it in a `config.json` file similar to the `config.json.example` file (except that you should write the token value instead of "blablabla").
+
+## Collect the data
 
 ### Extract the Science Feedback dataset
 
@@ -23,22 +26,19 @@ You should export the following tables in a CSV format from the Science Feedback
 
 ### Collect the Facebook posts sharing these URLs
 
-You should get a CrowdTangle token and write it in a `config.json` file similar to the `config.json.example` file 
-(except that you should write the token value instead of "blablabla").
-
 You should first clean the Science Feedback data, and then do the CrowdTangle request. Warning: the second command will take a few hours to run!
 ```
-python src/clean_sciencefeedback_data.py 2020-08-27
-./src/collect_crowdtangle_data_by_url.sh 2020-08-27
+python code/clean_sciencefeedback_data.py 2020-08-27
+./code/collect_crowdtangle_data_by_url.sh 2020-08-27
 ```
 
 The commands can also be lauched for specific data, as only the ones related to climate, health or covid:
 ```
-python src/clean_sciencefeedback_data.py 2020-06-29 covid
-./src/collect_crowdtangle_data_by_url.sh 2020-06-29 covid
+python code/clean_sciencefeedback_data.py 2020-06-29 covid
+./code/collect_crowdtangle_data_by_url.sh 2020-06-29 covid
 ```
 
-### Collect all the Facebook posts of the groups sharing these URLs
+### Collect all the Facebook posts of a set of group
 
 You should first have the list of the Facebook groups you want to collect. To see this list, you can write in a Jupyter Notebook:
 
@@ -50,38 +50,51 @@ posts_df = pd.read_csv("./data_crowdtangle_url/posts_url_2020-06-29.csv")
 posts_df["account_url"].value_counts()
 ```
 
-We prefer to display the Facebook groups' URL because it is easier to search the groups using their URL on the CrowdTangle interface. We need to manually add the groups you want to collect via their URLs on the Crowdtangle interface in a list.
+You can now select the Facebook accounts sharing more than X fake news, and manually add the accounts you want to collect via their URLs on the Crowdtangle interface in a list (the list is different for groups and pages).
 
-Then we can know what is the list number with the command:
+Then you will need the list ids to run the collect. All the list ids tied to a CrowdTangle account can be printed with:
 
 ```
 token_crowdtangle=$(jq -r '.token_crowdtangle' config.json)
 minet ct lists --token $token_crowdtangle
 ```
 
-You can now use this command with the CrowdTangle list id of interest, using today's date to specify the date of the request:
+To collect the data you need to add the corresponding list id to the following command:
 
 ```
-./src/collect_crowdtangle_data_by_group.sh 1439679 2020-09-01
+./code/collect_crowdtangle_data_by_group.sh <insert-list-id-here>
 ```
 
-You can then clean the data, and give it a more meaningful name with:
+The output file's name will contain today's date. It can be cleaned and renamed with the following command:
 ```
-python src/clean_crowdtangle_group_data.py 2020-09-01 fake_group
-```
-
-### Create the article's figures and tables
-
-You just need to precise the DATE of the Science Feedback data extraction, so you can run:
-```
-python src/create_paper_figures_and_tables.py 2020-08-27
+python code/clean_crowdtangle_group_data.py 2020-09-01 fake_news_group
 ```
 
-It will create one PNG file for each figure in the `figure` folder and one CSV file for each table in the `table` folder.
+## Analyse the data
 
-### Plot the temporal evolution
+To create the tables and the figures shown in the article, you should run:
 
-We can now plot the average popularity and number of posts for all the collected groups with the command:
 ```
-python ./src/plot_mean_popularity.py 2020-07-31
+python code/create_paper_tables_and_figures.py
+```
+
+The content of the tables will be printed in the console, and the figures saved as PNG in the `figure` folder.
+
+
+## Generate a draft
+
+First you should install Latex with:
+
+```
+sudo apt-get install texlive-full
+```
+
+To generate the PDF used to submit to the Web Conference 2021, you should run:
+
+```
+cd article/
+pdflatex webclim-facebook
+bibtex webclim-facebook
+pdflatex webclim-facebook
+pdflatex webclim-facebook
 ```
