@@ -7,7 +7,8 @@ import ural
 
 def import_data(DATE):
 
-    url_path = os.path.join(".", "data_sciencefeedback", "Appearances-Grid view " + DATE + ".csv")
+    url_path = os.path.join(".", "data", "data_sciencefeedback", 
+                            "Appearances-Grid view " + DATE + ".csv")
     url_df = pd.read_csv(url_path)
 
     return url_df
@@ -47,7 +48,8 @@ def clean_url_format(url_df):
 
 def add_info_from_fact_check_table(url_df):
 
-    fact_check_path = os.path.join(".", "data_sciencefeedback", "Reviews _ Fact-checks-Grid view " + DATE + ".csv")
+    fact_check_path = os.path.join(".", "data", "data_sciencefeedback", 
+                                   "Reviews _ Fact-checks-Grid view " + DATE + ".csv")
     fact_check_df = pd.read_csv(fact_check_path)
 
     fact_check_df['scientific_topic'] = fact_check_df['Review url'].str.extract('https://([^/]+)feedback.org')
@@ -64,6 +66,7 @@ def add_info_from_fact_check_table(url_df):
 
     return url_df
 
+
 def keep_only_topic_data(url_df, TOPIC):
     if TOPIC in ["climate", "health", "covid"]:
         return url_df[url_df["scientific_topic"] == TOPIC]
@@ -75,7 +78,7 @@ def save_data(url_df, DATE, TOPIC):
 
     url_df = url_df[['url', 'url_cleaned', 'domain_name', 'Item reviewed', 'Date of publication', 'scientific_topic']]
 
-    clean_url_path = os.path.join(".", "data_sciencefeedback", "appearances_" + DATE + "_" + TOPIC + ".csv")
+    clean_url_path = os.path.join(".", "data", "data_sciencefeedback", "appearances_" + DATE + "_" + TOPIC + ".csv")
     url_df.to_csv(clean_url_path, index=False)
 
     print("The '{}' file with {} fake news url has been saved in the '{}' folder."\

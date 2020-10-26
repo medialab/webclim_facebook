@@ -21,14 +21,14 @@ pd.set_option('display.max_rows', None)
 
 
 def import_data(folder, file_name):
-    data_path = os.path.join(".", folder, file_name)
+    data_path = os.path.join(".", 'data', folder, file_name)
     df = pd.read_csv(data_path)
     return df
 
 
 def save_figure(figure_name, how='matplotlib', A=None, **kwargs):
 
-    figure_path = os.path.join('.', 'figure_methodo', figure_name + '.png')
+    figure_path = os.path.join('.', 'figure', 'figure_methodo', figure_name + '.png')
     if how == 'matplotlib':
         plt.savefig(figure_path, **kwargs)
     elif how == 'graphviz':
@@ -41,7 +41,7 @@ def save_figure(figure_name, how='matplotlib', A=None, **kwargs):
 
 def save_table(df, table_name):
 
-    table_path = os.path.join('.', 'figure_methodo', table_name + '.csv')
+    table_path = os.path.join('.', 'figure', 'figure_methodo', table_name + '.csv')
     df.to_csv(table_path, index=False, header=True)
 
     print('\n\n' + table_name.upper())
