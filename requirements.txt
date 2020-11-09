@@ -2,7 +2,7 @@ fa2==0.3.5
 jupyter==1.0.0
 matplotlib==3.2.2
 matplotlib_venn==0.11.5
-minet==0.31.1
+minet==0.33.0
 networkx==2.5
 numpy==1.19.0
 pandas==1.0.5
