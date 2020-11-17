@@ -430,49 +430,6 @@ def merge_overlapping_periods(overlapping_periods):
         return merged_periods
 
 
-# FORMER WAY OF COMPUTING THE REDUCED PERIODS:
-# posts_df_group = posts_df[posts_df["account_id"] == account_id]
-# decreasing_dates, increasing_dates = compute_drastic_change_dates(posts_df_group)
-# reduced_periods = compute_periods_from_date_lists(decreasing_dates, increasing_dates, DATE)
-# reduced_periods = merge_overlapping_periods(reduced_periods)
-
-# def compute_drastic_change_dates(df):
-    
-#     df['metrics'] = df['reaction'] + df['comment']
-#     df['date'] = df['date'] - pd.to_timedelta(4, unit='d')
-#     df_temp = df[['date', 'metrics']].resample('W-Mon', on='date').mean().reset_index()
-
-#     decreasing_dates = []
-#     increasing_dates = []
-
-#     for index in df_temp.index[3:]:
-#         before_serie = df_temp[(index-3):(index-1)]['metrics'].values
-#         after_serie = df_temp[index:index+2]['metrics'].values
-
-#         if np.max(after_serie) < np.min(before_serie)/2:
-#             decreasing_dates.append(df_temp.iloc[index]['date'])
-#         elif np.max(before_serie) < np.min(after_serie)/2:
-#             increasing_dates.append(df_temp.iloc[index]['date'])
-            
-#     return decreasing_dates, increasing_dates
-
-
-# def compute_periods_from_date_lists(decreasing_dates, increasing_dates, DATE):
-    
-#     reduced_periods = []
-#     for each_decreasing_date in decreasing_dates:
-        
-#         next_increasing_date = [date for date in increasing_dates if date > each_decreasing_date]
-#         if len(next_increasing_date) > 0:
-#             next_increasing_date = np.min(next_increasing_date)
-#         else:
-#             next_increasing_date = np.datetime64(DATE)
-            
-#         reduced_periods.append([each_decreasing_date, next_increasing_date])
-        
-#     return reduced_periods
-
-
 def save_figure_3(posts_df, post_url_df, url_df):
 
     accounts_to_plot = [
