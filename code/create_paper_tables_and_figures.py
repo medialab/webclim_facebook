@@ -276,9 +276,6 @@ def compute_main_metrics_and_their_predictors(posts_fake_df, post_url_df):
         .reset_index().rename(columns={"index": "account_id"})
 
     evolution_percentage = pd.Series([])
-    reduced_periods_percentage = pd.Series([])
-    total_days = (np.datetime64('2020-06-09') - np.datetime64('2019-09-01'))/ np.timedelta64(1, 'D')
-
     for account_id in posts_fake_df['account_id'].unique():
 
         posts_group_df = posts_fake_df[posts_fake_df['account_id']==account_id]
@@ -286,32 +283,64 @@ def compute_main_metrics_and_their_predictors(posts_fake_df, post_url_df):
         if len(posts_group_df[posts_group_df['date']=='2020-06-08']) > 9 and len(posts_group_df[posts_group_df['date']=='2020-06-10']) > 9:
             percentage = (serie.loc['2020-06-10'] - serie.loc['2020-06-08']) * 100 / serie.loc['2020-06-08']
             evolution_percentage = evolution_percentage.append(pd.Series([percentage], index=[account_id]))
-        
-        reduced_periods = compute_reduced_periods(posts_fake_df, account_id)
-        reduced_periods = merge_overlapping_periods(reduced_periods)
-        reduced_period_length = 0
-        for period in reduced_periods:
-            if period[1] < np.datetime64('2020-06-09'):
-                reduced_period_length += (period[1] - period[0]).days
-            elif period[0] < np.datetime64('2020-06-09'):
-                reduced_period_length += (np.datetime64('2020-06-09') - period[0]).days
-        reduced_periods_percentage = reduced_periods_percentage.append(pd.Series([reduced_period_length*100/total_days], 
-                                                                                 index=[account_id]))
 
     evolution_percentage = evolution_percentage.to_frame(name="percentage_evolution")\
-        .reset_index().rename(columns={"index": "account_id"})
-    reduced_periods_percentage = reduced_periods_percentage.to_frame(name="reduced_periods_percentage")\
         .reset_index().rename(columns={"index": "account_id"})
 
     evolution_percentage = evolution_percentage.merge(link_number, how='left', on='account_id').fillna(0)
     evolution_percentage = evolution_percentage.merge(follower_number, how='left', on='account_id')
     evolution_percentage = evolution_percentage.merge(popularity, how='left', on='account_id')
 
-    reduced_periods_percentage = reduced_periods_percentage.merge(link_number, how='left', on='account_id').fillna(0)
-    reduced_periods_percentage = reduced_periods_percentage.merge(follower_number, how='left', on='account_id')
-    reduced_periods_percentage = reduced_periods_percentage.merge(popularity, how='left', on='account_id')
+    return evolution_percentage
 
-    return evolution_percentage, reduced_periods_percentage
+
+def save_supplementary_figure_1(evolution_percentage):
+
+    plt.figure(figsize=(12, 4))
+
+    plt.subplot(131)
+    plt.scatter(evolution_percentage['account_subscriber_count'], evolution_percentage['percentage_evolution'])
+
+    plt.xscale('log')
+    plt.gca().invert_yaxis()
+    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['+150%', '+100%', '+50%', '0%', '-50%', '-100%'])
+
+    plt.xlabel('Number of followers\n(in log scale)')
+    plt.ylabel("Evolution rate of each account's engagement\n between June 8 and 10, 2020")
+
+    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
+                list(evolution_percentage['account_subscriber_count'].values))[0, 1]
+    plt.text(80000, 150, 'r = ' + str(np.around(coef, decimals=2)))
+
+    plt.subplot(132)
+    plt.scatter(evolution_percentage['mean_popularity'], evolution_percentage['percentage_evolution'])
+
+    plt.gca().invert_yaxis()
+    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['', '', '', '', '', ''])
+
+    plt.xscale('log')
+    plt.xlabel('Mean engagement per post\n(in log scale)')
+
+    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
+                list(evolution_percentage['mean_popularity'].values))[0, 1]
+    plt.text(90, 150, 'r = ' + str(np.around(coef, decimals=2)))
+
+    plt.subplot(133)
+    plt.scatter(evolution_percentage['link_number'], evolution_percentage['percentage_evolution'])
+
+    plt.gca().invert_yaxis()
+    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['', '', '', '', '', ''])
+
+    plt.xscale('log')
+    plt.xticks(ticks=[20, 30, 40, 60, 100], labels=['20', '30', '40', '60', '100'])
+    plt.xlabel('Number of shared misinformation links\n(in log scale)')
+
+    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
+                list(evolution_percentage['link_number'].values))[0, 1]
+    plt.text(70, 150, 'r = ' + str(np.around(coef, decimals=2)))
+
+    plt.tight_layout()
+    save_figure('supplementary_figure_1')
 
 
 def print_correlation_coefficients(df, column_to_predict):
@@ -322,8 +351,7 @@ def print_correlation_coefficients(df, column_to_predict):
         print("The correlation coefficient with {} is {}.".format(predictor, np.around(coef, decimals=2)))
 
 
-def plot_one_group(posts_df, account_id, plot_special_date, 
-                   fake_news_dates, repeat_offender_periods):
+def plot_one_group(posts_df, account_id, plot_special_date, fake_news_dates):
     
     posts_df_group = posts_df[posts_df["account_id"] == account_id]
     
@@ -340,9 +368,6 @@ def plot_one_group(posts_df, account_id, plot_special_date,
 
     for date in fake_news_dates:
         plt.arrow(x=date, y=0, dx=0, dy=-scale_y, color='C3')
-    
-    for period in repeat_offender_periods:
-        plt.axvspan(period[0], period[1], ymin=0, ymax=1/11, facecolor='C3', alpha=0.2)
 
     plt.hlines(0, xmin=np.datetime64('2019-08-28'), xmax=np.datetime64('2020-09-04'), linewidths=1)
     plt.ylim(bottom=-scale_y)
@@ -389,28 +414,6 @@ def compute_repeat_offender_periods(fake_news_dates):
     return repeat_offender_periods
 
 
-def compute_reduced_periods(posts_df, account_id):
-
-    posts_df_group = posts_df[posts_df["account_id"] == account_id]
-    posts_df_group = posts_df_group.sort_values(by=['date'])
-    posts_df_group['metrics'] = posts_df_group['reaction'] + posts_df_group['comment']
-    
-    time_series = posts_df_group.groupby(by=["date"])["metrics"].mean()
-    global_mean = np.mean(time_series[time_series.index < np.datetime64("2020-06-09")].values)
-    global_std = np.std(time_series[time_series.index < np.datetime64("2020-06-09")].values)
-    zscores = (time_series - global_mean)/global_std
-    
-    reduced_periods = []
-    for index in range(len(time_series.index) - 14):
-        sample_zscores = zscores[index:index + 14]
-        if (np.sum(sample_zscores) < - 14) & (np.mean(time_series[index:index + 14]) < global_mean/1.5):
-            if len(sample_zscores[sample_zscores<-1]) > 1:
-                reduced_periods.append([sample_zscores[sample_zscores<-1].index[0], 
-                                        sample_zscores[sample_zscores<-1].index[-1]])
-
-    return reduced_periods
-
-
 def merge_overlapping_periods(overlapping_periods):
     
     if len(overlapping_periods) == 0:
@@ -433,15 +436,8 @@ def merge_overlapping_periods(overlapping_periods):
 def save_figure_3(posts_df, post_url_df, url_df):
 
     accounts_to_plot = [
-        'Chemtrails Global Skywatch',
         'Conspiracy Theory & Alternative News',
-        'Q The Greatest Story Ever Told',
         'Women SCOUTS for TRUMP (c)',
-        'The Rush Limbaugh Facebook Group',
-        'THRIVE MOVEMENT',
-        'Drain The Swamp',
-        'The Shift - Being the Change',
-        'Australian Climate Sceptics Group',
         'S5GG - STOP 5G Global'
     ]
 
@@ -450,22 +446,17 @@ def save_figure_3(posts_df, post_url_df, url_df):
     for group_index in range(len(accounts_to_plot)):
         account_id = posts_df[posts_df['account_name']==accounts_to_plot[group_index]].account_id.unique()[0]
 
-        ax = plt.subplot(len(accounts_to_plot)/2, 2, group_index + 1)
+        ax = plt.subplot(5, 2, group_index + 1)
 
         fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
+        plot_one_group(posts_df, account_id, plot_special_date=False, fake_news_dates=fake_news_dates)
 
         repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
         repeat_offender_periods = merge_overlapping_periods(repeat_offender_periods)
+        for period in repeat_offender_periods:
+            plt.axvspan(period[0], period[1], ymin=1/11, facecolor='C3', alpha=0.1)
 
-        reduced_periods = compute_reduced_periods(posts_df, account_id)
-        reduced_periods = merge_overlapping_periods(reduced_periods)
-        for period in reduced_periods:
-            plt.axvspan(period[0], period[1], ymin=1/11, facecolor='C2', alpha=0.2)
-
-        plot_one_group(posts_df, account_id, plot_special_date=False, 
-                       fake_news_dates=fake_news_dates, repeat_offender_periods=repeat_offender_periods)
-        
-        if group_index > 0: 
+        if group_index != 1: 
             ax.get_legend().set_visible(False)
 
         plt.title(accounts_to_plot[group_index])
@@ -474,7 +465,7 @@ def save_figure_3(posts_df, post_url_df, url_df):
     save_figure('figure_3')
 
 
-def plot_the_groups_one_by_one(posts_df, post_url_df, url_df):
+def save_supplementary_figure_2(posts_df, post_url_df, url_df):
 
     group_index = 0
     for account_id in posts_df['account_id'].unique():
@@ -490,120 +481,22 @@ def plot_the_groups_one_by_one(posts_df, post_url_df, url_df):
             ax = plt.subplot(5, 2, group_index % 10 + 1)
 
             fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
+            plot_one_group(posts_df, account_id, plot_special_date=False, fake_news_dates=fake_news_dates)
+            plt.title(posts_df[posts_df['account_id']==account_id].account_name.unique()[0])
 
             repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
             repeat_offender_periods = merge_overlapping_periods(repeat_offender_periods)
-
-            reduced_periods = compute_reduced_periods(posts_df, account_id)
-            reduced_periods = merge_overlapping_periods(reduced_periods)
-            for period in reduced_periods:
-                plt.axvspan(period[0], period[1], ymin=1/11, facecolor='C2', alpha=0.2)
-
-            plot_one_group(posts_df, account_id, plot_special_date=False, 
-                        fake_news_dates=fake_news_dates, repeat_offender_periods=repeat_offender_periods)
-            plt.title(posts_df[posts_df['account_id']==account_id].account_name.unique()[0])
+            for period in repeat_offender_periods:
+                plt.axvspan(period[0], period[1], ymin=1/11, facecolor='C3', alpha=0.1)
 
             if group_index % 10 != 0: 
                 ax.get_legend().set_visible(False)
 
             if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
                 plt.tight_layout()
-                save_figure('supplementary_figure_1_{}'.format(int(group_index / 10) + 1))
+                save_figure('supplementary_figure_2_{}'.format(int(group_index / 10) + 1))
             
             group_index += 1
-
-
-def save_figure_4(evolution_percentage):
-
-    plt.figure(figsize=(12, 4))
-
-    plt.subplot(131)
-    plt.scatter(evolution_percentage['account_subscriber_count'], evolution_percentage['percentage_evolution'])
-
-    plt.xscale('log')
-    plt.gca().invert_yaxis()
-    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['+150%', '+100%', '+50%', '0%', '-50%', '-100%'])
-
-    plt.xlabel('Number of followers\n(in log scale)')
-    plt.ylabel("Evolution rate of each account's engagement\n between June 8 and 10, 2020")
-
-    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
-                list(evolution_percentage['account_subscriber_count'].values))[0, 1]
-    plt.text(80000, 150, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.subplot(132)
-    plt.scatter(evolution_percentage['mean_popularity'], evolution_percentage['percentage_evolution'])
-
-    plt.gca().invert_yaxis()
-    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['', '', '', '', '', ''])
-
-    plt.xscale('log')
-    plt.xlabel('Mean engagement per post\n(in log scale)')
-
-    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
-                list(evolution_percentage['mean_popularity'].values))[0, 1]
-    plt.text(90, 150, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.subplot(133)
-    plt.scatter(evolution_percentage['link_number'], evolution_percentage['percentage_evolution'])
-
-    plt.gca().invert_yaxis()
-    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['', '', '', '', '', ''])
-
-    plt.xscale('log')
-    plt.xticks(ticks=[20, 30, 40, 60, 100], labels=['20', '30', '40', '60', '100'])
-    plt.xlabel('Number of shared misinformation links\n(in log scale)')
-
-    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
-                list(evolution_percentage['link_number'].values))[0, 1]
-    plt.text(70, 150, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.tight_layout()
-    save_figure('figure_4')
-
-
-def save_figure_5(reduced_periods_percentage):
-
-    plt.figure(figsize=(12, 4))
-
-    plt.subplot(131)
-    plt.scatter(reduced_periods_percentage['account_subscriber_count'], reduced_periods_percentage['reduced_periods_percentage'])
-
-    plt.xscale('log')
-
-    plt.xlabel('Number of followers\n(in log scale)')
-    plt.ylabel("Percentage of the predicted reduced periods\n between September 1, 2019 and June 8, 2020")
-    plt.yticks(ticks=[0, 5, 10, 15, 20], labels=['0%', '5%', '10%', '15%', '20%'])
-
-    coef = np.corrcoef(list(reduced_periods_percentage['reduced_periods_percentage'].values), 
-                list(reduced_periods_percentage['account_subscriber_count'].values))[0, 1]
-    plt.text(80000, 1.5, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.subplot(132)
-    plt.scatter(reduced_periods_percentage['mean_popularity'], reduced_periods_percentage['reduced_periods_percentage'])
-
-    plt.xscale('log')
-    plt.xlabel('Mean engagement per post\n(in log scale)')
-    plt.yticks(ticks=[0, 5, 10, 15, 20], labels=['', '', '', '', ''])
-
-    coef = np.corrcoef(list(reduced_periods_percentage['reduced_periods_percentage'].values), 
-                list(reduced_periods_percentage['mean_popularity'].values))[0, 1]
-    plt.text(90, 1.5, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.subplot(133)
-    plt.scatter(reduced_periods_percentage['link_number'], reduced_periods_percentage['reduced_periods_percentage'])
-
-    plt.xscale('log')
-    plt.xticks(ticks=[20, 30, 40, 60, 100], labels=['20', '30', '40', '60', '100'])
-    plt.xlabel('Number of shared misinformation links\n(in log scale)')
-    plt.yticks(ticks=[0, 5, 10, 15, 20], labels=['', '', '', '', ''])
-
-    coef = np.corrcoef(list(reduced_periods_percentage['reduced_periods_percentage'].values), 
-                list(reduced_periods_percentage['link_number'].values))[0, 1]
-    plt.text(70, 1.5, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.tight_layout()
-    save_figure('figure_5')
 
 
 if __name__ == "__main__":
@@ -626,13 +519,12 @@ if __name__ == "__main__":
     posts_main = clean_crowdtangle_group_data("main_news")
     save_figure_2(posts_main)
 
-    evolution_percentage, reduced_periods_percentage = compute_main_metrics_and_their_predictors(posts_fake, posts_url_after)
-    # save_figure_4(evolution_percentage)
-    # save_figure_5(reduced_periods_percentage)
+    evolution_percentage = compute_main_metrics_and_their_predictors(posts_fake, posts_url_after)
+    # save_supplementary_figure_1(evolution_percentage)
     print_correlation_coefficients(evolution_percentage, 'percentage_evolution')
-    print_correlation_coefficients(reduced_periods_percentage, 'reduced_periods_percentage')
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_2020-08-27_.csv")    
     save_figure_3(posts_fake, posts_url_after, url_df)
 
-    # plot_the_groups_one_by_one(posts_fake, posts_url_after, url_df)
+    ## Plot all the groups with more than 250 datapoints
+    # save_supplementary_figure_2(posts_fake, posts_url_after, url_df)
