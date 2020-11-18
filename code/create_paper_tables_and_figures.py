@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import matplotlib.patches as mpatches
 
 
 warnings.filterwarnings("ignore")
@@ -164,60 +165,59 @@ def save_figure(figure_name):
         .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
 
 
-def details_temporal_evolution(posts_df, plot_special_date):
+def details_temporal_evolution(posts_df, ax):
 
-    if plot_special_date:
-        plt.axvline(x=np.datetime64("2020-06-09"), color='black', linestyle='--', linewidth=1)
+    plt.axvline(x=np.datetime64("2020-06-09"), color='black', linestyle='--', linewidth=1)
 
     plt.legend()
 
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
     plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2))
 
+    plt.locator_params(axis='y', nbins=4)
+
     plt.xlim(
         np.datetime64(datetime.datetime.strptime('2019-09-01', '%Y-%m-%d') - datetime.timedelta(days=4)), 
         np.datetime64(datetime.datetime.strptime('2020-08-31', '%Y-%m-%d') + datetime.timedelta(days=4))
     )
+    plt.ylim(bottom=0)
+
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.grid(axis="y")
+
 
 def plot_all_groups(posts_df, title_detail):
 
     plt.figure(figsize=(8, 10))
 
-    plt.subplot(311)
+    ax = plt.subplot(311)
     plt.title("Evolution of Facebook interaction metrics averaged for {} '".format(posts_df["account_id"].nunique()) + title_detail + "' accounts")
     plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df["date"].value_counts().sort_index(), 
-            label="Mean number of reactions per post")
-
-    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df["date"].value_counts().sort_index(), 
-            label="Mean number of comments per post")
-
+            label="Reactions per post")
     plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df["date"].value_counts().sort_index(), 
-            label="Mean number of shares per post")
+            label="Shares per post")
+    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df["date"].value_counts().sort_index(), 
+            label="Comments per post")
+    details_temporal_evolution(posts_df, ax)
 
-    details_temporal_evolution(posts_df, plot_special_date=True)
-    plt.ylim(bottom=0)
-
-    plt.subplot(312)
+    ax = plt.subplot(312)
 
     plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-        label="Mean number of posts per day", color="grey")
+        label="Posts per day", color=[.2, .2, .2])
 
-    details_temporal_evolution(posts_df, plot_special_date=True)
-    plt.ylim(bottom=0)
+    details_temporal_evolution(posts_df, ax)
 
-    plt.subplot(313)
+    ax = plt.subplot(313)
 
     plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Mean number of reactions per day")
-
-    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Mean number of comments per day")
-
+            label="Reactions per day")
     plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Mean number of shares per day")
-
-    details_temporal_evolution(posts_df, plot_special_date=True)
-    plt.ylim(bottom=0)
+            label="Shares per day")
+    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Comments per day")
+    details_temporal_evolution(posts_df, ax)
 
     plt.tight_layout()
 
@@ -351,20 +351,32 @@ def print_correlation_coefficients(df, column_to_predict):
         print("The correlation coefficient with {} is {}.".format(predictor, np.around(coef, decimals=2)))
 
 
-def plot_one_group(posts_df, account_id, plot_special_date, fake_news_dates):
+def rolling_average_per_day(df, column):
+    return df.groupby(by=["date"])[column].mean()
+
+
+def plot_one_group(posts_df, account_id, fake_news_dates):
     
     posts_df_group = posts_df[posts_df["account_id"] == account_id]
     
-    plt.plot(posts_df_group.groupby(by=["date"])["reaction"].mean(), 
-            label="Mean number of reactions per post")
+    plt.plot(rolling_average_per_day(posts_df_group, 'reaction'), 
+            label="Reactions per post", color="C0")
 
-    plt.plot(posts_df_group.groupby(by=["date"])["comment"].mean(), 
-            label="Mean number of comments per post")
-    
-    details_temporal_evolution(posts_df, plot_special_date)
+    plt.plot(rolling_average_per_day(posts_df_group, 'comment'), 
+            label="Comments per post", color="C2")
 
-    scale_y = np.max([np.max(posts_df_group.groupby(by=["date"])["reaction"].mean()),
-                     np.max(posts_df_group.groupby(by=["date"])["comment"].mean())])/10
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=3))
+
+    plt.locator_params(axis='y', nbins=4)
+
+    plt.xlim(
+        np.datetime64(datetime.datetime.strptime('2019-09-01', '%Y-%m-%d') - datetime.timedelta(days=4)), 
+        np.datetime64(datetime.datetime.strptime('2020-08-31', '%Y-%m-%d') + datetime.timedelta(days=4))
+    )
+
+    scale_y = np.nanmax([rolling_average_per_day(posts_df_group, 'reaction'),
+                        rolling_average_per_day(posts_df_group, 'comment')])/10
 
     for date in fake_news_dates:
         plt.arrow(x=date, y=0, dx=0, dy=-scale_y, color='C3')
@@ -436,30 +448,54 @@ def merge_overlapping_periods(overlapping_periods):
 def save_figure_3(posts_df, post_url_df, url_df):
 
     accounts_to_plot = [
-        'Conspiracy Theory & Alternative News',
+        'Exposing The New World Order',
+        'Truth Revolution',
         'Women SCOUTS for TRUMP (c)',
-        'S5GG - STOP 5G Global'
+        'Climate Change Battle Royale',
+        'Conspiracy Theory & Alternative News',
+        'S5GG - STOP 5G Global',
+        'Pharmaceuticals Exposed',
+        'Stop GeoEngineering, Chemtrails, Bio-hacking CRISPR, WeDoNotConsent'
     ]
 
-    plt.figure(figsize=(12, 13))
+    plt.figure(figsize=(12, 10))
 
     for group_index in range(len(accounts_to_plot)):
         account_id = posts_df[posts_df['account_name']==accounts_to_plot[group_index]].account_id.unique()[0]
 
-        ax = plt.subplot(5, 2, group_index + 1)
+        ax = plt.subplot(4, 2, group_index + 1)
 
         fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
-        plot_one_group(posts_df, account_id, plot_special_date=False, fake_news_dates=fake_news_dates)
+        plot_one_group(posts_df, account_id, fake_news_dates=fake_news_dates)
 
         repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
         repeat_offender_periods = merge_overlapping_periods(repeat_offender_periods)
         for period in repeat_offender_periods:
             plt.axvspan(period[0], period[1], ymin=1/11, facecolor='C3', alpha=0.1)
 
-        if group_index != 1: 
-            ax.get_legend().set_visible(False)
+        if group_index == 1: 
+            plt.legend(framealpha=1)
+
+        if group_index == 0:
+            plt.text(
+                s='Known strikes', color='C3',
+                x=np.datetime64('2020-02-15'), horizontalalignment='left', 
+                y=-1, verticalalignment='top'
+            )
+            patch1 = mpatches.Patch(facecolor='pink', alpha=0.4, edgecolor='k')
+            patch2 = mpatches.Patch(facecolor='white', alpha=0.4, edgecolor='k')
+            plt.legend([patch1, patch2], ["'Repeat offender' period", "'Free' period"],
+                       loc='upper left', framealpha=1)
+
+        if accounts_to_plot[group_index] == 'Truth Revolution':
+            plt.ylim([-5, 50])
 
         plt.title(accounts_to_plot[group_index])
+        ax.spines['right'].set_visible(False)
+        ax.spines['left'].set_visible(False)
+        ax.spines['top'].set_visible(False)
+        ax.spines['bottom'].set_visible(False)
+        ax.grid(axis="y")
 
     plt.tight_layout()
     save_figure('figure_3')
@@ -481,7 +517,7 @@ def save_supplementary_figure_2(posts_df, post_url_df, url_df):
             ax = plt.subplot(5, 2, group_index % 10 + 1)
 
             fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
-            plot_one_group(posts_df, account_id, plot_special_date=False, fake_news_dates=fake_news_dates)
+            plot_one_group(posts_df, account_id, fake_news_dates=fake_news_dates)
             plt.title(posts_df[posts_df['account_id']==account_id].account_name.unique()[0])
 
             repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
@@ -501,27 +537,27 @@ def save_supplementary_figure_2(posts_df, post_url_df, url_df):
 
 if __name__ == "__main__":
 
-    posts_url_before = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-06-02_.csv")
-    posts_url_before = keep_only_one_year_data(posts_url_before)
-    posts_url_before = clean_crowdtangle_url_data(posts_url_before)
+    # posts_url_before = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-06-02_.csv")
+    # posts_url_before = keep_only_one_year_data(posts_url_before)
+    # posts_url_before = clean_crowdtangle_url_data(posts_url_before)
     
     posts_url_after  = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
     posts_url_after  = keep_only_one_year_data(posts_url_after)
     posts_url_after = clean_crowdtangle_url_data(posts_url_after)
 
-    print_table_1(posts_url_before, posts_url_after)
-    print_table_2(posts_url_before, posts_url_after)
+    # print_table_1(posts_url_before, posts_url_after)
+    # print_table_2(posts_url_before, posts_url_after)
 
     posts_fake = clean_crowdtangle_group_data("fake_news")
     save_figure_1(posts_fake)
-    print_figure_1_statistics(posts_fake)
+    # print_figure_1_statistics(posts_fake)
 
     posts_main = clean_crowdtangle_group_data("main_news")
     save_figure_2(posts_main)
 
-    evolution_percentage = compute_main_metrics_and_their_predictors(posts_fake, posts_url_after)
+    # evolution_percentage = compute_main_metrics_and_their_predictors(posts_fake, posts_url_after)
     # save_supplementary_figure_1(evolution_percentage)
-    print_correlation_coefficients(evolution_percentage, 'percentage_evolution')
+    # print_correlation_coefficients(evolution_percentage, 'percentage_evolution')
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_2020-08-27_.csv")    
     save_figure_3(posts_fake, posts_url_after, url_df)
