@@ -503,6 +503,7 @@ def save_figure_3(posts_df, post_url_df, url_df):
 
 
 def keep_repeat_offender_posts(posts_df, account_id, repeat_offender_periods):
+
     posts_df_group = posts_df[posts_df['account_id']==account_id]
     
     if len(repeat_offender_periods) == 0:
@@ -522,6 +523,7 @@ def keep_repeat_offender_posts(posts_df, account_id, repeat_offender_periods):
 
 
 def keep_free_posts(posts_df, account_id, repeat_offender_periods):
+    
     posts_df_group = posts_df[posts_df['account_id']==account_id]
     
     if len(repeat_offender_periods) == 0:
@@ -563,7 +565,12 @@ def save_figure_4(posts_df, post_url_df, url_df):
         repeat_offender_periods = merge_overlapping_periods(repeat_offender_periods)
         
         repeat_offender_df = keep_repeat_offender_posts(posts_df, account_id, repeat_offender_periods)
+        if len(repeat_offender_df) > 0:
+            repeat_offender_df = repeat_offender_df[repeat_offender_df['date'] < datetime.datetime.strptime('2020-06-09', '%Y-%m-%d')]
+
         free_df = keep_free_posts(posts_df, account_id, repeat_offender_periods)
+        if len(free_df) > 0:
+            free_df = free_df[free_df['date'] < datetime.datetime.strptime('2020-06-09', '%Y-%m-%d')]
 
         if (len(repeat_offender_df) >= 100) & (len(free_df) >= 100):
             
@@ -641,31 +648,31 @@ def save_supplementary_figure_2(posts_df, post_url_df, url_df):
 
 if __name__ == "__main__":
 
-    # posts_url_before = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-06-02_.csv")
-    # posts_url_before = keep_only_one_year_data(posts_url_before)
-    # posts_url_before = clean_crowdtangle_url_data(posts_url_before)
+    posts_url_before = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-06-02_.csv")
+    posts_url_before = keep_only_one_year_data(posts_url_before)
+    posts_url_before = clean_crowdtangle_url_data(posts_url_before)
     
     posts_url_after  = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
     posts_url_after  = keep_only_one_year_data(posts_url_after)
     posts_url_after = clean_crowdtangle_url_data(posts_url_after)
 
-    # print_table_1(posts_url_before, posts_url_after)
-    # print_table_2(posts_url_before, posts_url_after)
+    print_table_1(posts_url_before, posts_url_after)
+    print_table_2(posts_url_before, posts_url_after)
 
     posts_fake = clean_crowdtangle_group_data("fake_news")
     save_figure_1(posts_fake)
-    # print_figure_1_statistics(posts_fake)
+    print_figure_1_statistics(posts_fake)
 
     posts_main = clean_crowdtangle_group_data("main_news")
     save_figure_2(posts_main)
 
-    # evolution_percentage = compute_main_metrics_and_their_predictors(posts_fake, posts_url_after)
+    evolution_percentage = compute_main_metrics_and_their_predictors(posts_fake, posts_url_after)
     # save_supplementary_figure_1(evolution_percentage)
-    # print_correlation_coefficients(evolution_percentage, 'percentage_evolution')
+    print_correlation_coefficients(evolution_percentage, 'percentage_evolution')
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_2020-08-27_.csv")    
     save_figure_3(posts_fake, posts_url_after, url_df)
     save_figure_4(posts_fake, posts_url_after, url_df)
 
-    # Plot all the groups with more than 250 datapoints
+    # Plot all the groups
     # save_supplementary_figure_2(posts_fake, posts_url_after, url_df)
