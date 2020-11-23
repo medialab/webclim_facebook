@@ -21,8 +21,8 @@ def clean_post_data(df):
     clean_df['date'] = pd.to_datetime(df['date'])
 
     clean_df['account_id'] = df['account_id'].astype(int)
-    clean_df["share"]   = df[["actual_share_count"]].astype(int)
-    clean_df["comment"] = df[["actual_comment_count"]].astype(int)
+    clean_df["share"]   = df["actual_share_count"].astype(int)
+    clean_df["comment"] = df["actual_comment_count"].astype(int)
 
     clean_df["reaction"] = df[["actual_like_count", "actual_favorite_count", "actual_love_count",
     "actual_wow_count", "actual_haha_count", "actual_sad_count",
@@ -46,12 +46,14 @@ def plot_one_group(posts_df, account_id, reduced_date, ax):
 
     plt.legend()
 
-    plt.xticks([np.datetime64('2019-01-01'), np.datetime64('2019-03-01'), np.datetime64('2019-05-01'), 
-                np.datetime64('2019-07-01'), np.datetime64('2019-09-01'), np.datetime64('2019-11-01'),
-                np.datetime64('2020-01-01'), np.datetime64('2020-03-01'), np.datetime64('2020-05-01'), 
-                np.datetime64('2020-07-01'), np.datetime64('2020-09-01'), np.datetime64('2020-11-01'),
-                np.datetime64(reduced_date)], 
-               rotation=30, ha='right')
+    xlabels = [np.datetime64('2019-01-01'), np.datetime64('2019-03-01'), np.datetime64('2019-05-01'), 
+               np.datetime64('2019-07-01'), np.datetime64('2019-09-01'), np.datetime64('2019-11-01'),
+               np.datetime64('2020-01-01'), np.datetime64('2020-03-01'), np.datetime64('2020-05-01'), 
+               np.datetime64('2020-07-01'), np.datetime64('2020-09-01'), np.datetime64('2020-11-01'),
+               np.datetime64(reduced_date)]
+    if account_id == 111077570271805:
+        xlabels.pop(11)
+    plt.xticks(xlabels, rotation=30, ha='right')
     plt.gca().get_xticklabels()[-1].set_color('red')
     
     plt.xlim(
@@ -105,7 +107,5 @@ if __name__ == "__main__":
     #collect_date = "2020-11-17"
     collect_date = "2020-11-23"
     posts_df = import_data(folder="data_crowdtangle_group", file_name='posts_group_' + collect_date + '.csv')
-    print(posts_df.account_name.unique())
-    print(posts_df.account_id.unique())
     posts_df = clean_post_data(posts_df)
     save_blog_figure(posts_df)
