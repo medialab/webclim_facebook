@@ -46,14 +46,14 @@ def plot_one_group(posts_df, account_id, reduced_date, ax):
 
     plt.legend()
 
-    xlabels = [np.datetime64('2019-01-01'), np.datetime64('2019-03-01'), np.datetime64('2019-05-01'), 
+    xticks = [np.datetime64('2019-01-01'), np.datetime64('2019-03-01'), np.datetime64('2019-05-01'), 
                np.datetime64('2019-07-01'), np.datetime64('2019-09-01'), np.datetime64('2019-11-01'),
                np.datetime64('2020-01-01'), np.datetime64('2020-03-01'), np.datetime64('2020-05-01'), 
                np.datetime64('2020-07-01'), np.datetime64('2020-09-01'), np.datetime64('2020-11-01'),
                np.datetime64(reduced_date)]
     if account_id == 111077570271805:
-        xlabels.pop(11)
-    plt.xticks(xlabels, rotation=30, ha='right')
+        xticks.pop(11)
+    plt.xticks(xticks, rotation=30, ha='right')
     plt.gca().get_xticklabels()[-1].set_color('red')
     
     plt.xlim(
