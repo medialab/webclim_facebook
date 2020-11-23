@@ -68,12 +68,12 @@ def plot_one_group(posts_df, account_id, reduced_date, ax):
 
 def save_blog_figure(posts_df):
 
-    plt.figure(figsize=(9, 11))
+    plt.figure(figsize=(9, 13))
     group_index = 0
 
-    for account_id in [311190048935167, 368557930146199, 16307558831]:
+    for account_id in [311190048935167, 368557930146199, 16307558831, 111077570271805]:
 
-        ax = plt.subplot(3, 1, group_index + 1)
+        ax = plt.subplot(4, 1, group_index + 1)
         
         account_name = posts_df[posts_df['account_id']==account_id].account_name.unique()[0]
         plt.title(account_name, size="x-large")
@@ -88,6 +88,8 @@ def save_blog_figure(posts_df):
         elif account_name == 'Mark Levin':
             reduced_date = '2020-10-05'
             plt.yticks([10000, 20000])
+        elif account_name == 'Wendy Bell Radio':
+            reduced_date = '2020-11-09'
 
         plot_one_group(posts_df, account_id, reduced_date, ax)
         
@@ -100,7 +102,10 @@ def save_blog_figure(posts_df):
 
 
 if __name__ == "__main__":
-    collect_date = "2020-11-17"
+    #collect_date = "2020-11-17"
+    collect_date = "2020-11-23"
     posts_df = import_data(folder="data_crowdtangle_group", file_name='posts_group_' + collect_date + '.csv')
+    print(posts_df.account_name.unique())
+    print(posts_df.account_id.unique())
     posts_df = clean_post_data(posts_df)
     save_blog_figure(posts_df)
