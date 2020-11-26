@@ -55,8 +55,7 @@ You can now select the Facebook accounts sharing more than X fake news, and manu
 Then you will need the list ids to run the collect. All the list ids tied to a CrowdTangle account can be printed with:
 
 ```
-token_crowdtangle=$(jq -r '.token_crowdtangle' config.json)
-minet ct lists --token $token_crowdtangle
+minet ct lists
 ```
 
 To collect the data you need to add the corresponding list id to the following command:
