@@ -6,5 +6,3 @@ minet==0.34.0
 networkx==2.5
 numpy==1.19.0
 pandas==1.0.5
-pygraphviz==1.6
-ural==0.24.1

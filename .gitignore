@@ -5,7 +5,7 @@ src/__pycache__/*
 *.ipynb
 
 config.json
-.minetrc.yml
+.minetrc
 
 *.csv
 *.txt

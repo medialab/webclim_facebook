@@ -14,7 +14,7 @@ cd webclim_facebook
 pip install -r requirements.txt
 ```
 
-To collect data from CrowdTangle, a CrowdTangle token is needed, and you should write it in a `config.json` file similar to the `config.json.example` file (except that you should write the token value instead of "blablabla").
+To collect data from CrowdTangle, a CrowdTangle token is needed, and you should write it in a `.minetrc` file at the root similar to the `.minetrc.example` file.
 
 ## Collect the data
 
