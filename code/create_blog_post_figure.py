@@ -1,5 +1,6 @@
 import os
 import datetime
+import json
 
 import pandas as pd
 import numpy as np
@@ -105,7 +106,14 @@ def save_blog_figure(posts_df):
 
 if __name__ == "__main__":
     #collect_date = "2020-11-17"
-    collect_date = "2020-11-23"
+    collect_date = "2020-12-01"
     posts_df = import_data(folder="data_crowdtangle_group", file_name='posts_group_' + collect_date + '.csv')
     posts_df = clean_post_data(posts_df)
-    save_blog_figure(posts_df)
+
+    print(posts_df.account_name.unique())
+
+    with open('./data/self_declared_repeat_offenders/dates.json') as json_file:
+        repeat_offender_date = json.load(json_file)
+    print(repeat_offender_date)
+
+    #save_blog_figure(posts_df)
