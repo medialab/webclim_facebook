@@ -1,11 +1,13 @@
 import os
 import datetime
 import json
+import datetime
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
+import scipy.stats as stats
 
 from create_paper_tables_and_figures import import_data, save_figure
 
@@ -92,7 +94,75 @@ def save_figure_1(posts_df, repeat_offender_date):
                 color='C3', linestyle='--', linewidth=2)
 
     plt.tight_layout()
-    save_figure('figure_blog_1')
+    save_figure('sdro_figure_1')
+
+
+def save_figure_2(posts_df, repeat_offender_date):
+
+    reaction_before = []
+    share_before = []
+    comment_before = []
+
+    reaction_after = []
+    share_after = []
+    comment_after = []
+
+    for account_name in posts_df['account_name'].unique():
+
+        posts_df_group = posts_df[posts_df["account_name"] == account_name] 
+
+        posts_df_group_before = posts_df_group[
+            (posts_df_group['date'] < datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')) &
+            (posts_df_group['date'] >= datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d') - datetime.timedelta(days=15))
+        ]
+        posts_df_group_after = posts_df_group[
+            (posts_df_group['date'] > datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')) &
+            (posts_df_group['date'] <= datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d') + datetime.timedelta(days=15))
+        ]
+
+        if ((np.max(posts_df_group_before['date']) - np.min(posts_df_group_before['date']) == datetime.timedelta(days=14)) & 
+            (np.max(posts_df_group_after['date']) - np.min(posts_df_group_after['date']) == datetime.timedelta(days=14)) &
+            (len(posts_df_group_before['date']) >= 30) & (len(posts_df_group_after['date']) >= 30)):
+
+            reaction_before.append(np.mean(posts_df_group_before['reaction']))
+            share_before.append(np.mean(posts_df_group_before['share']))
+            comment_before.append(np.mean(posts_df_group_before['comment']))
+
+            reaction_after.append(np.mean(posts_df_group_after['reaction']))
+            share_after.append(np.mean(posts_df_group_after['share']))
+            comment_after.append(np.mean(posts_df_group_after['comment']))
+
+    fig, ax = plt.subplots(figsize=(6, 3))
+    ax.grid(axis="y", zorder=0, linestyle='--')
+
+    width = .25
+    labels = ['Reactions', 'Shares', 'Comments']
+    x = np.arange(len(labels))
+    plt.bar(x - width/2, [np.mean(reaction_before), np.mean(share_before), np.mean(comment_before)], 
+                    width, label="The 15 days before the alleged repeat offender date", 
+                    color='pink', edgecolor=[.2, .2, .2], zorder=3)
+    plt.bar(x + width/2, [np.mean(reaction_after), np.mean(share_after), np.mean(comment_after)], 
+                    width, label="The 15 days after the alleged repeat offender date", 
+                    color='white', edgecolor=[.2, .2, .2], zorder=3)
+    plt.legend(framealpha=1)
+
+    plt.xticks(x, labels)
+    ax.tick_params(axis='x', which='both',length=0)
+    plt.xlim([-.5, 2.5])
+
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+
+    fig.tight_layout()
+    save_figure('sdro_figure_2')
+
+    t, p = stats.wilcoxon(reaction_before, reaction_after)
+    print('\nWilcoxon test between the reactions: t =', t, ', p =', p)
+    t, p = stats.wilcoxon(share_before, share_after)
+    print('\nWilcoxon test between the shares: t =', t, ', p =', p)
+    t, p = stats.wilcoxon(comment_before, comment_after)
+    print('\nWilcoxon test between the comments: t =', t, ', p =', p)
 
 
 def save_all_groups_figures(posts_df, repeat_offender_date):
@@ -118,7 +188,7 @@ def save_all_groups_figures(posts_df, repeat_offender_date):
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
-            save_figure('supplementary_figure_blog_{}'.format(int(group_index / 10) + 1))
+            save_figure('sdro_supplementary_figure_{}'.format(int(group_index / 10) + 1))
 
         group_index += 1
 
@@ -129,4 +199,5 @@ if __name__ == "__main__":
     posts_df = clean_post_data(posts_df)
     repeat_offender_date = import_json(folder='self_declared_repeat_offenders', file_name='dates.json')
     save_figure_1(posts_df, repeat_offender_date)
+    save_figure_2(posts_df, repeat_offender_date)
     save_all_groups_figures(posts_df, repeat_offender_date)
