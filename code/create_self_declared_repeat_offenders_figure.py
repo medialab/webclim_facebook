@@ -120,10 +120,7 @@ def save_figure_2(posts_df, repeat_offender_date):
             (posts_df_group['date'] <= datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d') + datetime.timedelta(days=15))
         ]
 
-        if ((np.max(posts_df_group_before['date']) - np.min(posts_df_group_before['date']) == datetime.timedelta(days=14)) & 
-            (np.max(posts_df_group_after['date']) - np.min(posts_df_group_after['date']) == datetime.timedelta(days=14)) &
-            (len(posts_df_group_before['date']) >= 30) & (len(posts_df_group_after['date']) >= 30)):
-
+        if ((len(posts_df_group_before['date']) >= 30) & (len(posts_df_group_after['date']) >= 30)):
             reaction_before.append(np.mean(posts_df_group_before['reaction']))
             share_before.append(np.mean(posts_df_group_before['share']))
             comment_before.append(np.mean(posts_df_group_before['comment']))
@@ -138,10 +135,10 @@ def save_figure_2(posts_df, repeat_offender_date):
     width = .25
     labels = ['Reactions', 'Shares', 'Comments']
     x = np.arange(len(labels))
-    plt.bar(x - width/2, [np.mean(reaction_before), np.mean(share_before), np.mean(comment_before)], 
+    plt.bar(x - width/2, [np.median(reaction_before), np.median(share_before), np.median(comment_before)], 
                     width, label="The 15 days before the alleged repeat offender date", 
                     color='pink', edgecolor=[.2, .2, .2], zorder=3)
-    plt.bar(x + width/2, [np.mean(reaction_after), np.mean(share_after), np.mean(comment_after)], 
+    plt.bar(x + width/2, [np.median(reaction_after), np.median(share_after), np.median(comment_after)], 
                     width, label="The 15 days after the alleged repeat offender date", 
                     color='white', edgecolor=[.2, .2, .2], zorder=3)
     plt.legend(framealpha=1)
