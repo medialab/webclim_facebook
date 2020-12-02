@@ -52,10 +52,9 @@ def plot_one_group(posts_df, account_id, ax):
     
     plt.legend()
 
-    xticks = [np.datetime64('2019-11-01'),
-               np.datetime64('2020-01-01'), np.datetime64('2020-03-01'), np.datetime64('2020-05-01'), 
-               np.datetime64('2020-07-01'), np.datetime64('2020-09-01'), np.datetime64('2020-11-01')]
-    plt.xticks(xticks, rotation=30, ha='right')
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
+    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2))
+    plt.xticks(rotation=30, ha='right')
     
     plt.xlim(
         np.datetime64(datetime.datetime.strptime('2019-11-01', '%Y-%m-%d') - datetime.timedelta(days=4)), 
