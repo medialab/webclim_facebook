@@ -2,12 +2,14 @@ import os
 import datetime
 import json
 import datetime
+import random
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import scipy.stats as stats
+from wordcloud import WordCloud
 
 from create_paper_tables_and_figures import import_data, save_figure
 
@@ -147,7 +149,7 @@ def save_figure_2(posts_df, repeat_offender_date):
     df_share['mean'] = df_share.mean(axis=1)
     df_comment['mean'] = df_comment.mean(axis=1)
 
-    plt.figure(figsize=(8, 4))
+    plt.figure(figsize=(8, 3))
     ax = plt.subplot()
 
     plt.plot(df_reaction['mean'], label="Number of reactions per post")
@@ -168,6 +170,47 @@ def save_figure_2(posts_df, repeat_offender_date):
 
     plt.tight_layout()
     save_figure('sdro_figure_2')
+
+
+def grey_color_func(word, font_size,
+                    position, orientation,
+                    random_state=None,
+                    **kwargs):
+    return "hsl(0, 0%%, %d%%)" % random.randint(0, 40)
+
+
+def save_figure_3(screenshot_df):
+
+    text = '\n\n'.join(screenshot_df['message'].dropna().values)
+    wordcloud = WordCloud(background_color="white", color_func=grey_color_func).generate(text)
+
+    fig = plt.figure(figsize=(10, 5))
+
+    plt.imshow(wordcloud, interpolation="bilinear")
+    plt.axis("off")
+    plt.tight_layout(pad=0)
+    save_figure('sdro_figure_3')
+
+
+def save_figure_4(screenshot_df):
+
+    plt.figure(figsize=(8, 3))
+    ax = plt.subplot()
+
+    plt.hist(screenshot_df['score'].values, 100, facecolor='grey')
+    plt.xlabel("CrowdTangle overperforming scores for the posts sharing the 'reduced distribution' screenshot")
+    plt.axvline(x=0, color='k', linestyle='-')
+
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+
+    plt.tight_layout()
+    save_figure('sdro_figure_4')
+
+    print('\nThe average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
+    print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
+
 
 def save_all_groups_figures(posts_df, repeat_offender_date):
 
@@ -199,9 +242,16 @@ def save_all_groups_figures(posts_df, repeat_offender_date):
 
 if __name__ == "__main__":
     collect_date = "2020-12-01"
-    posts_df = import_data(folder="data_crowdtangle_group", file_name='posts_group_' + collect_date + '.csv')
+    posts_df = import_data(folder="self_declared_repeat_offenders", file_name='posts_group_' + collect_date + '.csv')
     posts_df = clean_post_data(posts_df)
     repeat_offender_date = import_json(folder='self_declared_repeat_offenders', file_name='dates.json')
+
     save_figure_1(posts_df, repeat_offender_date)
     save_figure_2(posts_df, repeat_offender_date)
+
+    ## minet ct posts-by-id repeat-offender-post-url ./data/self_declared_repeat_offenders/table_1.csv > ./data/self_declared_repeat_offenders/posts_test.csv
+    screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
+    save_figure_3(screenshot_df)
+    save_figure_4(screenshot_df)
+
     save_all_groups_figures(posts_df, repeat_offender_date)

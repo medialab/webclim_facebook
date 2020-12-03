@@ -6,3 +6,4 @@ minet==0.34.0
 networkx==2.5
 numpy==1.19.0
 pandas==1.0.5
+wordcloud==1.8.1
