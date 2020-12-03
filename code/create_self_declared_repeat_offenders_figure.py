@@ -49,8 +49,8 @@ def plot_one_group(posts_df, account_id, ax):
     
     posts_df_group = posts_df[posts_df["account_id"] == account_id] 
     plt.plot(rolling_average_per_day(posts_df_group, 'reaction'), label="Number of reactions per post")
-    plt.plot(rolling_average_per_day(posts_df_group, 'comment'), label="Number of comments per post")
     plt.plot(rolling_average_per_day(posts_df_group, 'share'), label="Number of shares per post")
+    plt.plot(rolling_average_per_day(posts_df_group, 'comment'), label="Number of comments per post")
     
     plt.legend()
 
@@ -107,52 +107,32 @@ def save_figure_2(posts_df, repeat_offender_date):
     share_after = []
     comment_after = []
 
+    df_reaction = pd.DataFrame(index=list(range(-7, 8)))
+    df_share = pd.DataFrame(index=list(range(-7, 8)))
+    df_comment = pd.DataFrame(index=list(range(-7, 8)))
+
     for account_name in posts_df['account_name'].unique():
 
         posts_df_group = posts_df[posts_df["account_name"] == account_name] 
-
-        posts_df_group_before = posts_df_group[
-            (posts_df_group['date'] < datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')) &
-            (posts_df_group['date'] >= datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d') - datetime.timedelta(days=15))
-        ]
-        posts_df_group_after = posts_df_group[
-            (posts_df_group['date'] > datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')) &
-            (posts_df_group['date'] <= datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d') + datetime.timedelta(days=15))
+        posts_df_group = posts_df_group[
+            (posts_df_group['date'] >= datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d') - datetime.timedelta(days=7)) &
+            (posts_df_group['date'] <= datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d') + datetime.timedelta(days=7))
         ]
 
-        if ((len(posts_df_group_before['date']) >= 30) & (len(posts_df_group_after['date']) >= 30)):
-            reaction_before.append(np.mean(posts_df_group_before['reaction']))
-            share_before.append(np.mean(posts_df_group_before['share']))
-            comment_before.append(np.mean(posts_df_group_before['comment']))
+        if len(posts_df_group.groupby(by=["date"])["reaction"].mean().values) == 15:
 
-            reaction_after.append(np.mean(posts_df_group_after['reaction']))
-            share_after.append(np.mean(posts_df_group_after['share']))
-            comment_after.append(np.mean(posts_df_group_after['comment']))
+            reaction_before.append(np.mean(posts_df_group[posts_df_group['date'] < datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')]['reaction']))
+            reaction_after.append(np.mean(posts_df_group[posts_df_group['date'] > datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')]['reaction']))
 
-    fig, ax = plt.subplots(figsize=(6, 3))
-    ax.grid(axis="y", zorder=0, linestyle='--')
+            share_before.append(np.mean(posts_df_group[posts_df_group['date'] < datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')]['share']))
+            share_after.append(np.mean(posts_df_group[posts_df_group['date'] > datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')]['share']))
 
-    width = .25
-    labels = ['Reactions', 'Shares', 'Comments']
-    x = np.arange(len(labels))
-    plt.bar(x - width/2, [np.median(reaction_before), np.median(share_before), np.median(comment_before)], 
-                    width, label="The 15 days before the alleged repeat offender date", 
-                    color='pink', edgecolor=[.2, .2, .2], zorder=3)
-    plt.bar(x + width/2, [np.median(reaction_after), np.median(share_after), np.median(comment_after)], 
-                    width, label="The 15 days after the alleged repeat offender date", 
-                    color='white', edgecolor=[.2, .2, .2], zorder=3)
-    plt.legend(framealpha=1)
+            comment_before.append(np.mean(posts_df_group[posts_df_group['date'] < datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')]['comment']))
+            comment_after.append(np.mean(posts_df_group[posts_df_group['date'] > datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')]['comment']))
 
-    plt.xticks(x, labels)
-    ax.tick_params(axis='x', which='both',length=0)
-    plt.xlim([-.5, 2.5])
-
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-
-    fig.tight_layout()
-    save_figure('sdro_figure_2')
+            df_reaction[account_name] = posts_df_group.groupby(by=["date"])["reaction"].mean().values
+            df_share[account_name] = posts_df_group.groupby(by=["date"])["share"].mean().values
+            df_comment[account_name] = posts_df_group.groupby(by=["date"])["comment"].mean().values
 
     t, p = stats.wilcoxon(reaction_before, reaction_after)
     print('\nWilcoxon test between the reactions: t =', t, ', p =', p)
@@ -161,6 +141,33 @@ def save_figure_2(posts_df, repeat_offender_date):
     t, p = stats.wilcoxon(comment_before, comment_after)
     print('\nWilcoxon test between the comments: t =', t, ', p =', p)
 
+    print(len(comment_before))
+    
+    df_reaction['mean'] = df_reaction.mean(axis=1)
+    df_share['mean'] = df_share.mean(axis=1)
+    df_comment['mean'] = df_comment.mean(axis=1)
+
+    plt.figure(figsize=(8, 4))
+    ax = plt.subplot()
+
+    plt.plot(df_reaction['mean'], label="Number of reactions per post")
+    plt.plot(df_share['mean'], label="Number of shares per post")
+    plt.plot(df_comment['mean'], label="Number of comments per post")
+    
+    plt.axvline(x=0, color='C3', linestyle='--', linewidth=2)
+
+    plt.legend()
+    plt.xticks(ticks=[-7, 0, 7], labels=['7 days before', 'Alleged date', '7 days after'])
+    plt.ylim(bottom=0)
+    plt.locator_params(axis='y', nbins=3)
+    ax.grid(axis="y")
+
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+
+    plt.tight_layout()
+    save_figure('sdro_figure_2')
 
 def save_all_groups_figures(posts_df, repeat_offender_date):
 
