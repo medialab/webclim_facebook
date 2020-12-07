@@ -1,17 +1,25 @@
 import os
+import re
 import datetime
 import json
 import datetime
 import random
+from collections import Counter
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import scipy.stats as stats
-from wordcloud import WordCloud
+from nltk.stem import WordNetLemmatizer 
+from nltk.corpus import stopwords 
+from nltk.tokenize import word_tokenize
 
 from create_paper_tables_and_figures import import_data, save_figure
+
+
+stop_words = stopwords.words('english') + ['u', 'also', 'ha']
+wnl = WordNetLemmatizer() 
 
 
 def import_json(folder, file_name):
@@ -201,27 +209,22 @@ def save_figure_2(posts_df, repeat_offender_date):
     save_figure('sdro_figure_2')
 
 
-def grey_color_func(word, font_size,
-                    position, orientation,
-                    random_state=None,
-                    **kwargs):
-    return "hsl(0, 0%%, %d%%)" % random.randint(0, 40)
+def save_table_1(screenshot_df):
+
+    text = '\n\n'.join(screenshot_df['message'].dropna().values)
+
+    text = re.sub(r'\W+', ' ', text).strip()
+    text = text.lower()
+    text = word_tokenize(text) 
+    text = [wnl.lemmatize(w) for w in text]
+    text = [w for w in text if not w in stop_words]
+
+    counter = Counter(text)
+    print('\n\n TABLE_1:')
+    print(*(counter.most_common(20)), sep="\n")
 
 
 def save_figure_3(screenshot_df):
-
-    text = '\n\n'.join(screenshot_df['message'].dropna().values)
-    wordcloud = WordCloud(background_color="white", color_func=grey_color_func).generate(text)
-
-    fig = plt.figure(figsize=(10, 5))
-
-    plt.imshow(wordcloud, interpolation="bilinear")
-    plt.axis("off")
-    plt.tight_layout(pad=0)
-    save_figure('sdro_figure_3')
-
-
-def save_figure_4(screenshot_df):
 
     plt.figure(figsize=(8, 3))
     ax = plt.subplot()
@@ -235,7 +238,7 @@ def save_figure_4(screenshot_df):
     ax.spines['top'].set_visible(False)
 
     plt.tight_layout()
-    save_figure('sdro_figure_4')
+    save_figure('sdro_figure_3')
 
     print('\nThe average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
     print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
@@ -270,6 +273,7 @@ def save_all_groups_figures(posts_df, repeat_offender_date):
 
 
 if __name__ == "__main__":
+    
     collect_date = "2020-12-01"
     posts_df = import_data(folder="self_declared_repeat_offenders", file_name='posts_group_' + collect_date + '.csv')
     posts_df = clean_post_data(posts_df)
@@ -278,9 +282,9 @@ if __name__ == "__main__":
     save_figure_1(posts_df, repeat_offender_date)
     save_figure_2(posts_df, repeat_offender_date)
 
-    # ## minet ct posts-by-id repeat-offender-post-url ./data/self_declared_repeat_offenders/table_1.csv > ./data/self_declared_repeat_offenders/posts_test.csv
-    # screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
-    # save_figure_3(screenshot_df)
-    # save_figure_4(screenshot_df)
+    ## minet ct posts-by-id repeat-offender-post-url ./data/self_declared_repeat_offenders/table_1.csv > ./data/self_declared_repeat_offenders/posts_test.csv
+    screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
+    save_table_1(screenshot_df)
+    save_figure_3(screenshot_df)
 
-    # save_all_groups_figures(posts_df, repeat_offender_date)
+    save_all_groups_figures(posts_df, repeat_offender_date)
