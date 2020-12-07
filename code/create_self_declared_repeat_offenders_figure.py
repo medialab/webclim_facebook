@@ -104,14 +104,18 @@ def save_figure_2(posts_df, repeat_offender_date):
     reaction_before = []
     share_before = []
     comment_before = []
+    posts_before = []
 
     reaction_after = []
     share_after = []
     comment_after = []
+    posts_after = []
 
     df_reaction = pd.DataFrame(index=list(range(-7, 8)))
     df_share = pd.DataFrame(index=list(range(-7, 8)))
     df_comment = pd.DataFrame(index=list(range(-7, 8)))
+
+    df_post_number = pd.DataFrame(index=list(range(-7, 8)))
 
     for account_name in posts_df['account_name'].unique():
 
@@ -136,22 +140,39 @@ def save_figure_2(posts_df, repeat_offender_date):
             df_share[account_name] = posts_df_group.groupby(by=["date"])["share"].mean().values
             df_comment[account_name] = posts_df_group.groupby(by=["date"])["comment"].mean().values
 
+        post_number = posts_df_group["date"].value_counts().to_frame()
+        post_number = post_number.rename(columns={"date": "post_number"})
+        post_number['date'] = post_number.index
+        post_number['relative_date'] = post_number['date'] - datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')
+        post_number['relative_date'] = post_number['relative_date'].apply(lambda x: x.days)
+        post_number = post_number.drop(columns=['date'])
+
+        default_post_number = pd.DataFrame({'relative_date': list(range(-7, 8))})
+        post_number = post_number.merge(default_post_number, on='relative_date', how='outer')\
+            .sort_values(by=['relative_date']).reset_index(drop=True)
+        post_number['post_number'] = post_number['post_number'].fillna(0).astype(int)
+
+        df_post_number[account_name] = post_number['post_number'].values
+        posts_before.append(np.mean(post_number['post_number'].values[:7]))
+        posts_after.append(np.mean(post_number['post_number'].values[8:]))
+
     t, p = stats.wilcoxon(reaction_before, reaction_after)
     print('\nWilcoxon test between the reactions: t =', t, ', p =', p)
     t, p = stats.wilcoxon(share_before, share_after)
     print('\nWilcoxon test between the shares: t =', t, ', p =', p)
     t, p = stats.wilcoxon(comment_before, comment_after)
     print('\nWilcoxon test between the comments: t =', t, ', p =', p)
+    t, p = stats.wilcoxon(posts_before, posts_after)
+    print('\nWilcoxon test between the number of posts: t =', t, ', p =', p)
 
-    print(len(comment_before))
-    
     df_reaction['mean'] = df_reaction.mean(axis=1)
     df_share['mean'] = df_share.mean(axis=1)
     df_comment['mean'] = df_comment.mean(axis=1)
+    df_post_number['mean'] = df_post_number.mean(axis=1)
 
-    plt.figure(figsize=(8, 3))
-    ax = plt.subplot()
+    plt.figure(figsize=(8, 6))
 
+    ax = plt.subplot(2, 1, 1)
     plt.plot(df_reaction['mean'], label="Number of reactions per post")
     plt.plot(df_share['mean'], label="Number of shares per post")
     plt.plot(df_comment['mean'], label="Number of comments per post")
@@ -168,7 +189,22 @@ def save_figure_2(posts_df, repeat_offender_date):
     ax.spines['left'].set_visible(False)
     ax.spines['top'].set_visible(False)
 
-    plt.tight_layout()
+    ax = plt.subplot(2, 1, 2)
+    plt.plot(df_post_number['mean'], label="Number of posts per day", color="grey")
+    
+    plt.axvline(x=0, color='C3', linestyle='--', linewidth=2)
+
+    plt.legend()
+    plt.xticks(ticks=[-7, 0, 7], labels=['7 days before', 'Alleged date', '7 days after'])
+    plt.ylim(bottom=0)
+    plt.locator_params(axis='y', nbins=3)
+    ax.grid(axis="y")
+
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+
+    plt.tight_layout(pad=3)
     save_figure('sdro_figure_2')
 
 
@@ -249,9 +285,9 @@ if __name__ == "__main__":
     save_figure_1(posts_df, repeat_offender_date)
     save_figure_2(posts_df, repeat_offender_date)
 
-    ## minet ct posts-by-id repeat-offender-post-url ./data/self_declared_repeat_offenders/table_1.csv > ./data/self_declared_repeat_offenders/posts_test.csv
-    screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
-    save_figure_3(screenshot_df)
-    save_figure_4(screenshot_df)
+    # ## minet ct posts-by-id repeat-offender-post-url ./data/self_declared_repeat_offenders/table_1.csv > ./data/self_declared_repeat_offenders/posts_test.csv
+    # screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
+    # save_figure_3(screenshot_df)
+    # save_figure_4(screenshot_df)
 
-    save_all_groups_figures(posts_df, repeat_offender_date)
+    # save_all_groups_figures(posts_df, repeat_offender_date)
