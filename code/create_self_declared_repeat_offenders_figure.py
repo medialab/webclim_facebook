@@ -99,6 +99,21 @@ def save_figure_1(posts_df, repeat_offender_date):
     save_figure('sdro_figure_1')
 
 
+def add_layout_details(ax):
+
+    plt.axvline(x=0, color='C3', linestyle='--', linewidth=2)
+
+    plt.legend()
+    plt.xticks(ticks=[-7, 0, 7], labels=['7 days before', 'Alleged date', '7 days after'])
+    plt.ylim(bottom=0)
+    plt.locator_params(axis='y', nbins=3)
+    ax.grid(axis="y")
+
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+
+
 def save_figure_2(posts_df, repeat_offender_date):
 
     reaction_before = []
@@ -176,33 +191,11 @@ def save_figure_2(posts_df, repeat_offender_date):
     plt.plot(df_reaction['mean'], label="Number of reactions per post")
     plt.plot(df_share['mean'], label="Number of shares per post")
     plt.plot(df_comment['mean'], label="Number of comments per post")
-    
-    plt.axvline(x=0, color='C3', linestyle='--', linewidth=2)
-
-    plt.legend()
-    plt.xticks(ticks=[-7, 0, 7], labels=['7 days before', 'Alleged date', '7 days after'])
-    plt.ylim(bottom=0)
-    plt.locator_params(axis='y', nbins=3)
-    ax.grid(axis="y")
-
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['top'].set_visible(False)
+    add_layout_details(ax)
 
     ax = plt.subplot(2, 1, 2)
     plt.plot(df_post_number['mean'], label="Number of posts per day", color="grey")
-    
-    plt.axvline(x=0, color='C3', linestyle='--', linewidth=2)
-
-    plt.legend()
-    plt.xticks(ticks=[-7, 0, 7], labels=['7 days before', 'Alleged date', '7 days after'])
-    plt.ylim(bottom=0)
-    plt.locator_params(axis='y', nbins=3)
-    ax.grid(axis="y")
-
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['top'].set_visible(False)
+    add_layout_details(ax)
 
     plt.tight_layout(pad=3)
     save_figure('sdro_figure_2')
