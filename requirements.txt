@@ -8,3 +8,5 @@ nltk==3.5
 numpy==1.19.0
 pandas==1.0.5
 wordcloud==1.8.1
+python-dotenv==0.15.0
+requests==2.25.0

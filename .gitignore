@@ -4,8 +4,8 @@ src/__pycache__/*
 .ipynb_checkpoints
 *.ipynb
 
-config.json
 .minetrc
+.env
 
 *.csv
 *.txt

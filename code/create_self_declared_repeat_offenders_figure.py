@@ -282,7 +282,7 @@ if __name__ == "__main__":
     save_figure_1(posts_df, repeat_offender_date)
     save_figure_2(posts_df, repeat_offender_date)
 
-    ## minet ct posts-by-id repeat-offender-post-url ./data/self_declared_repeat_offenders/table_1.csv > ./data/self_declared_repeat_offenders/posts_test.csv
+    ## minet ct posts-by-id repeat-offender-post-url ./data/self_declared_repeat_offenders/supplementary_table_1.csv > ./data/self_declared_repeat_offenders/posts.csv
     screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
     save_table_1(screenshot_df)
     save_figure_3(screenshot_df)
