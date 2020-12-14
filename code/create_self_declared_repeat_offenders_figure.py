@@ -2,7 +2,6 @@ import os
 import re
 import datetime
 import json
-import datetime
 import random
 from collections import Counter
 
