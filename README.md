@@ -71,14 +71,25 @@ python code/clean_crowdtangle_group_data.py 2020-09-01 fake_news_group
 
 ## Analyse the data
 
-To create the tables and the figures shown in the article, you should run:
+To reproduce the results in the methodological draft:
+```
+python code/methodo_paper.py
+```
+
+To reproduce the results in the draft in preparation for the IP&M special issue:
 
 ```
-python code/create_paper_tables_and_figures.py
+python code/ip&m_paper_part_2.py
+python code/ip&m_paper_part_1.py
 ```
 
-The content of the tables will be printed in the console, and the figures saved as PNG in the `figure` folder.
+And for the first results for the QAnon draft:
 
+```
+python code/qanon_paper.py
+```
+
+The figures saved as PNG in the `figure` folder, and the content of the tables will be either printed in the console or saved as CSV in the same folder.
 
 ## Generate a draft
 
