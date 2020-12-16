@@ -24,7 +24,7 @@ def details_temporal_evolution(posts_df, ax):
     plt.legend()
 
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
-    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2))
+    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=3))
 
     plt.locator_params(axis='y', nbins=4)
 
@@ -42,7 +42,7 @@ def details_temporal_evolution(posts_df, ax):
 
 def save_figure_1(posts_fake, posts_main):
 
-    plt.figure(figsize=(12, 10))
+    plt.figure(figsize=(10, 7))
 
     for index in range(2):
         if index == 0:
@@ -198,7 +198,7 @@ def print_correlation_coefficients(df, column_to_predict):
 
 
 def rolling_average_per_day(df, column):
-    return df.groupby(by=["date"])[column].mean()
+    return df.groupby(by=["date"])[column].mean().rolling(window=5, win_type='triang', center=True).mean()
 
 
 def plot_one_group(posts_df, account_id, fake_news_dates):
@@ -207,6 +207,9 @@ def plot_one_group(posts_df, account_id, fake_news_dates):
     
     plt.plot(rolling_average_per_day(posts_df_group, 'reaction'), 
             label="Reactions per post", color="C0")
+
+    plt.plot(rolling_average_per_day(posts_df_group, 'share'), 
+            label="Shares per post", color="C1")
 
     plt.plot(rolling_average_per_day(posts_df_group, 'comment'), 
             label="Comments per post", color="C2")
@@ -220,9 +223,11 @@ def plot_one_group(posts_df, account_id, fake_news_dates):
         np.datetime64(datetime.datetime.strptime('2019-09-01', '%Y-%m-%d') - datetime.timedelta(days=4)), 
         np.datetime64(datetime.datetime.strptime('2020-08-31', '%Y-%m-%d') + datetime.timedelta(days=4))
     )
+    plt.ylim(bottom=0)
 
     scale_y = np.nanmax([rolling_average_per_day(posts_df_group, 'reaction'),
-                        rolling_average_per_day(posts_df_group, 'comment')])/10
+                        rolling_average_per_day(posts_df_group, 'comment'),
+                        rolling_average_per_day(posts_df_group, 'share')])/10
 
     for date in fake_news_dates:
         plt.arrow(x=date, y=0, dx=0, dy=-scale_y, color='C3')
@@ -290,62 +295,6 @@ def merge_overlapping_periods(overlapping_periods):
         return merged_periods
 
 
-def save_figure_3(posts_df, post_url_df, url_df):
-
-    accounts_to_plot = [
-        'Exposing The New World Order',
-        'Stop Mandatory Vaccination',
-        'Truth Revolution',
-        'Women SCOUTS for TRUMP (c)',
-        'Climate Change Battle Royale',
-        'Conspiracy Theory & Alternative News',
-        'S5GG - STOP 5G Global',
-        'The British Constitution Group'
-    ]
-
-    plt.figure(figsize=(12, 10))
-
-    for group_index in range(len(accounts_to_plot)):
-        account_id = posts_df[posts_df['account_name']==accounts_to_plot[group_index]].account_id.unique()[0]
-
-        ax = plt.subplot(4, 2, group_index + 1)
-
-        fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
-        plot_one_group(posts_df, account_id, fake_news_dates=fake_news_dates)
-
-        repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
-        repeat_offender_periods = merge_overlapping_periods(repeat_offender_periods)
-        for period in repeat_offender_periods:
-            plt.axvspan(period[0], period[1], ymin=1/11, facecolor='C3', alpha=0.1)
-
-        if group_index == 1: 
-            plt.legend(framealpha=1)
-
-        if group_index == 0:
-            plt.text(
-                s='Known strikes', color='C3',
-                x=np.datetime64('2020-02-15'), horizontalalignment='left', 
-                y=-0.5, verticalalignment='top'
-            )
-            patch1 = mpatches.Patch(facecolor='pink', alpha=0.4, edgecolor='k')
-            patch2 = mpatches.Patch(facecolor='white', alpha=0.4, edgecolor='k')
-            plt.legend([patch1, patch2], ["'Repeat offender' period", "'Free' period"],
-                       loc='upper left', framealpha=1)
-
-        if accounts_to_plot[group_index] == 'Truth Revolution':
-            plt.ylim([-5, 50])
-
-        plt.title(accounts_to_plot[group_index])
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        ax.spines['bottom'].set_visible(False)
-        ax.grid(axis="y")
-
-    plt.tight_layout()
-    save_figure('figure_3', folder='ip&m')
-
-
 def keep_repeat_offender_posts(posts_df, account_id, repeat_offender_periods):
 
     posts_df_group = posts_df[posts_df['account_id']==account_id]
@@ -391,16 +340,18 @@ def keep_free_posts(posts_df, account_id, repeat_offender_periods):
         return pd.DataFrame()
 
 
-def save_figure_4(posts_df, post_url_df, url_df):
+def compute_periods_average(posts_df, post_url_df, url_df):
 
-    repeat_offender_reaction = []
-    free_reaction = []
-
-    repeat_offender_share = []
-    free_share = []
-
-    repeat_offender_comment = []
-    free_comment = []
+    repeat_offender = {
+        'reaction': [],
+        'share': [],
+        'comment': []
+    }
+    free = {
+        'reaction': [],
+        'share': [],
+        'comment': []
+    }
 
     for account_id in posts_df['account_id'].unique():
             
@@ -416,46 +367,91 @@ def save_figure_4(posts_df, post_url_df, url_df):
         if len(free_df) > 0:
             free_df = free_df[free_df['date'] < datetime.datetime.strptime('2020-06-09', '%Y-%m-%d')]
 
-        if (len(repeat_offender_df) >= 100) & (len(free_df) >= 100):
+        if (len(repeat_offender_df) > 0) & (len(free_df) > 0):
             
-            repeat_offender_reaction.append(np.mean(repeat_offender_df['reaction']))
-            free_reaction.append(np.mean(free_df['reaction']))
+            repeat_offender['reaction'].append(np.mean(repeat_offender_df['reaction']))
+            free['reaction'].append(np.mean(free_df['reaction']))
             
-            repeat_offender_share.append(np.mean(repeat_offender_df['share']))
-            free_share.append(np.mean(free_df['share']))
+            repeat_offender['share'].append(np.mean(repeat_offender_df['share']))
+            free['share'].append(np.mean(free_df['share']))
             
-            repeat_offender_comment.append(np.mean(repeat_offender_df['comment']))
-            free_comment.append(np.mean(free_df['comment']))
+            repeat_offender['comment'].append(np.mean(repeat_offender_df['comment']))
+            free['comment'].append(np.mean(free_df['comment']))
 
-    fig, ax = plt.subplots(figsize=(6, 3))
-    ax.grid(axis="y", zorder=0, linestyle='--')
+    return repeat_offender, free
+
+
+def save_figure_2(posts_df, post_url_df, url_df):
+
+    fig = plt.figure(figsize=(10, 6))
+    gs = fig.add_gridspec(2, 5)
+
+    ## First part
+    ax = fig.add_subplot(gs[0, :])
+
+    account_name = 'Stop GeoEngineering, Chemtrails, Bio-hacking CRISPR, WeDoNotConsent'
+    account_id = posts_df[posts_df['account_name']==account_name].account_id.unique()[0]
+    fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
+    plot_one_group(posts_df, account_id, fake_news_dates=fake_news_dates)
+
+    repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
+    repeat_offender_periods = merge_overlapping_periods(repeat_offender_periods)
+    for period in repeat_offender_periods:
+        plt.axvspan(period[0], period[1], ymin=1/11, facecolor='C3', alpha=0.1)
+
+    plt.text(
+        s='Known strikes', color='C3',
+        x=np.datetime64('2019-09-05'), horizontalalignment='left', 
+        y=-1, verticalalignment='top'
+    )
+
+    legend1 = plt.legend(loc='upper left')
+
+    patch1 = mpatches.Patch(facecolor='pink', alpha=0.4, edgecolor='k')
+    patch2 = mpatches.Patch(facecolor='white', alpha=0.4, edgecolor='k')
+    legend2 = plt.legend([patch1, patch2], ["'Repeat offender' periods", "'Free' periods"],
+                loc='upper right', framealpha=1)
+    plt.gca().add_artist(legend1)
+
+    plt.title(account_name)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.grid(axis="y")
+
+    ## Second part
+    repeat_offender, free = compute_periods_average(posts_df, post_url_df, url_df)
+    ax = fig.add_subplot(gs[1, 1:4])
 
     width = .25
     labels = ['Reactions', 'Shares', 'Comments']
     x = np.arange(len(labels))
-    plt.bar(x - width/2, [np.mean(repeat_offender_reaction), np.mean(repeat_offender_share), 
-                                        np.mean(repeat_offender_comment)], 
+    plt.bar(x - width/2, [np.mean(repeat_offender['reaction']), np.mean(repeat_offender['share']), 
+                                        np.mean(repeat_offender['comment'])], 
                     width, label="'Repeat offender' periods", color='pink', edgecolor=[.2, .2, .2], zorder=3)
-    plt.bar(x + width/2, [np.mean(free_reaction), np.mean(free_share), np.mean(free_comment)], 
+    plt.bar(x + width/2, [np.mean(free['reaction']), np.mean(free['share']), np.mean(free['comment'])], 
                     width, label="'Free' periods", color='white', edgecolor=[.2, .2, .2], zorder=3)
     plt.legend(framealpha=1)
 
-    plt.xticks(x, labels)
-    ax.tick_params(axis='x', which='both',length=0)
+    plt.title("Average over the 'misinformation' accounts")
+    plt.xticks(x, labels, fontsize='large',)
+    ax.tick_params(axis='x', which='both', length=0)
     plt.xlim([-.5, 2.5])
+    ax.grid(axis="y", zorder=0, linestyle='--')
 
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
     ax.spines['top'].set_visible(False)
 
-    fig.tight_layout()
-    save_figure('figure_4', folder='ip&m')
+    plt.tight_layout(pad=3)
+    save_figure('figure_2', folder='ip&m')
 
-    t, p = stats.wilcoxon(repeat_offender_reaction, free_reaction)
+    t, p = stats.wilcoxon(repeat_offender['reaction'], free['reaction'])
     print('\nWilcoxon test between the reactions: t =', t, ', p =', p)
-    t, p = stats.wilcoxon(repeat_offender_share, free_share)
+    t, p = stats.wilcoxon(repeat_offender['share'], free['share'])
     print('\nWilcoxon test between the shares: t =', t, ', p =', p)
-    t, p = stats.wilcoxon(repeat_offender_comment, free_comment)
+    t, p = stats.wilcoxon(repeat_offender['comment'], free['comment'])
     print('\nWilcoxon test between the comments: t =', t, ', p =', p)
 
 
@@ -497,17 +493,16 @@ if __name__ == "__main__":
     save_figure_1(posts_fake, posts_main)
     print_figure_1_statistics(posts_fake)
 
-    # appearance_df  = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
-    # appearance_df  = keep_only_one_year_data(appearance_df)
-    # appearance_df = clean_crowdtangle_url_data(appearance_df)
+    appearance_df  = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
+    appearance_df  = keep_only_one_year_data(appearance_df)
+    appearance_df = clean_crowdtangle_url_data(appearance_df)
 
     # evolution_percentage = compute_main_metrics_and_their_predictors(posts_fake, appearance_df)
-    # # save_supplementary_figure_1(evolution_percentage)
+    # save_supplementary_figure_1(evolution_percentage)
     # print_correlation_coefficients(evolution_percentage, 'percentage_evolution')
 
-    # url_df = import_data(folder="data_sciencefeedback", file_name="appearances_2020-08-27_.csv")    
-    # save_figure_3(posts_fake, appearance_df, url_df)
-    # save_figure_4(posts_fake, appearance_df, url_df)
+    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_2020-08-27_.csv")    
+    save_figure_2(posts_fake, appearance_df, url_df)
 
     # Plot all the groups
     # save_supplementary_figure_2(posts_fake, appearance_df, url_df)
