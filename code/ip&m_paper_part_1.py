@@ -40,44 +40,43 @@ def details_temporal_evolution(posts_df, ax):
     ax.grid(axis="y")
 
 
-def plot_all_groups(posts_df, title_detail):
+def save_figure_1(posts_fake, posts_main):
 
-    plt.figure(figsize=(6.5, 7))
+    plt.figure(figsize=(12, 10))
 
-    ax = plt.subplot(311)
-    plt.title("Evolution of Facebook interaction metrics\naveraged for {} '"\
-        .format(posts_df["account_id"].nunique()) + title_detail + "' accounts", fontsize='large')
-    plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df["date"].value_counts().sort_index(), 
-            label="Reactions per post")
-    plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df["date"].value_counts().sort_index(), 
-            label="Shares per post")
-    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df["date"].value_counts().sort_index(), 
-            label="Comments per post")
-    details_temporal_evolution(posts_df, ax)
+    for index in range(2):
+        if index == 0:
+            posts_df = posts_fake
+            title_detail = 'Misinformation'
+        else:
+            posts_df = posts_main
+            title_detail = 'Mainstream news'
 
-    ax = plt.subplot(312)
+        ax = plt.subplot(3, 2, 1 + index)
+        plt.title("'" + title_detail + "' accounts", fontsize='x-large')
+        plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df["date"].value_counts().sort_index(), 
+                label="Reactions per post")
+        plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df["date"].value_counts().sort_index(), 
+                label="Shares per post")
+        plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df["date"].value_counts().sort_index(), 
+                label="Comments per post")
+        details_temporal_evolution(posts_df, ax)
 
-    plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-        label="Posts per day", color=[.2, .2, .2])
+        ax = plt.subplot(3, 2, 3 + index)
+        plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Posts per day", color=[.2, .2, .2])
+        details_temporal_evolution(posts_df, ax)
 
-    details_temporal_evolution(posts_df, ax)
-
-    ax = plt.subplot(313)
-
-    plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Reactions per day")
-    plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Shares per day")
-    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Comments per day")
-    details_temporal_evolution(posts_df, ax)
+        ax = plt.subplot(3, 2, 5 + index)
+        plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+                label="Reactions per day")
+        plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+                label="Shares per day")
+        plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+                label="Comments per day")
+        details_temporal_evolution(posts_df, ax)
 
     plt.tight_layout()
-
-
-def save_figure_1(posts_df):
-
-    plot_all_groups(posts_df, title_detail="misinformation")
     save_figure('figure_1', folder='ip&m')
 
 
@@ -104,12 +103,6 @@ def print_figure_1_statistics(posts_df):
     posts_df_temp = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
 
     print_evolution_percentages(posts_df_temp)
-
-
-def save_figure_2(posts_df):
-
-    plot_all_groups(posts_df, title_detail="mainstream news")
-    save_figure('figure_2', folder='ip&m')
 
 
 def compute_main_metrics_and_their_predictors(posts_fake_df, post_url_df):
@@ -498,25 +491,23 @@ def save_supplementary_figure_2(posts_df, post_url_df, url_df):
 
 
 if __name__ == "__main__":
-    
-    appearance_df  = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
-    appearance_df  = keep_only_one_year_data(appearance_df)
-    appearance_df = clean_crowdtangle_url_data(appearance_df)
 
     posts_fake = clean_crowdtangle_group_data("fake_news")
-    save_figure_1(posts_fake)
+    posts_main = clean_crowdtangle_group_data("main_news")
+    save_figure_1(posts_fake, posts_main)
     print_figure_1_statistics(posts_fake)
 
-    posts_main = clean_crowdtangle_group_data("main_news")
-    save_figure_2(posts_main)
+    # appearance_df  = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
+    # appearance_df  = keep_only_one_year_data(appearance_df)
+    # appearance_df = clean_crowdtangle_url_data(appearance_df)
 
-    evolution_percentage = compute_main_metrics_and_their_predictors(posts_fake, appearance_df)
-    # save_supplementary_figure_1(evolution_percentage)
-    print_correlation_coefficients(evolution_percentage, 'percentage_evolution')
+    # evolution_percentage = compute_main_metrics_and_their_predictors(posts_fake, appearance_df)
+    # # save_supplementary_figure_1(evolution_percentage)
+    # print_correlation_coefficients(evolution_percentage, 'percentage_evolution')
 
-    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_2020-08-27_.csv")    
-    save_figure_3(posts_fake, appearance_df, url_df)
-    save_figure_4(posts_fake, appearance_df, url_df)
+    # url_df = import_data(folder="data_sciencefeedback", file_name="appearances_2020-08-27_.csv")    
+    # save_figure_3(posts_fake, appearance_df, url_df)
+    # save_figure_4(posts_fake, appearance_df, url_df)
 
     # Plot all the groups
     # save_supplementary_figure_2(posts_fake, appearance_df, url_df)
