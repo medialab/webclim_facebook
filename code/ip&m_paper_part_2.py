@@ -14,7 +14,7 @@ from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords 
 from nltk.tokenize import word_tokenize
 
-from create_paper_tables_and_figures import import_data, save_figure
+from utils import import_data, save_figure
 
 
 stop_words = stopwords.words('english') + ['u', 'also', 'ha']
@@ -103,7 +103,7 @@ def save_figure_1(posts_df, repeat_offender_date):
                 color='C3', linestyle='--', linewidth=2)
 
     plt.tight_layout()
-    save_figure('sdro_figure_1')
+    save_figure('figure_3', folder='ip&m')
 
 
 def add_layout_details(ax):
@@ -205,7 +205,7 @@ def save_figure_2(posts_df, repeat_offender_date):
     add_layout_details(ax)
 
     plt.tight_layout(pad=3)
-    save_figure('sdro_figure_2')
+    save_figure('figure_4', folder='ip&m')
 
 
 def save_table_1(screenshot_df):
@@ -237,7 +237,7 @@ def save_figure_3(screenshot_df):
     ax.spines['top'].set_visible(False)
 
     plt.tight_layout()
-    save_figure('sdro_figure_3')
+    save_figure('figure_5', folder='ip&m')
 
     print('\nThe average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
     print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
@@ -266,9 +266,23 @@ def save_all_groups_figures(posts_df, repeat_offender_date):
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
-            save_figure('sdro_supplementary_figure_{}'.format(int(group_index / 10) + 1))
+            save_figure('supplementary_figure_3_{}'.format(int(group_index / 10) + 1), folder='ip&m')
 
         group_index += 1
+
+
+def save_supplementary_table_1():
+
+    df = import_data(folder="self_declared_repeat_offenders", file_name='alledged-repeat-offenders - Feuille 1.csv')
+    
+    df = df[df['date_in_screenshot'] & df['page_name_in_screenshot'] & df['is_clearly_reduced']]
+    df = df[df['group-or-page']=='page']
+    df = df.drop_duplicates(subset=['account-url'], keep='first')
+    df = df[['repeat-offender-post-url']]
+
+    df_path = os.path.join('.', 'data', 'self_declared_repeat_offenders', 'supplementary_table_1.csv')
+    df.to_csv(df_path, index=False)
+    print("The supplementary table 1 was saved in the 'self_declared_repeat_offenders' folder.")
 
 
 if __name__ == "__main__":
@@ -286,4 +300,5 @@ if __name__ == "__main__":
     save_table_1(screenshot_df)
     save_figure_3(screenshot_df)
 
-    save_all_groups_figures(posts_df, repeat_offender_date)
+    # save_all_groups_figures(posts_df, repeat_offender_date)
+    # save_supplementary_table_1()

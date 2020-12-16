@@ -9,161 +9,12 @@ import matplotlib.dates as mdates
 import matplotlib.patches as mpatches
 import scipy.stats as stats
 
+from utils import (import_data, save_figure, keep_only_one_year_data, 
+                   clean_crowdtangle_url_data, clean_crowdtangle_group_data)
+
 
 warnings.filterwarnings("ignore")
 pd.options.display.max_colwidth = 300
-
-
-def import_data(folder, file_name):
-    data_path = os.path.join(".", "data", folder, file_name)
-    df = pd.read_csv(data_path)
-    return df
-
-
-def keep_only_one_year_data(df):
-    df['date'] = pd.to_datetime(df['date'])
-    df = df[df['date'] < np.max(df['date'])]
-    df = df[df['date'] > np.max(df['date']) - datetime.timedelta(days=366)]
-    return df
-
-
-def filter_accounts_sharing_less_than_x_fake_news(df, x):
-    value_count = df.drop_duplicates(subset=['account_id', 'url'], keep='first')['account_id'].value_counts()
-    df_filtered = df[df['account_id'].isin(value_count[value_count >= x].index)]
-    return df_filtered
-
-
-def print_table_1(df_before, df_after):
-    
-    print('\n\nTABLE 1')
-
-    df_before_filtered = filter_accounts_sharing_less_than_x_fake_news(df_before, x=10)
-    print('\nThere are {} Facebook accounts sharing more than 10 fake news in the June data.'\
-        .format(df_before_filtered.account_id.nunique()))
-
-    list_qanon_before = [name for name in list(df_before_filtered.account_name.value_counts().index) if 'Q' in name]
-    print('The list of the {} QAnon related accounts in the June data:'.format(len(list_qanon_before)))
-    print(df_before_filtered[df_before_filtered['account_name'].isin(list_qanon_before)]\
-        [['account_name', 'account_subscriber_count']].drop_duplicates()\
-        .sort_values(by='account_subscriber_count', ascending=False).to_string(index=False))
-    print('Total number of follower: {}'.format(np.sum(df_before_filtered[df_before_filtered['account_name'].isin(list_qanon_before)]\
-        [['account_name', 'account_subscriber_count']].drop_duplicates()[['account_subscriber_count']].values)))
-
-
-    df_after_filtered = filter_accounts_sharing_less_than_x_fake_news(df_after, x=10)
-    print('\nThere are {} Facebook accounts sharing more than 10 fake news in the August data.'\
-        .format(df_after_filtered.account_id.nunique()))
-
-    list_qanon_after = [name for name in list(df_after_filtered.account_name.value_counts().index) if 'Q' in name]
-    print('The list of the {} QAnon related accounts in the Augsut data:'.format(len(list_qanon_after)))
-    print(df_after_filtered[df_after_filtered['account_name'].isin(list_qanon_after)]\
-        [['account_name', 'account_subscriber_count']].drop_duplicates()\
-        .sort_values(by='account_subscriber_count', ascending=False).to_string(index=False))
-    print('Total number of follower: {}'.format(np.sum(df_after_filtered[df_after_filtered['account_name'].isin(list_qanon_after)]\
-        [['account_name', 'account_subscriber_count']].drop_duplicates()[['account_subscriber_count']].values)))
-
-
-def print_table_2(df_before, df_after):
-
-    print('\n\nTABLE 2')
-
-    df_before_filtered = filter_accounts_sharing_less_than_x_fake_news(df_before, x=3)
-    print('\nThere are {} Facebook accounts sharing more than 3 fake news in the June data.'\
-        .format(df_before_filtered.account_id.nunique()))
-
-    list_qanon_before = [name for name in list(df_before_filtered.account_name.value_counts().index) if 'Q' in name]
-    accounts_to_remove_before = [
-        "Vương Nhất Bác 王一博 - UNIQ's Wang Yibo 1st Vietnamese Fanpage",
-        'QUESTION EVERYTHING... EVERYWHERE',
-        'QuantumEquilibrium ~ The Truth State',
-        '@STOP 5 G MONTRÉAL/QUÉBEC',
-        'AMERICANS Against Excessive Quarantine!',
-        'Questioning Global Warming',
-        'QUESTION EVERYTHING',
-        'Rastos Quimicos Portugal//Chemtrail Activism',
-        'Natural And Quodesh',
-        'STOP 5G Val-David. Laurentides et autres circonscriptions du Québec',
-        'Rockcastle County C.V.Q.R.G',
-        'Info Pro-Trump  Québec'
-    ]
-    list_qanon_before = [x for x in list_qanon_before if x not in accounts_to_remove_before]
-
-    print('There are {} accounts with Q in their names in the June data.'.format(len(list_qanon_before)))
-    print('Total number of follower: {}'.format(np.sum(df_before_filtered[df_before_filtered['account_name'].isin(list_qanon_before)]\
-        [['account_name', 'account_subscriber_count']].drop_duplicates()[['account_subscriber_count']].values)))
-
-
-    df_after_filtered = filter_accounts_sharing_less_than_x_fake_news(df_after, x=3)
-    print('\nThere are {} Facebook accounts sharing more than 3 fake news in the August data.'\
-        .format(df_after_filtered.account_id.nunique()))
-
-    list_qanon_after = [name for name in list(df_after_filtered.account_name.value_counts().index) if 'Q' in name]
-    accounts_to_remove_after = [
-        'QUESTION EVERYTHING... EVERYWHERE',
-        'AMERICANS Against Excessive Quarantine!',
-        'Info Pro-Trump  Québec',
-        'Médias Alternatifs Québecois',
-        'Wisconsinites Against Excessive Quarantine',
-        'Minnesotans Against Excessive Quarantine',
-        'Venner, der synes godt om Question Everything',
-        'Spiritual Awakening, Quantum Physics, Aliens & The 5th Dimension',
-        'Canadians Against Excessive Quarantine',
-        'PRQBUĐENI HRVATSKA',
-        'Quotes of Life',
-        'QUESTION EVERYTHING',
-        'Rastos Quimicos Portugal//Chemtrail Activism',
-        '@STOP 5 G MONTRÉAL/QUÉBEC',
-        'QuantumEquilibrium ~ The Truth State',
-        'STOP 5G Val-David. Laurentides et autres circonscriptions du Québec',
-        'Rockcastle County C.V.Q.R.G'
-    ]
-    list_qanon_after = [x for x in list_qanon_after if x not in accounts_to_remove_after]
-
-    print('There are {} accounts with Q in their names in the August data.'.format(len(list_qanon_after)))
-    print('Total number of follower: {}'.format(np.sum(df_after_filtered[df_after_filtered['account_name'].isin(list_qanon_after)]\
-        [['account_name', 'account_subscriber_count']].drop_duplicates()[['account_subscriber_count']].values)))
-
-
-def clean_crowdtangle_url_data(post_url_df):
-
-    post_url_df = post_url_df[post_url_df["platform"] == "Facebook"]
-    post_url_df = post_url_df.dropna(subset=['account_id', 'url'])
-
-    post_url_df = post_url_df.sort_values(by=['datetime'], ascending=True)
-    post_url_df = post_url_df.drop_duplicates(subset=['account_id', 'url'], keep='first')
-
-    post_url_df = post_url_df[['url', 'account_id', 'account_name', 'account_subscriber_count', 'date']]
-
-    return post_url_df
-
-
-def clean_crowdtangle_group_data(suffix):
-
-    posts_group_df = import_data(folder="data_crowdtangle_group", 
-                                 file_name="posts_" + suffix + "_group.csv")
-    print('\nThere are {} Facebook groups about {}.'.format(posts_group_df.account_id.nunique(), suffix))
-
-    posts_page_df = import_data(folder="data_crowdtangle_group", 
-                                file_name="posts_" + suffix + "_page.csv")
-    print('There are {} Facebook pages about {}.'.format(posts_page_df.account_id.nunique(), suffix))
-
-    posts_df = pd.concat([posts_group_df, posts_page_df])
-
-    posts_df['date'] = pd.to_datetime(posts_df['date'])
-    posts_df = posts_df[posts_df['date'] >= datetime.datetime.strptime('2019-09-01', '%Y-%m-%d')]
-    posts_df = posts_df[posts_df['date'] <= datetime.datetime.strptime('2020-08-31', '%Y-%m-%d')]
-
-    return posts_df
-
-
-def save_figure(figure_name):
-
-    figure_path = os.path.join('.', 'figure', figure_name + '.png')
-    plt.savefig(figure_path)
-
-    print('\n\n' + figure_name.upper())
-    print("The '{}' figure has been saved in the '{}' folder."\
-        .format(figure_path.split('/')[-1], figure_path.split('/')[-2]))
 
 
 def details_temporal_evolution(posts_df, ax):
@@ -227,7 +78,7 @@ def plot_all_groups(posts_df, title_detail):
 def save_figure_1(posts_df):
 
     plot_all_groups(posts_df, title_detail="misinformation")
-    save_figure('figure_1')
+    save_figure('figure_1', folder='ip&m')
 
 
 def print_evolution_percentages(posts_df):
@@ -258,7 +109,7 @@ def print_figure_1_statistics(posts_df):
 def save_figure_2(posts_df):
 
     plot_all_groups(posts_df, title_detail="mainstream news")
-    save_figure('figure_2')
+    save_figure('figure_2', folder='ip&m')
 
 
 def compute_main_metrics_and_their_predictors(posts_fake_df, post_url_df):
@@ -342,7 +193,7 @@ def save_supplementary_figure_1(evolution_percentage):
     plt.text(70, 150, 'r = ' + str(np.around(coef, decimals=2)))
 
     plt.tight_layout()
-    save_figure('supplementary_figure_1')
+    save_figure('supplementary_figure_1', folder='ip&m')
 
 
 def print_correlation_coefficients(df, column_to_predict):
@@ -499,7 +350,7 @@ def save_figure_3(posts_df, post_url_df, url_df):
         ax.grid(axis="y")
 
     plt.tight_layout()
-    save_figure('figure_3')
+    save_figure('figure_3', folder='ip&m')
 
 
 def keep_repeat_offender_posts(posts_df, account_id, repeat_offender_periods):
@@ -605,7 +456,7 @@ def save_figure_4(posts_df, post_url_df, url_df):
     ax.spines['top'].set_visible(False)
 
     fig.tight_layout()
-    save_figure('figure_4')
+    save_figure('figure_4', folder='ip&m')
 
     t, p = stats.wilcoxon(repeat_offender_reaction, free_reaction)
     print('\nWilcoxon test between the reactions: t =', t, ', p =', p)
@@ -641,23 +492,16 @@ def save_supplementary_figure_2(posts_df, post_url_df, url_df):
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
-            save_figure('supplementary_figure_2_{}'.format(int(group_index / 10) + 1))
+            save_figure('supplementary_figure_2_{}'.format(int(group_index / 10) + 1), folder='ip&m')
         
         group_index += 1
 
 
 if __name__ == "__main__":
-
-    posts_url_before = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-06-02_.csv")
-    posts_url_before = keep_only_one_year_data(posts_url_before)
-    posts_url_before = clean_crowdtangle_url_data(posts_url_before)
     
-    posts_url_after  = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
-    posts_url_after  = keep_only_one_year_data(posts_url_after)
-    posts_url_after = clean_crowdtangle_url_data(posts_url_after)
-
-    print_table_1(posts_url_before, posts_url_after)
-    print_table_2(posts_url_before, posts_url_after)
+    appearance_df  = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
+    appearance_df  = keep_only_one_year_data(appearance_df)
+    appearance_df = clean_crowdtangle_url_data(appearance_df)
 
     posts_fake = clean_crowdtangle_group_data("fake_news")
     save_figure_1(posts_fake)
@@ -666,13 +510,13 @@ if __name__ == "__main__":
     posts_main = clean_crowdtangle_group_data("main_news")
     save_figure_2(posts_main)
 
-    evolution_percentage = compute_main_metrics_and_their_predictors(posts_fake, posts_url_after)
+    evolution_percentage = compute_main_metrics_and_their_predictors(posts_fake, appearance_df)
     # save_supplementary_figure_1(evolution_percentage)
     print_correlation_coefficients(evolution_percentage, 'percentage_evolution')
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_2020-08-27_.csv")    
-    save_figure_3(posts_fake, posts_url_after, url_df)
-    save_figure_4(posts_fake, posts_url_after, url_df)
+    save_figure_3(posts_fake, appearance_df, url_df)
+    save_figure_4(posts_fake, appearance_df, url_df)
 
     # Plot all the groups
-    # save_supplementary_figure_2(posts_fake, posts_url_after, url_df)
+    # save_supplementary_figure_2(posts_fake, appearance_df, url_df)
