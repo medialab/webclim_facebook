@@ -105,98 +105,6 @@ def print_figure_1_statistics(posts_df):
     print_evolution_percentages(posts_df_temp)
 
 
-def compute_main_metrics_and_their_predictors(posts_fake_df, post_url_df):
-
-    follower_number = post_url_df[['account_id', 'account_subscriber_count']].drop_duplicates().dropna()
-
-    link_number = post_url_df[post_url_df['date'] < np.datetime64('2020-06-09')]
-    link_number = link_number[['account_id', 'url']].drop_duplicates().dropna()
-    link_number = link_number.account_id.value_counts().to_frame(name="link_number")\
-        .reset_index().rename(columns={"index": "account_id"})
-
-    vc = posts_fake_df['account_id'].value_counts()
-    posts_fake_df = posts_fake_df[posts_fake_df['account_id'].isin(vc[vc > 14].index)]
-
-    posts_fake_df['metric'] = posts_fake_df['share'] + posts_fake_df['comment'] + posts_fake_df['reaction']
-    popularity = posts_fake_df.groupby(by=["account_id"])['metric'].mean().to_frame(name="mean_popularity")\
-        .reset_index().rename(columns={"index": "account_id"})
-
-    evolution_percentage = pd.Series([])
-    for account_id in posts_fake_df['account_id'].unique():
-
-        posts_group_df = posts_fake_df[posts_fake_df['account_id']==account_id]
-        serie = posts_group_df.groupby(by=["date"])['metric'].mean()
-        if len(posts_group_df[posts_group_df['date']=='2020-06-08']) > 9 and len(posts_group_df[posts_group_df['date']=='2020-06-10']) > 9:
-            percentage = (serie.loc['2020-06-10'] - serie.loc['2020-06-08']) * 100 / serie.loc['2020-06-08']
-            evolution_percentage = evolution_percentage.append(pd.Series([percentage], index=[account_id]))
-
-    evolution_percentage = evolution_percentage.to_frame(name="percentage_evolution")\
-        .reset_index().rename(columns={"index": "account_id"})
-
-    evolution_percentage = evolution_percentage.merge(link_number, how='left', on='account_id').fillna(0)
-    evolution_percentage = evolution_percentage.merge(follower_number, how='left', on='account_id')
-    evolution_percentage = evolution_percentage.merge(popularity, how='left', on='account_id')
-
-    return evolution_percentage
-
-
-def save_supplementary_figure_1(evolution_percentage):
-
-    plt.figure(figsize=(12, 4))
-
-    plt.subplot(131)
-    plt.scatter(evolution_percentage['account_subscriber_count'], evolution_percentage['percentage_evolution'])
-
-    plt.xscale('log')
-    plt.gca().invert_yaxis()
-    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['+150%', '+100%', '+50%', '0%', '-50%', '-100%'])
-
-    plt.xlabel('Number of followers\n(in log scale)')
-    plt.ylabel("Evolution rate of each account's engagement\n between June 8 and 10, 2020")
-
-    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
-                list(evolution_percentage['account_subscriber_count'].values))[0, 1]
-    plt.text(80000, 150, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.subplot(132)
-    plt.scatter(evolution_percentage['mean_popularity'], evolution_percentage['percentage_evolution'])
-
-    plt.gca().invert_yaxis()
-    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['', '', '', '', '', ''])
-
-    plt.xscale('log')
-    plt.xlabel('Mean engagement per post\n(in log scale)')
-
-    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
-                list(evolution_percentage['mean_popularity'].values))[0, 1]
-    plt.text(90, 150, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.subplot(133)
-    plt.scatter(evolution_percentage['link_number'], evolution_percentage['percentage_evolution'])
-
-    plt.gca().invert_yaxis()
-    plt.yticks(ticks=[150, 100, 50, 0, -50, -100], labels=['', '', '', '', '', ''])
-
-    plt.xscale('log')
-    plt.xticks(ticks=[20, 30, 40, 60, 100], labels=['20', '30', '40', '60', '100'])
-    plt.xlabel('Number of shared misinformation links\n(in log scale)')
-
-    coef = np.corrcoef(list(evolution_percentage['percentage_evolution'].values), 
-                list(evolution_percentage['link_number'].values))[0, 1]
-    plt.text(70, 150, 'r = ' + str(np.around(coef, decimals=2)))
-
-    plt.tight_layout()
-    save_figure('supplementary_figure_1', folder='ip&m')
-
-
-def print_correlation_coefficients(df, column_to_predict):
-    print("\n\nFor the " + column_to_predict + " variable:")
-    for predictor in ['account_subscriber_count', 'mean_popularity', 'link_number']:
-        coef = np.corrcoef(list(df[column_to_predict].values), 
-                    list(df[predictor].values))[0, 1]
-        print("The correlation coefficient with {} is {}.".format(predictor, np.around(coef, decimals=2)))
-
-
 def rolling_average_per_day(df, column):
     return df.groupby(by=["date"])[column].mean().rolling(window=5, win_type='triang', center=True).mean()
 
@@ -496,10 +404,6 @@ if __name__ == "__main__":
     appearance_df  = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
     appearance_df  = keep_only_one_year_data(appearance_df)
     appearance_df = clean_crowdtangle_url_data(appearance_df)
-
-    # evolution_percentage = compute_main_metrics_and_their_predictors(posts_fake, appearance_df)
-    # save_supplementary_figure_1(evolution_percentage)
-    # print_correlation_coefficients(evolution_percentage, 'percentage_evolution')
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_2020-08-27_.csv")    
     save_figure_2(posts_fake, appearance_df, url_df)
