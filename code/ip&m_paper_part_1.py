@@ -40,7 +40,7 @@ def details_temporal_evolution(posts_df, ax):
     ax.grid(axis="y")
 
 
-def save_figure_1(posts_fake, posts_main):
+def save_figure_2(posts_fake, posts_main):
 
     plt.figure(figsize=(10, 7))
 
@@ -77,7 +77,7 @@ def save_figure_1(posts_fake, posts_main):
         details_temporal_evolution(posts_df, ax)
 
     plt.tight_layout()
-    save_figure('figure_1', folder='ip&m')
+    save_figure('figure_2', folder='ip&m')
 
 
 def print_evolution_percentages(posts_df):
@@ -90,7 +90,7 @@ def print_evolution_percentages(posts_df):
         ))
 
 
-def print_figure_1_statistics(posts_df):
+def print_figure_2_statistics(posts_df):
 
     print_evolution_percentages(posts_df)
 
@@ -289,7 +289,7 @@ def compute_periods_average(posts_df, post_url_df, url_df):
     return repeat_offender, free
 
 
-def save_figure_2(posts_df, post_url_df, url_df):
+def save_figure_1(posts_df, post_url_df, url_df):
 
     fig = plt.figure(figsize=(10, 6))
     gs = fig.add_gridspec(2, 5)
@@ -353,7 +353,7 @@ def save_figure_2(posts_df, post_url_df, url_df):
     ax.spines['top'].set_visible(False)
 
     plt.tight_layout(pad=3)
-    save_figure('figure_2', folder='ip&m')
+    save_figure('figure_1', folder='ip&m')
 
     t, p = stats.wilcoxon(repeat_offender['reaction'], free['reaction'])
     print('\nWilcoxon test between the reactions: t =', t, ', p =', p)
@@ -363,7 +363,7 @@ def save_figure_2(posts_df, post_url_df, url_df):
     print('\nWilcoxon test between the comments: t =', t, ', p =', p)
 
 
-def save_supplementary_figure_2(posts_df, post_url_df, url_df):
+def save_supplementary_figure_1(posts_df, post_url_df, url_df):
 
     group_index = 0
     for account_id in posts_df['account_id'].unique():
@@ -389,7 +389,7 @@ def save_supplementary_figure_2(posts_df, post_url_df, url_df):
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
-            save_figure('supplementary_figure_2_{}'.format(int(group_index / 10) + 1), folder='ip&m')
+            save_figure('supplementary_figure_1_{}'.format(int(group_index / 10) + 1), folder='ip&m')
         
         group_index += 1
 
@@ -398,15 +398,15 @@ if __name__ == "__main__":
 
     posts_fake = clean_crowdtangle_group_data("fake_news")
     posts_main = clean_crowdtangle_group_data("main_news")
-    save_figure_1(posts_fake, posts_main)
-    print_figure_1_statistics(posts_fake)
+    save_figure_2(posts_fake, posts_main)
+    print_figure_2_statistics(posts_fake)
 
     appearance_df  = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
     appearance_df  = keep_only_one_year_data(appearance_df)
     appearance_df = clean_crowdtangle_url_data(appearance_df)
 
     url_df = import_data(folder="data_sciencefeedback", file_name="appearances_2020-08-27_.csv")    
-    save_figure_2(posts_fake, appearance_df, url_df)
+    save_figure_1(posts_fake, appearance_df, url_df)
 
     # Plot all the groups
-    # save_supplementary_figure_2(posts_fake, appearance_df, url_df)
+    save_supplementary_figure_1(posts_fake, appearance_df, url_df)
