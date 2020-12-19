@@ -297,7 +297,7 @@ def save_figure_1(posts_df, post_url_df, url_df):
     ## First part
     ax = fig.add_subplot(gs[0, :])
 
-    account_name = 'Stop GeoEngineering, Chemtrails, Bio-hacking CRISPR, WeDoNotConsent'
+    account_name = 'Forbidden Knowledge News'
     account_id = posts_df[posts_df['account_name']==account_name].account_id.unique()[0]
     fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
     plot_one_group(posts_df, account_id, fake_news_dates=fake_news_dates)
@@ -309,7 +309,7 @@ def save_figure_1(posts_df, post_url_df, url_df):
 
     plt.text(
         s='Known strikes', color='C3',
-        x=np.datetime64('2019-09-05'), horizontalalignment='left', 
+        x=np.datetime64('2019-10-20'), horizontalalignment='left', 
         y=-1, verticalalignment='top'
     )
 
