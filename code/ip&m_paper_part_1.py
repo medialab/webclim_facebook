@@ -77,7 +77,7 @@ def save_figure_2(posts_fake, posts_main):
         details_temporal_evolution(posts_df, ax)
 
     plt.tight_layout()
-    save_figure('figure_2', folder='ip&m')
+    save_figure('figure_2', folder='ip&m', dpi=50)
 
 
 def print_evolution_percentages(posts_df):
@@ -353,7 +353,7 @@ def save_figure_1(posts_df, post_url_df, url_df):
     ax.spines['top'].set_visible(False)
 
     plt.tight_layout(pad=3)
-    save_figure('figure_1', folder='ip&m')
+    save_figure('figure_1', folder='ip&m', dpi=50)
 
     t, p = stats.wilcoxon(repeat_offender['reaction'], free['reaction'])
     print('\nWilcoxon test between the reactions: t =', t, ', p =', p)
@@ -389,7 +389,7 @@ def save_supplementary_figure_1(posts_df, post_url_df, url_df):
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
-            save_figure('supplementary_figure_1_{}'.format(int(group_index / 10) + 1), folder='ip&m')
+            save_figure('supplementary_figure_1_{}'.format(int(group_index / 10) + 1), folder='ip&m', dpi=30)
         
         group_index += 1
 

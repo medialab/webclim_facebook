@@ -12,14 +12,14 @@ def import_data(folder, file_name):
     return df
 
 
-def save_figure(figure_name, folder=None):
+def save_figure(figure_name, folder=None, dpi=None):
 
     if folder:
         figure_path = os.path.join('.', 'figure', folder, figure_name + '.png')
     else:
         figure_path = os.path.join('.', 'figure', figure_name + '.png')
     
-    plt.savefig(figure_path)
+    plt.savefig(figure_path, dpi=dpi)
 
     print('\n\n' + figure_name.upper())
     print("The '{}' figure has been saved in the '{}' folder."\
