@@ -193,7 +193,7 @@ def save_figure_2(posts_df, repeat_offender_date):
     df_comment['mean'] = df_comment.mean(axis=1)
     df_post_number['mean'] = df_post_number.mean(axis=1)
 
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(10, 7))
 
     ax = plt.subplot(2, 1, 1)
     plt.plot(df_reaction['mean'], label="Number of reactions per post")
@@ -206,7 +206,7 @@ def save_figure_2(posts_df, repeat_offender_date):
     add_layout_details(ax)
 
     plt.tight_layout(pad=3)
-    save_figure('figure_4', folder='ip&m')
+    save_figure('figure_4', folder='ip&m', dpi=50)
 
 
 def save_table_1(screenshot_df):
@@ -226,7 +226,7 @@ def save_table_1(screenshot_df):
 
 def save_figure_3(screenshot_df):
 
-    plt.figure(figsize=(8, 3))
+    plt.figure(figsize=(10, 4))
     ax = plt.subplot()
 
     plt.hist(screenshot_df['score'].values, 100, facecolor='grey')
@@ -238,7 +238,7 @@ def save_figure_3(screenshot_df):
     ax.spines['top'].set_visible(False)
 
     plt.tight_layout()
-    save_figure('figure_5', folder='ip&m')
+    save_figure('figure_5', folder='ip&m', dpi=50)
 
     print('\nThe average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
     print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
@@ -251,7 +251,7 @@ def save_all_groups_figures(posts_df, repeat_offender_date):
     for account_id in posts_df['account_id'].unique():
 
         if group_index % 10 == 0:
-            plt.figure(figsize=(15, 17))
+            plt.figure(figsize=(12, 14))
 
         ax = plt.subplot(5, 2, group_index % 10 + 1)
         
@@ -267,7 +267,7 @@ def save_all_groups_figures(posts_df, repeat_offender_date):
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
-            save_figure('supplementary_figure_2_{}'.format(int(group_index / 10) + 1), folder='ip&m')
+            save_figure('supplementary_figure_2_{}'.format(int(group_index / 10) + 1), folder='ip&m', dpi=30)
 
         group_index += 1
 
