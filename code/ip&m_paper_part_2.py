@@ -209,21 +209,6 @@ def save_figure_2(posts_df, repeat_offender_date):
     save_figure('figure_4', folder='ip&m', dpi=50)
 
 
-def save_table_1(screenshot_df):
-
-    text = '\n\n'.join(screenshot_df['message'].dropna().values)
-
-    text = re.sub(r'\W+', ' ', text).strip()
-    text = text.lower()
-    text = word_tokenize(text) 
-    text = [wnl.lemmatize(w) for w in text]
-    text = [w for w in text if not w in stop_words]
-
-    counter = Counter(text)
-    print('\n\n TABLE_1:')
-    print(*(counter.most_common(20)), sep="\n")
-
-
 def save_figure_3(screenshot_df):
 
     plt.figure(figsize=(10, 4))
@@ -298,7 +283,6 @@ if __name__ == "__main__":
 
     ## minet ct posts-by-id repeat-offender-post-url ./data/self_declared_repeat_offenders/supplementary_table_1.csv > ./data/self_declared_repeat_offenders/posts.csv
     screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
-    save_table_1(screenshot_df)
     save_figure_3(screenshot_df)
 
     # save_all_groups_figures(posts_df, repeat_offender_date)
