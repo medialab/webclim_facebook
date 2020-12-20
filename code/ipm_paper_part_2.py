@@ -16,7 +16,7 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
 from utils import import_data, save_figure
-
+from ipm_paper_part_1 import details_temporal_evolution
 
 warnings.filterwarnings("ignore")
 
@@ -229,6 +229,38 @@ def save_figure_5(screenshot_df):
     print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
 
 
+def save_figure_6(posts_df):
+
+    plt.figure(figsize=(5, 7))
+
+    ax = plt.subplot(3, 1, 1)
+    plt.title("self-declared 'repeat offender' accounts", fontsize='x-large')
+    plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df["date"].value_counts().sort_index(), 
+            label="Reactions per post")
+    plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df["date"].value_counts().sort_index(), 
+            label="Shares per post")
+    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df["date"].value_counts().sort_index(), 
+            label="Comments per post")
+    details_temporal_evolution(posts_df, ax)
+
+    ax = plt.subplot(3, 1, 2)
+    plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+        label="Posts per day", color=[.2, .2, .2])
+    details_temporal_evolution(posts_df, ax)
+
+    ax = plt.subplot(3, 1, 3)
+    plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Reactions per day")
+    plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Shares per day")
+    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
+            label="Comments per day")
+    details_temporal_evolution(posts_df, ax)
+
+    plt.tight_layout()
+    save_figure('figure_6', folder='ip&m', dpi=50)
+
+
 def save_all_groups_figures(posts_df, repeat_offender_date):
 
     group_index = 0
@@ -284,6 +316,8 @@ if __name__ == "__main__":
     ## minet ct posts-by-id repeat-offender-post-url ./data/self_declared_repeat_offenders/supplementary_table_1.csv > ./data/self_declared_repeat_offenders/posts.csv
     screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
     save_figure_5(screenshot_df)
+
+    # save_figure_6(posts_df)
 
     # save_all_groups_figures(posts_df, repeat_offender_date)
     # save_supplementary_table_1()
