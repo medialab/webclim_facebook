@@ -1,4 +1,5 @@
 import os
+import warnings
 import re
 import datetime
 import json
@@ -16,6 +17,8 @@ from nltk.tokenize import word_tokenize
 
 from utils import import_data, save_figure
 
+
+warnings.filterwarnings("ignore")
 
 stop_words = stopwords.words('english') + ['u', 'also', 'ha']
 wnl = WordNetLemmatizer() 
@@ -82,7 +85,7 @@ def plot_one_group(posts_df, account_id, ax):
 
 def save_figure_1(posts_df, repeat_offender_date):
 
-    account_name = 'Mark Levin'
+    account_name = 'I Love Carbon Dioxide'
     account_id = posts_df[posts_df['account_name']==account_name].account_id.unique()[0]
 
     plt.figure(figsize=(10, 4))
@@ -92,10 +95,8 @@ def save_figure_1(posts_df, repeat_offender_date):
 
     plot_one_group(posts_df, account_id, ax)
 
-    xticks = [np.datetime64('2019-11-01'),
-              np.datetime64('2020-01-01'), np.datetime64('2020-03-01'), np.datetime64('2020-05-01'), 
-              np.datetime64('2020-07-01'), np.datetime64('2020-09-01'), np.datetime64('2020-11-01'),
-              np.datetime64(repeat_offender_date[account_name])]
+    xticks = [np.datetime64('2020-01-01'), np.datetime64('2020-04-01'), np.datetime64('2020-07-01'), 
+              np.datetime64('2020-10-01'), np.datetime64(repeat_offender_date[account_name])]
     plt.xticks(xticks, rotation=30, ha='right')
     plt.gca().get_xticklabels()[-1].set_color('red')
 
@@ -103,7 +104,7 @@ def save_figure_1(posts_df, repeat_offender_date):
                 color='C3', linestyle='--', linewidth=2)
 
     plt.tight_layout()
-    save_figure('figure_3', folder='ip&m')
+    save_figure('figure_3', folder='ip&m', dpi=50)
 
 
 def add_layout_details(ax):
@@ -266,7 +267,7 @@ def save_all_groups_figures(posts_df, repeat_offender_date):
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
-            save_figure('supplementary_figure_3_{}'.format(int(group_index / 10) + 1), folder='ip&m')
+            save_figure('supplementary_figure_2_{}'.format(int(group_index / 10) + 1), folder='ip&m')
 
         group_index += 1
 
