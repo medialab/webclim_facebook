@@ -401,11 +401,11 @@ if __name__ == "__main__":
     save_figure_2(posts_fake, posts_main)
     print_figure_2_statistics(posts_fake)
 
-    appearance_df  = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
+    appearance_df  = import_data(folder="crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
     appearance_df  = keep_only_one_year_data(appearance_df)
     appearance_df = clean_crowdtangle_url_data(appearance_df)
 
-    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_2020-08-27_.csv")    
+    url_df = import_data(folder="sciencefeedback", file_name="appearances_2020-08-27_.csv")    
     save_figure_1(posts_fake, appearance_df, url_df)
 
     # Plot all the groups

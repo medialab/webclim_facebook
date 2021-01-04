@@ -303,11 +303,11 @@ if __name__ == "__main__":
         "climate": "dodgerblue"
     }
 
-    url_df = import_data(folder="data_sciencefeedback", file_name="appearances_" + DATE + "_.csv")
+    url_df = import_data(folder="sciencefeedback", file_name="appearances_" + DATE + "_.csv")
     print_table_1(url_df)
     save_figure_1(url_df, topic_color)
 
-    post_url_df = import_data(folder="data_crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
+    post_url_df = import_data(folder="crowdtangle_url", file_name="posts_url_" + DATE_URL_REQUEST + "_.csv")
     post_url_df = clean_crowdtangle_url_data(post_url_df, url_df)
     print_table_2(post_url_df, url_df)
     save_figure_2(post_url_df, topic_color)

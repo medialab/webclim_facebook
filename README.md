@@ -20,7 +20,7 @@ To collect data from CrowdTangle, a CrowdTangle token is needed, and you should 
 
 ### Extract the Science Feedback dataset
 
-You should export the following tables in a CSV format from the Science Feedback Airtable database, add the day's date in their name, and put them in the `data_sciencefeedback` folder:
+You should export the following tables in a CSV format from the Science Feedback Airtable database, add the day's date in their name, and put them in the `sciencefeedback` folder:
 * "Appearances-Grid view 2020-06-29.csv"
 * "Reviews _ Fact-checks-Grid view 2020-06-29.csv"
 
@@ -46,7 +46,7 @@ You should first have the list of the Facebook groups you want to collect. To se
 import pandas as pd
 pd.set_option('display.max_rows', None)
 
-posts_df = pd.read_csv("./data_crowdtangle_url/posts_url_2020-06-29.csv")
+posts_df = pd.read_csv("./crowdtangle_url/posts_url_2020-06-29.csv")
 posts_df["account_url"].value_counts()
 ```
 

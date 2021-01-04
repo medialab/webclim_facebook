@@ -103,11 +103,11 @@ def print_table_2(df_before, df_after):
 
 if __name__ == "__main__":
 
-    posts_url_before = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-06-02_.csv")
+    posts_url_before = import_data(folder="crowdtangle_url", file_name="posts_url_2020-06-02_.csv")
     posts_url_before = keep_only_one_year_data(posts_url_before)
     posts_url_before = clean_crowdtangle_url_data(posts_url_before)
     
-    posts_url_after  = import_data(folder="data_crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
+    posts_url_after  = import_data(folder="crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
     posts_url_after  = keep_only_one_year_data(posts_url_after)
     posts_url_after = clean_crowdtangle_url_data(posts_url_after)
 

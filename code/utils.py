@@ -48,11 +48,11 @@ def clean_crowdtangle_url_data(post_url_df):
 
 def clean_crowdtangle_group_data(suffix):
 
-    posts_group_df = import_data(folder="data_crowdtangle_group", 
+    posts_group_df = import_data(folder="crowdtangle_group", 
                                  file_name="posts_" + suffix + "_group.csv")
     print('\nThere are {} Facebook groups about {}.'.format(posts_group_df.account_id.nunique(), suffix))
 
-    posts_page_df = import_data(folder="data_crowdtangle_group", 
+    posts_page_df = import_data(folder="crowdtangle_group", 
                                 file_name="posts_" + suffix + "_page.csv")
     print('There are {} Facebook pages about {}.'.format(posts_page_df.account_id.nunique(), suffix))
 

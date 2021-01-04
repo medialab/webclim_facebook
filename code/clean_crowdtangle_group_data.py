@@ -6,7 +6,7 @@ import pandas as pd
 
 def import_all_csvs(DATE):
 
-    df_path = os.path.join('.', 'data', 'data_crowdtangle_group', 'posts_group_' + DATE + '.csv')
+    df_path = os.path.join('.', 'data', 'crowdtangle_group', 'posts_group_' + DATE + '.csv')
     df = pd.read_csv(df_path)
     
     return df
@@ -37,7 +37,7 @@ def clean_columns(df):
 
 def export_clean_csv(clean_df, SUFFIX):
 
-    csv_path = os.path.join('.', 'data', 'data_crowdtangle_group', 'posts_' + SUFFIX + '.csv')
+    csv_path = os.path.join('.', 'data', 'crowdtangle_group', 'posts_' + SUFFIX + '.csv')
     clean_df.to_csv(csv_path, index=False)
     print("The '{}' file has been printed in the '{}' folder".format(
         csv_path.split('/')[-1], csv_path.split('/')[-2])
