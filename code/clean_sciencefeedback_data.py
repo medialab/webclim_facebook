@@ -4,14 +4,7 @@ import sys
 import pandas as pd
 import ural
 
-
-def import_data(DATE):
-
-    url_path = os.path.join(".", "data", "sciencefeedback", 
-                            "Appearances-Grid view " + DATE + ".csv")
-    url_df = pd.read_csv(url_path)
-
-    return url_df
+from utils import (import_data, export_data)
 
 
 def keep_only_the_urls_considered_fake_by_facebook(url_df):
@@ -74,25 +67,16 @@ def keep_only_topic_data(url_df, TOPIC):
         return url_df
  
 
-def save_data(url_df, DATE, TOPIC):
-
-    url_df = url_df[['url', 'url_cleaned', 'domain_name', 'Item reviewed', 'Date of publication', 'scientific_topic']]
-
-    clean_url_path = os.path.join(".", "data", "sciencefeedback", "appearances_" + DATE + "_" + TOPIC + ".csv")
-    url_df.to_csv(clean_url_path, index=False)
-
-    print("The '{}' file with {} fake news url has been saved in the '{}' folder."\
-        .format(clean_url_path.split('/')[-1], len(url_df), clean_url_path.split('/')[-2]))
-
-
 if __name__ == "__main__":
 
     DATE = sys.argv[1]
     TOPIC = sys.argv[2] if len(sys.argv) >= 3 else ""
 
-    url_df = import_data(DATE)
+    url_df = import_data(folder="sciencefeedback", file_name="Appearances-Grid view " + DATE + ".csv")
     url_df = keep_only_the_urls_considered_fake_by_facebook(url_df)
     url_df = clean_url_format(url_df)
     url_df = add_info_from_fact_check_table(url_df)
     url_df = keep_only_topic_data(url_df, TOPIC)
-    save_data(url_df, DATE, TOPIC)
+    url_df = url_df[['url', 'url_cleaned', 'domain_name', 'Item reviewed', 'Date of publication', 'scientific_topic']]
+    print("There are {} fake news urls.".format(len(url_df)))
+    export_data(url_df, 'sciencefeedback', "appearances_" + DATE + "_" + TOPIC + ".csv")

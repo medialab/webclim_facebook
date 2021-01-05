@@ -3,13 +3,7 @@ import os
 
 import pandas as pd
 
-
-def import_all_csvs(DATE):
-
-    df_path = os.path.join('.', 'data', 'crowdtangle_group', 'posts_group_' + DATE + '.csv')
-    df = pd.read_csv(df_path)
-    
-    return df
+from utils import (import_data, export_data)
 
 
 def clean_columns(df):
@@ -35,21 +29,11 @@ def clean_columns(df):
     return clean_df
 
 
-def export_clean_csv(clean_df, SUFFIX):
-
-    csv_path = os.path.join('.', 'data', 'crowdtangle_group', 'posts_' + SUFFIX + '.csv')
-    clean_df.to_csv(csv_path, index=False)
-    print("The '{}' file has been printed in the '{}' folder".format(
-        csv_path.split('/')[-1], csv_path.split('/')[-2])
-    )
-
-
 if __name__=="__main__":
 
     DATE = sys.argv[1]
     SUFFIX = sys.argv[2]
 
-    df = import_all_csvs(DATE)
+    df = import_data(folder="crowdtangle_group", file_name='posts_group_' + DATE + '.csv')
     clean_df = clean_columns(df)
-    export_clean_csv(clean_df, SUFFIX)
-
+    export_data(clean_df, 'crowdtangle_group', 'posts_' + SUFFIX + '.csv')
