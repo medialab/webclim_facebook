@@ -47,6 +47,7 @@ import pandas as pd
 pd.set_option('display.max_rows', None)
 
 posts_df = pd.read_csv("./crowdtangle_url/posts_url_2020-06-29.csv")
+posts_df = posts_df.drop_duplicates(subset=['url', 'account_url'])
 posts_df["account_url"].value_counts()
 ```
 
