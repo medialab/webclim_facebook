@@ -363,7 +363,7 @@ def save_figure_1(posts_df, post_url_df, url_df):
     print('\nWilcoxon test between the comments: t =', t, ', p =', p)
 
 
-def save_supplementary_figure_1(posts_df, post_url_df, url_df):
+def save_all_groups_figures(posts_df, post_url_df, url_df):
 
     group_index = 0
     for account_id in posts_df['account_id'].unique():
@@ -389,7 +389,7 @@ def save_supplementary_figure_1(posts_df, post_url_df, url_df):
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
-            save_figure('supplementary_figure_1_{}'.format(int(group_index / 10) + 1), folder='ip&m', dpi=30)
+            save_figure('supplementary_figure_2_{}'.format(int(group_index / 10) + 1), folder='ip&m', dpi=30)
         
         group_index += 1
 
@@ -409,4 +409,4 @@ if __name__ == "__main__":
     save_figure_1(posts_fake, appearance_df, url_df)
 
     # Plot all the groups
-    save_supplementary_figure_1(posts_fake, appearance_df, url_df)
+    save_all_groups_figures(posts_fake, appearance_df, url_df)

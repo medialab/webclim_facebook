@@ -209,7 +209,7 @@ def save_figure_4(posts_df, repeat_offender_date):
     save_figure('figure_4', folder='ip&m', dpi=50)
 
 
-def save_figure_5(screenshot_df):
+def save_supplementary_figure_1(screenshot_df):
 
     plt.figure(figsize=(10, 4))
     ax = plt.subplot()
@@ -223,7 +223,7 @@ def save_figure_5(screenshot_df):
     ax.spines['top'].set_visible(False)
 
     plt.tight_layout()
-    save_figure('figure_5', folder='ip&m', dpi=50)
+    save_figure('supplementary_figure_1', folder='ip&m', dpi=50)
 
     print('\nThe average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
     print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
@@ -284,7 +284,7 @@ def save_all_groups_figures(posts_df, repeat_offender_date):
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
-            save_figure('supplementary_figure_2_{}'.format(int(group_index / 10) + 1), folder='ip&m', dpi=30)
+            save_figure('supplementary_figure_3_{}'.format(int(group_index / 10) + 1), folder='ip&m', dpi=30)
 
         group_index += 1
 
@@ -315,7 +315,7 @@ if __name__ == "__main__":
 
     ## minet ct posts-by-id repeat-offender-post-url ./data/self_declared_repeat_offenders/supplementary_table_1.csv > ./data/self_declared_repeat_offenders/posts.csv
     screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
-    save_figure_5(screenshot_df)
+    save_supplementary_figure_1(screenshot_df)
 
     # save_figure_6(posts_df)
 
