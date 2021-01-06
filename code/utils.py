@@ -67,7 +67,7 @@ def clean_crowdtangle_group_data(suffix):
     posts_df = pd.concat([posts_group_df, posts_page_df])
 
     posts_df['date'] = pd.to_datetime(posts_df['date'])
-    posts_df = posts_df[posts_df['date'] >= datetime.datetime.strptime('2019-09-01', '%Y-%m-%d')]
-    posts_df = posts_df[posts_df['date'] <= datetime.datetime.strptime('2020-08-31', '%Y-%m-%d')]
+    # posts_df = posts_df[posts_df['date'] >= datetime.datetime.strptime('2019-09-01', '%Y-%m-%d')]
+    # posts_df = posts_df[posts_df['date'] <= datetime.datetime.strptime('2020-08-31', '%Y-%m-%d')]
 
     return posts_df

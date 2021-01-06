@@ -24,13 +24,13 @@ def details_temporal_evolution(posts_df, ax):
     plt.legend()
 
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
-    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=3))
+    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=4))
 
     plt.locator_params(axis='y', nbins=4)
 
     plt.xlim(
-        np.datetime64(datetime.datetime.strptime('2019-09-01', '%Y-%m-%d') - datetime.timedelta(days=4)), 
-        np.datetime64(datetime.datetime.strptime('2020-08-31', '%Y-%m-%d') + datetime.timedelta(days=4))
+        np.datetime64(datetime.datetime.strptime('2019-01-01', '%Y-%m-%d') - datetime.timedelta(days=4)), 
+        np.datetime64(datetime.datetime.strptime('2020-12-31', '%Y-%m-%d') + datetime.timedelta(days=4))
     )
     plt.ylim(bottom=0)
 
@@ -397,20 +397,20 @@ def save_all_groups_figures(posts_df, post_url_df, url_df):
 
 if __name__ == "__main__":
 
-    posts_fake = clean_crowdtangle_group_data("fake_news")
+    # posts_fake = clean_crowdtangle_group_data("fake_news_1_2021")
 
-    appearance_df  = import_data(folder="crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
-    appearance_df  = keep_only_one_year_data(appearance_df)
-    appearance_df = clean_crowdtangle_url_data(appearance_df)
+    # appearance_df  = import_data(folder="crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
+    # appearance_df  = keep_only_one_year_data(appearance_df)
+    # appearance_df = clean_crowdtangle_url_data(appearance_df)
 
-    url_df = import_data(folder="sciencefeedback", file_name="appearances_2020-08-27_.csv")    
-    save_figure_1(posts_fake, appearance_df, url_df)
+    # url_df = import_data(folder="sciencefeedback", file_name="appearances_2020-08-27_.csv")    
+    # save_figure_1(posts_fake, appearance_df, url_df)
 
-    save_figure_2(posts_fake)
-    print_figure_2_statistics(posts_fake)
+    # save_figure_2(posts_fake)
+    # print_figure_2_statistics(posts_fake)
 
-    posts_main = clean_crowdtangle_group_data("main_news")
+    posts_main = clean_crowdtangle_group_data("main_news_2021")
     save_figure_3(posts_main)
 
     # Plot all the groups
-    save_all_groups_figures(posts_fake, appearance_df, url_df)
+    # save_all_groups_figures(posts_fake, appearance_df, url_df)
