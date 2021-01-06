@@ -83,7 +83,7 @@ def plot_one_group(posts_df, account_id, ax):
     ax.grid(axis="y")
 
 
-def save_figure_3(posts_df, repeat_offender_date):
+def save_figure_4(posts_df, repeat_offender_date):
 
     account_name = 'I Love Carbon Dioxide'
     account_id = posts_df[posts_df['account_name']==account_name].account_id.unique()[0]
@@ -104,7 +104,7 @@ def save_figure_3(posts_df, repeat_offender_date):
                 color='C3', linestyle='--', linewidth=2)
 
     plt.tight_layout()
-    save_figure('figure_3', folder='ip&m', dpi=50)
+    save_figure('figure_4', folder='ip&m', dpi=50)
 
 
 def add_layout_details(ax):
@@ -122,7 +122,7 @@ def add_layout_details(ax):
     ax.spines['top'].set_visible(False)
 
 
-def save_figure_4(posts_df, repeat_offender_date):
+def save_figure_5(posts_df, repeat_offender_date):
 
     reaction_before = []
     share_before = []
@@ -206,7 +206,7 @@ def save_figure_4(posts_df, repeat_offender_date):
     add_layout_details(ax)
 
     plt.tight_layout(pad=3)
-    save_figure('figure_4', folder='ip&m', dpi=50)
+    save_figure('figure_5', folder='ip&m', dpi=50)
 
 
 def save_supplementary_figure_1(screenshot_df):
@@ -310,8 +310,8 @@ if __name__ == "__main__":
     posts_df = clean_post_data(posts_df)
     repeat_offender_date = import_json(folder='self_declared_repeat_offenders', file_name='dates.json')
 
-    save_figure_3(posts_df, repeat_offender_date)
     save_figure_4(posts_df, repeat_offender_date)
+    save_figure_5(posts_df, repeat_offender_date)
 
     ## minet ct posts-by-id repeat-offender-post-url ./data/self_declared_repeat_offenders/supplementary_table_1.csv > ./data/self_declared_repeat_offenders/posts.csv
     screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
@@ -319,5 +319,5 @@ if __name__ == "__main__":
 
     # save_figure_6(posts_df)
 
-    # save_all_groups_figures(posts_df, repeat_offender_date)
+    save_all_groups_figures(posts_df, repeat_offender_date)
     # save_supplementary_table_1()
