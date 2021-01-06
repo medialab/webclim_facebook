@@ -317,7 +317,7 @@ def save_figure_1(posts_df, post_url_df, url_df):
 
     patch1 = mpatches.Patch(facecolor='pink', alpha=0.4, edgecolor='k')
     patch2 = mpatches.Patch(facecolor='white', alpha=0.4, edgecolor='k')
-    legend2 = plt.legend([patch1, patch2], ["'Repeat offender' periods", "'Free' periods"],
+    legend2 = plt.legend([patch1, patch2], ["'Repeat offender' periods", "'No strike' periods"],
                 loc='upper right', framealpha=1)
     plt.gca().add_artist(legend1)
 
@@ -339,7 +339,7 @@ def save_figure_1(posts_df, post_url_df, url_df):
                                         np.mean(repeat_offender['comment'])], 
                     width, label="'Repeat offender' periods", color='pink', edgecolor=[.2, .2, .2], zorder=3)
     plt.bar(x + width/2, [np.mean(free['reaction']), np.mean(free['share']), np.mean(free['comment'])], 
-                    width, label="'Free' periods", color='white', edgecolor=[.2, .2, .2], zorder=3)
+                    width, label="'No strike' periods", color='white', edgecolor=[.2, .2, .2], zorder=3)
     plt.legend(framealpha=1)
 
     plt.title("Average over the 'misinformation' accounts")
