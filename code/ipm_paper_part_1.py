@@ -50,14 +50,18 @@ def details_temporal_evolution(posts_df, ax):
 
     plt.legend()
 
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
-    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=4))
+    xticks = [np.datetime64('2019-01-01'), np.datetime64('2019-03-01'), np.datetime64('2019-05-01'), 
+              np.datetime64('2019-07-01'), np.datetime64('2019-09-01'), np.datetime64('2019-11-01'),
+              np.datetime64('2020-01-01'), np.datetime64('2020-03-01'), np.datetime64('2020-05-01'), 
+              np.datetime64('2020-07-01'), np.datetime64('2020-09-01'), np.datetime64('2020-11-01'),
+             ]
+    plt.xticks(xticks, rotation=30, ha='right')
 
     plt.locator_params(axis='y', nbins=4)
 
     plt.xlim(
-        np.datetime64(datetime.datetime.strptime('2019-01-01', '%Y-%m-%d') - datetime.timedelta(days=4)), 
-        np.datetime64(datetime.datetime.strptime('2020-12-31', '%Y-%m-%d') + datetime.timedelta(days=4))
+        np.datetime64(datetime.datetime.strptime('2018-12-31', '%Y-%m-%d') - datetime.timedelta(days=4)), 
+        np.datetime64(datetime.datetime.strptime('2021-01-01', '%Y-%m-%d') + datetime.timedelta(days=4))
     )
     plt.ylim(bottom=0)
 
