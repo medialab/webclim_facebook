@@ -108,7 +108,7 @@ def save_figure_2(posts_fake):
 
 
 def save_figure_3(posts_main):
-    plot_group_average(posts_main, title_detail="Mainstream news")
+    plot_group_average(posts_main, title_detail="Established news")
     save_figure('figure_3', folder='ip&m', dpi=100)
 
 
