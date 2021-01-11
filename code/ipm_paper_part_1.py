@@ -10,11 +10,38 @@ import matplotlib.patches as mpatches
 import scipy.stats as stats
 
 from utils import (import_data, save_figure, keep_only_one_year_data, 
-                   clean_crowdtangle_url_data, clean_crowdtangle_group_data)
+                   clean_crowdtangle_url_data)
 
 
 warnings.filterwarnings("ignore")
 pd.options.display.max_colwidth = 300
+
+
+def concatenate_crowdtangle_group_data(suffix):
+
+    if suffix == "fake_news_2021":
+        df_list = []
+        for file_index in range(5):
+            df_list.append(import_data(folder="crowdtangle_group", 
+                file_name="posts_" + suffix + "_group_" + str(file_index + 1) + ".csv"))
+        posts_group_df = pd.concat(df_list)  
+    else:
+        posts_group_df = import_data(folder="crowdtangle_group", 
+                                    file_name="posts_" + suffix + "_group.csv")
+
+    print('\nThere are {} Facebook groups about {}.'.format(posts_group_df.account_id.nunique(), suffix))
+
+    posts_page_df = import_data(folder="crowdtangle_group", 
+                                file_name="posts_" + suffix + "_page.csv")
+    print('There are {} Facebook pages about {}.'.format(posts_page_df.account_id.nunique(), suffix))
+
+    posts_df = pd.concat([posts_group_df, posts_page_df])
+
+    posts_df['date'] = pd.to_datetime(posts_df['date'])
+    # posts_df = posts_df[posts_df['date'] >= datetime.datetime.strptime('2019-09-01', '%Y-%m-%d')]
+    # posts_df = posts_df[posts_df['date'] <= datetime.datetime.strptime('2020-08-31', '%Y-%m-%d')]
+
+    return posts_df
 
 
 def details_temporal_evolution(posts_df, ax):
@@ -73,12 +100,12 @@ def plot_group_average(posts_df, title_detail):
 
 def save_figure_2(posts_fake):
     plot_group_average(posts_fake, title_detail="Misinformation")
-    save_figure('figure_2', folder='ip&m', dpi=50)
+    save_figure('figure_2', folder='ip&m', dpi=100)
 
 
 def save_figure_3(posts_main):
     plot_group_average(posts_main, title_detail="Mainstream news")
-    save_figure('figure_3', folder='ip&m', dpi=50)
+    save_figure('figure_3', folder='ip&m', dpi=100)
 
 
 def print_evolution_percentages(posts_df):
@@ -397,7 +424,7 @@ def save_all_groups_figures(posts_df, post_url_df, url_df):
 
 if __name__ == "__main__":
 
-    # posts_fake = clean_crowdtangle_group_data("fake_news_1_2021")
+    posts_fake = concatenate_crowdtangle_group_data("fake_news_2021")
 
     # appearance_df  = import_data(folder="crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
     # appearance_df  = keep_only_one_year_data(appearance_df)
@@ -406,10 +433,10 @@ if __name__ == "__main__":
     # url_df = import_data(folder="sciencefeedback", file_name="appearances_2020-08-27_.csv")    
     # save_figure_1(posts_fake, appearance_df, url_df)
 
-    # save_figure_2(posts_fake)
+    save_figure_2(posts_fake)
     # print_figure_2_statistics(posts_fake)
 
-    posts_main = clean_crowdtangle_group_data("main_news_2021")
+    posts_main = concatenate_crowdtangle_group_data("main_news_2021")
     save_figure_3(posts_main)
 
     # Plot all the groups

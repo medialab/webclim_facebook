@@ -52,22 +52,3 @@ def clean_crowdtangle_url_data(post_url_df):
     post_url_df = post_url_df[['url', 'account_id', 'account_name', 'account_subscriber_count', 'date']]
 
     return post_url_df
-
-
-def clean_crowdtangle_group_data(suffix):
-
-    posts_group_df = import_data(folder="crowdtangle_group", 
-                                 file_name="posts_" + suffix + "_group.csv")
-    print('\nThere are {} Facebook groups about {}.'.format(posts_group_df.account_id.nunique(), suffix))
-
-    posts_page_df = import_data(folder="crowdtangle_group", 
-                                file_name="posts_" + suffix + "_page.csv")
-    print('There are {} Facebook pages about {}.'.format(posts_page_df.account_id.nunique(), suffix))
-
-    posts_df = pd.concat([posts_group_df, posts_page_df])
-
-    posts_df['date'] = pd.to_datetime(posts_df['date'])
-    # posts_df = posts_df[posts_df['date'] >= datetime.datetime.strptime('2019-09-01', '%Y-%m-%d')]
-    # posts_df = posts_df[posts_df['date'] <= datetime.datetime.strptime('2020-08-31', '%Y-%m-%d')]
-
-    return posts_df
