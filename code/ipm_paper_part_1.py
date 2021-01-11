@@ -126,6 +126,25 @@ def print_figure_2_statistics(posts_df):
 
     print_evolution_percentages(posts_df)
 
+    all_accounts_index = 0
+    declining_accounts_index = 0
+
+    for account_id in posts_df['account_id'].unique():
+        posts_df_group = posts_df[posts_df["account_id"] == account_id]
+        reaction_serie = posts_df_group.groupby(by=["date"])['reaction'].mean()
+        share_serie = posts_df_group.groupby(by=["date"])['share'].mean()
+        comment_serie = posts_df_group.groupby(by=["date"])['comment'].mean()
+
+        if ('2020-06-08' in reaction_serie.index) and ('2020-06-10' in reaction_serie.index):
+            all_accounts_index += 1
+            if ((reaction_serie.loc['2020-06-10'] < reaction_serie.loc['2020-06-08']) and 
+                (share_serie.loc['2020-06-10'] < share_serie.loc['2020-06-08']) and 
+                (comment_serie.loc['2020-06-10'] < comment_serie.loc['2020-06-08'])):
+                declining_accounts_index += 1
+
+    print('\nAmong the {} misinformation accounts, {} of them see their three engagement metrics decline.'\
+            .format(all_accounts_index, declining_accounts_index))
+
     list_complete_groups_id = []
     for id in posts_df['account_id'].unique():
         posts_df_group = posts_df[posts_df["account_id"] == id]
@@ -438,7 +457,7 @@ if __name__ == "__main__":
     # save_figure_1(posts_fake, appearance_df, url_df)
 
     save_figure_2(posts_fake)
-    # print_figure_2_statistics(posts_fake)
+    print_figure_2_statistics(posts_fake)
 
     posts_main = concatenate_crowdtangle_group_data("main_news_2021")
     save_figure_3(posts_main)
