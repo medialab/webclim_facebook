@@ -48,6 +48,7 @@ def clean_crowdtangle_url_data(post_url_df):
 
     post_url_df = post_url_df.sort_values(by=['datetime'], ascending=True)
     post_url_df = post_url_df.drop_duplicates(subset=['account_id', 'url'], keep='first')
+    post_url_df['account_id'] = post_url_df['account_id'].astype(int)
 
     post_url_df = post_url_df[['url', 'account_id', 'account_name', 'account_subscriber_count', 'date']]
 

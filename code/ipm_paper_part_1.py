@@ -9,8 +9,7 @@ import matplotlib.dates as mdates
 import matplotlib.patches as mpatches
 import scipy.stats as stats
 
-from utils import (import_data, save_figure, keep_only_one_year_data, 
-                   clean_crowdtangle_url_data)
+from utils import import_data, save_figure, clean_crowdtangle_url_data
 
 
 warnings.filterwarnings("ignore")
@@ -160,7 +159,7 @@ def rolling_average_per_day(df, column):
     return df.groupby(by=["date"])[column].mean().rolling(window=5, win_type='triang', center=True).mean()
 
 
-def plot_one_group(posts_df, account_id, fake_news_dates):
+def plot_one_group(ax, posts_df, account_id, fake_news_dates):
     
     posts_df_group = posts_df[posts_df["account_id"] == account_id]
     
@@ -173,16 +172,18 @@ def plot_one_group(posts_df, account_id, fake_news_dates):
     plt.plot(rolling_average_per_day(posts_df_group, 'comment'), 
             label="Comments per post", color="C2")
 
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
-    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=3))
-
     plt.locator_params(axis='y', nbins=4)
+    xticks = [np.datetime64('2019-01-01'), np.datetime64('2019-03-01'), np.datetime64('2019-05-01'), 
+              np.datetime64('2019-07-01'), np.datetime64('2019-09-01'), np.datetime64('2019-11-01'),
+              np.datetime64('2020-01-01'), np.datetime64('2020-03-01'), np.datetime64('2020-05-01'), 
+              np.datetime64('2020-07-01'), np.datetime64('2020-09-01'), np.datetime64('2020-11-01'),
+             ]
+    plt.xticks(xticks, rotation=30, ha='right')
 
     plt.xlim(
-        np.datetime64(datetime.datetime.strptime('2019-09-01', '%Y-%m-%d') - datetime.timedelta(days=4)), 
-        np.datetime64(datetime.datetime.strptime('2020-08-31', '%Y-%m-%d') + datetime.timedelta(days=4))
+        np.datetime64(datetime.datetime.strptime('2018-12-31', '%Y-%m-%d') - datetime.timedelta(days=4)), 
+        np.datetime64(datetime.datetime.strptime('2021-01-01', '%Y-%m-%d') + datetime.timedelta(days=4))
     )
-    plt.ylim(bottom=0)
 
     scale_y = np.nanmax([rolling_average_per_day(posts_df_group, 'reaction'),
                         rolling_average_per_day(posts_df_group, 'comment'),
@@ -191,18 +192,22 @@ def plot_one_group(posts_df, account_id, fake_news_dates):
     for date in fake_news_dates:
         plt.arrow(x=date, y=0, dx=0, dy=-scale_y, color='C3')
 
-    plt.hlines(0, xmin=np.datetime64('2019-08-28'), xmax=np.datetime64('2020-09-04'), linewidths=1)
+    plt.hlines(0, xmin=np.datetime64('2018-12-17'), xmax=np.datetime64('2021-01-04'), linewidths=1)
     plt.ylim(bottom=-scale_y)
+        
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.grid(axis="y")
 
 
 def compute_fake_news_dates(post_url_df, url_df, account_id):
 
     post_url_group_df = post_url_df[post_url_df["account_id"]==account_id]
-    urls = post_url_group_df["url"].unique().tolist()
-
     fake_news_dates = []
 
-    for url in urls:
+    for url in post_url_group_df["url"].unique().tolist():
         potential_dates = []
 
         # We consider the date of the Facebook post or posts:
@@ -342,16 +347,16 @@ def compute_periods_average(posts_df, post_url_df, url_df):
 
 def save_figure_1(posts_df, post_url_df, url_df):
 
-    fig = plt.figure(figsize=(10, 6))
+    fig = plt.figure(figsize=(10, 8))
     gs = fig.add_gridspec(2, 5)
 
     ## First part
     ax = fig.add_subplot(gs[0, :])
 
-    account_name = 'Forbidden Knowledge News'
+    account_name = 'Australian Climate Sceptics Group'
     account_id = posts_df[posts_df['account_name']==account_name].account_id.unique()[0]
     fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
-    plot_one_group(posts_df, account_id, fake_news_dates=fake_news_dates)
+    plot_one_group(ax, posts_df, account_id, fake_news_dates=fake_news_dates)
 
     repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
     repeat_offender_periods = merge_overlapping_periods(repeat_offender_periods)
@@ -359,9 +364,9 @@ def save_figure_1(posts_df, post_url_df, url_df):
         plt.axvspan(period[0], period[1], ymin=1/11, facecolor='C3', alpha=0.1)
 
     plt.text(
-        s='Known strikes', color='C3',
-        x=np.datetime64('2019-10-20'), horizontalalignment='left', 
-        y=-1, verticalalignment='top'
+        s='Known strikes', color='C3', fontweight='bold',
+        x=np.datetime64('2019-09-25'), horizontalalignment='right', 
+        y=-2, verticalalignment='top'
     )
 
     legend1 = plt.legend(loc='upper left')
@@ -372,12 +377,9 @@ def save_figure_1(posts_df, post_url_df, url_df):
                 loc='upper right', framealpha=1)
     plt.gca().add_artist(legend1)
 
-    plt.title(account_name)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.spines['bottom'].set_visible(False)
-    ax.grid(axis="y")
+    plt.ylim(top=80)
+
+    plt.title("Engagement metrics for one Facebook group example ('" + account_name + "')")
 
     ## Second part
     repeat_offender, free = compute_periods_average(posts_df, post_url_df, url_df)
@@ -393,18 +395,20 @@ def save_figure_1(posts_df, post_url_df, url_df):
                     width, label="'No strike' periods", color='white', edgecolor=[.2, .2, .2], zorder=3)
     plt.legend(framealpha=1)
 
-    plt.title("Average over the 'misinformation' accounts")
+    plt.title("Engagement metrics averaged over {} 'misinformation' accounts"\
+        .format(len(repeat_offender['reaction'])))
     plt.xticks(x, labels, fontsize='large',)
     ax.tick_params(axis='x', which='both', length=0)
     plt.xlim([-.5, 2.5])
-    ax.grid(axis="y", zorder=0, linestyle='--')
+    ax.grid(axis="y", zorder=0)
+    plt.locator_params(axis='y', nbins=4)
 
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
     ax.spines['top'].set_visible(False)
 
     plt.tight_layout(pad=3)
-    save_figure('figure_1', folder='ip&m', dpi=50)
+    save_figure('figure_1', folder='ip&m', dpi=100)
 
     t, p = stats.wilcoxon(repeat_offender['reaction'], free['reaction'])
     print('\nWilcoxon test between the reactions: t =', t, ', p =', p)
@@ -427,10 +431,10 @@ def save_all_groups_figures(posts_df, post_url_df, url_df):
         if group_index % 10 == 0:
             plt.figure(figsize=(12, 14))
 
-        plt.subplot(5, 2, group_index % 10 + 1)
+        ax = plt.subplot(5, 2, group_index % 10 + 1)
 
         fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
-        plot_one_group(posts_df, account_id, fake_news_dates=fake_news_dates)
+        plot_one_group(ax, posts_df, account_id, fake_news_dates=fake_news_dates)
         plt.title(posts_df[posts_df['account_id']==account_id].account_name.unique()[0])
 
         repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
@@ -440,8 +444,8 @@ def save_all_groups_figures(posts_df, post_url_df, url_df):
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
-            save_figure('supplementary_figure_2_{}'.format(int(group_index / 10) + 1), folder='ip&m', dpi=30)
-        
+            save_figure('part_1_all_groups_{}'.format(int(group_index / 10) + 1), folder='ip&m', dpi=100)
+
         group_index += 1
 
 
@@ -449,12 +453,11 @@ if __name__ == "__main__":
 
     posts_fake = concatenate_crowdtangle_group_data("fake_news_2021")
 
-    # appearance_df  = import_data(folder="crowdtangle_url", file_name="posts_url_2020-08-31_.csv")
-    # appearance_df  = keep_only_one_year_data(appearance_df)
-    # appearance_df = clean_crowdtangle_url_data(appearance_df)
+    appearance_df  = import_data(folder="crowdtangle_url", file_name="posts_url_2021-01-04_.csv")
+    appearance_df = clean_crowdtangle_url_data(appearance_df)
 
-    # url_df = import_data(folder="sciencefeedback", file_name="appearances_2020-08-27_.csv")    
-    # save_figure_1(posts_fake, appearance_df, url_df)
+    url_df = import_data(folder="sciencefeedback", file_name="appearances_2021-01-04_.csv")    
+    save_figure_1(posts_fake, appearance_df, url_df)
 
     save_figure_2(posts_fake)
     print_figure_2_statistics(posts_fake)
@@ -462,5 +465,4 @@ if __name__ == "__main__":
     posts_main = concatenate_crowdtangle_group_data("main_news_2021")
     save_figure_3(posts_main)
 
-    # Plot all the groups
-    # save_all_groups_figures(posts_fake, appearance_df, url_df)
+    save_all_groups_figures(posts_fake, appearance_df, url_df)
