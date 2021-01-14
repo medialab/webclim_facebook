@@ -173,10 +173,8 @@ def plot_one_group(ax, posts_df, account_id, fake_news_dates):
             label="Comments per post", color="C2")
 
     plt.locator_params(axis='y', nbins=4)
-    xticks = [np.datetime64('2019-01-01'), np.datetime64('2019-03-01'), np.datetime64('2019-05-01'), 
-              np.datetime64('2019-07-01'), np.datetime64('2019-09-01'), np.datetime64('2019-11-01'),
-              np.datetime64('2020-01-01'), np.datetime64('2020-03-01'), np.datetime64('2020-05-01'), 
-              np.datetime64('2020-07-01'), np.datetime64('2020-09-01'), np.datetime64('2020-11-01'),
+    xticks = [np.datetime64('2019-01-01'), np.datetime64('2019-05-01'), np.datetime64('2019-09-01'),
+              np.datetime64('2020-01-01'), np.datetime64('2020-05-01'), np.datetime64('2020-09-01')
              ]
     plt.xticks(xticks, rotation=30, ha='right')
 
@@ -363,6 +361,13 @@ def save_figure_1(posts_df, post_url_df, url_df):
     for period in repeat_offender_periods:
         plt.axvspan(period[0], period[1], ymin=1/11, facecolor='C3', alpha=0.1)
 
+    xticks = [np.datetime64('2019-01-01'), np.datetime64('2019-03-01'), np.datetime64('2019-05-01'), 
+              np.datetime64('2019-07-01'), np.datetime64('2019-09-01'), np.datetime64('2019-11-01'),
+              np.datetime64('2020-01-01'), np.datetime64('2020-03-01'), np.datetime64('2020-05-01'), 
+              np.datetime64('2020-07-01'), np.datetime64('2020-09-01'), np.datetime64('2020-11-01'),
+             ]
+    plt.xticks(xticks, rotation=30, ha='right')
+
     plt.text(
         s='Known strikes', color='C3', fontweight='bold',
         x=np.datetime64('2019-09-25'), horizontalalignment='right', 
@@ -418,15 +423,53 @@ def save_figure_1(posts_df, post_url_df, url_df):
     print('\nWilcoxon test between the comments: t =', t, ', p =', p)
 
 
+def save_supplementary_figure_1(posts_df, post_url_df, url_df):
+    
+    fig = plt.figure(figsize=(10, 12))
+
+    accounts_to_plot = [
+        'News2morrow',
+        'Pharmaceuticals Exposed',
+        'Truth Train',
+        'Humanity vs Insanity - The CRANE Report',
+        'The British Constitution Group',
+        "Arnica - Parents' Support Network, Promoting Natural Immunity",
+        'ROKOTUSKRIITTISET',
+        'Canadian Freedom Fighters',
+        "'FACEBOOK CENSORED NEWS'",
+        'Tampa Bay Trump Club'
+    ]
+
+    for idx in range(len(accounts_to_plot)):
+        ax = plt.subplot(5, 2, idx + 1)
+        plt.title(accounts_to_plot[idx])
+
+        account_id = posts_df[posts_df['account_name']==accounts_to_plot[idx]].account_id.unique()[0]
+        fake_news_dates = compute_fake_news_dates(post_url_df, url_df, account_id)
+        plot_one_group(ax, posts_df, account_id, fake_news_dates=fake_news_dates)
+
+        repeat_offender_periods = compute_repeat_offender_periods(fake_news_dates)
+        repeat_offender_periods = merge_overlapping_periods(repeat_offender_periods)
+        for period in repeat_offender_periods:
+            plt.axvspan(period[0], period[1], ymin=1/11, facecolor='C3', alpha=0.1)
+
+        if idx == 0:
+            legend1 = plt.legend(loc='upper left')
+        elif idx == 1:
+            patch1 = mpatches.Patch(facecolor='pink', alpha=0.4, edgecolor='k')
+            patch2 = mpatches.Patch(facecolor='white', alpha=0.4, edgecolor='k')
+            legend2 = plt.legend([patch1, patch2], ["'Repeat offender' periods", "'No strike' periods"],
+                        loc='upper right', framealpha=1)
+        plt.axvline(x=np.datetime64("2020-06-09"), color='black', linestyle='--', linewidth=1)
+
+    plt.tight_layout()
+    save_figure('supplementary_figure_1', folder='ip&m', dpi=100)
+
+
 def save_all_groups_figures(posts_df, post_url_df, url_df):
 
     group_index = 0
     for account_id in posts_df['account_id'].unique():
-
-        # posts_df_group = posts_df[posts_df["account_id"] == account_id]
-        # time_series = posts_df_group.groupby(by=["date"])["reaction"].mean()
-
-        # if len(time_series) > 350:
 
         if group_index % 10 == 0:
             plt.figure(figsize=(12, 14))
@@ -455,14 +498,14 @@ if __name__ == "__main__":
 
     appearance_df  = import_data(folder="crowdtangle_url", file_name="posts_url_2021-01-04_.csv")
     appearance_df = clean_crowdtangle_url_data(appearance_df)
-
     url_df = import_data(folder="sciencefeedback", file_name="appearances_2021-01-04_.csv")    
-    save_figure_1(posts_fake, appearance_df, url_df)
+    # save_figure_1(posts_fake, appearance_df, url_df)
 
-    save_figure_2(posts_fake)
-    print_figure_2_statistics(posts_fake)
+    # save_figure_2(posts_fake)
+    # print_figure_2_statistics(posts_fake)
 
-    posts_main = concatenate_crowdtangle_group_data("main_news_2021")
-    save_figure_3(posts_main)
+    # posts_main = concatenate_crowdtangle_group_data("main_news_2021")
+    # save_figure_3(posts_main)
 
-    save_all_groups_figures(posts_fake, appearance_df, url_df)
+    save_supplementary_figure_1(posts_fake, appearance_df, url_df)
+    # save_all_groups_figures(posts_fake, appearance_df, url_df)
