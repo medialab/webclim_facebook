@@ -1,6 +1,7 @@
 import os
 import warnings
 import datetime
+import random
 
 import pandas as pd
 import numpy as np
@@ -381,16 +382,44 @@ def plot_repeat_offender_example(posts_df, post_url_df, url_df, ax):
     plt.title("Engagement metrics for one Facebook group example ('" + account_name + "')")
 
 
+def calculate_confidence_interval(sample):
+
+    averages = []
+    for bootstrap_index in range(1000):
+        resampled_sample = random.choices(sample, k=len(sample))
+        averages.append(np.mean(resampled_sample))
+
+    return np.percentile(averages, 2.5), np.percentile(averages, 97.5)
+
+
 def plot_repeat_offender_average(repeat_offender, free, ax):
 
     width = .25
     labels = ['Reactions', 'Shares', 'Comments']
-    x = np.arange(len(labels))
+    x = np.arange(len(labels)) 
+
+    # Plot the bars
     plt.bar(x - width/2, [np.mean(repeat_offender['reaction']), np.mean(repeat_offender['share']), 
                                         np.mean(repeat_offender['comment'])], 
                     width, label="'Repeat offender' periods", color='pink', edgecolor=[.2, .2, .2], zorder=3)
     plt.bar(x + width/2, [np.mean(free['reaction']), np.mean(free['share']), np.mean(free['comment'])], 
                     width, label="'No strike' periods", color='white', edgecolor=[.2, .2, .2], zorder=3)
+
+    # Add the error bars
+    idx = 0   
+    for metric in ['reaction', 'share', 'comment']:
+        low, high = calculate_confidence_interval(repeat_offender[metric])
+        plt.errorbar(idx - width/2, np.mean(repeat_offender[metric]), 
+            yerr=[[np.mean(repeat_offender[metric]) - low], [high - np.mean(repeat_offender[metric])]], 
+            color=[.2, .2, .2], zorder=4, linestyle='')
+
+        low, high = calculate_confidence_interval(free[metric])
+        plt.errorbar(idx + width/2, np.mean(free[metric]), 
+            yerr=[[np.mean(free[metric]) - low], [high - np.mean(free[metric])]], 
+            color=[.2, .2, .2], zorder=4, linestyle='')
+
+        idx += 1
+
     plt.legend(framealpha=1)
 
     plt.title("Engagement metrics averaged over {} 'misinformation' accounts"\
