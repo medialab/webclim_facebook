@@ -343,13 +343,7 @@ def compute_periods_average(posts_df, post_url_df, url_df):
     return repeat_offender, free
 
 
-def save_figure_1(posts_df, post_url_df, url_df):
-
-    fig = plt.figure(figsize=(10, 8))
-    gs = fig.add_gridspec(2, 5)
-
-    ## First part
-    ax = fig.add_subplot(gs[0, :])
+def plot_repeat_offender_example(posts_df, post_url_df, url_df, ax):
 
     account_name = 'Australian Climate Sceptics Group'
     account_id = posts_df[posts_df['account_name']==account_name].account_id.unique()[0]
@@ -386,9 +380,8 @@ def save_figure_1(posts_df, post_url_df, url_df):
 
     plt.title("Engagement metrics for one Facebook group example ('" + account_name + "')")
 
-    ## Second part
-    repeat_offender, free = compute_periods_average(posts_df, post_url_df, url_df)
-    ax = fig.add_subplot(gs[1, 1:4])
+
+def plot_repeat_offender_average(repeat_offender, free, ax):
 
     width = .25
     labels = ['Reactions', 'Shares', 'Comments']
@@ -412,15 +405,34 @@ def save_figure_1(posts_df, post_url_df, url_df):
     ax.spines['left'].set_visible(False)
     ax.spines['top'].set_visible(False)
 
-    plt.tight_layout(pad=3)
-    save_figure('figure_1', folder='ip&m', dpi=100)
 
+def print_repeat_offender_statistics(repeat_offender, free):
     t, p = stats.wilcoxon(repeat_offender['reaction'], free['reaction'])
     print('\nWilcoxon test between the reactions: t =', t, ', p =', p)
     t, p = stats.wilcoxon(repeat_offender['share'], free['share'])
     print('\nWilcoxon test between the shares: t =', t, ', p =', p)
     t, p = stats.wilcoxon(repeat_offender['comment'], free['comment'])
     print('\nWilcoxon test between the comments: t =', t, ', p =', p)
+
+
+def save_figure_1(posts_df, post_url_df, url_df):
+
+    fig = plt.figure(figsize=(10, 8))
+    gs = fig.add_gridspec(2, 5)
+
+    # top panel
+    ax = fig.add_subplot(gs[0, :])
+    plot_repeat_offender_example(posts_df, post_url_df, url_df, ax)
+
+    # bottom panel
+    repeat_offender, free = compute_periods_average(posts_df, post_url_df, url_df)
+    ax = fig.add_subplot(gs[1, 1:4])
+    plot_repeat_offender_average(repeat_offender, free, ax)
+
+    plt.tight_layout(pad=3)
+    save_figure('figure_1', folder='ip&m', dpi=100)
+
+    print_repeat_offender_statistics(repeat_offender, free)
 
 
 def save_supplementary_figure_1(posts_df, post_url_df, url_df):
@@ -499,7 +511,7 @@ if __name__ == "__main__":
     appearance_df  = import_data(folder="crowdtangle_url", file_name="posts_url_2021-01-04_.csv")
     appearance_df = clean_crowdtangle_url_data(appearance_df)
     url_df = import_data(folder="sciencefeedback", file_name="appearances_2021-01-04_.csv")    
-    # save_figure_1(posts_fake, appearance_df, url_df)
+    save_figure_1(posts_fake, appearance_df, url_df)
 
     # save_figure_2(posts_fake)
     # print_figure_2_statistics(posts_fake)
@@ -507,5 +519,5 @@ if __name__ == "__main__":
     # posts_main = concatenate_crowdtangle_group_data("main_news_2021")
     # save_figure_3(posts_main)
 
-    save_supplementary_figure_1(posts_fake, appearance_df, url_df)
+    # save_supplementary_figure_1(posts_fake, appearance_df, url_df)
     # save_all_groups_figures(posts_fake, appearance_df, url_df)
