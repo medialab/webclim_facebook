@@ -389,7 +389,7 @@ def calculate_confidence_interval(sample):
         resampled_sample = random.choices(sample, k=len(sample))
         averages.append(np.mean(resampled_sample))
 
-    return np.percentile(averages, 2.5), np.percentile(averages, 97.5)
+    return np.percentile(averages, 5), np.percentile(averages, 95)
 
 
 def plot_repeat_offender_average(repeat_offender, free, ax):
@@ -542,11 +542,11 @@ if __name__ == "__main__":
     url_df = import_data(folder="sciencefeedback", file_name="appearances_2021-01-04_.csv")    
     save_figure_1(posts_fake, appearance_df, url_df)
 
-    # save_figure_2(posts_fake)
+    save_figure_2(posts_fake)
     # print_figure_2_statistics(posts_fake)
 
-    # posts_main = concatenate_crowdtangle_group_data("main_news_2021")
-    # save_figure_3(posts_main)
+    posts_main = concatenate_crowdtangle_group_data("main_news_2021")
+    save_figure_3(posts_main)
 
     # save_supplementary_figure_1(posts_fake, appearance_df, url_df)
-    # save_all_groups_figures(posts_fake, appearance_df, url_df)
+    save_all_groups_figures(posts_fake, appearance_df, url_df)
