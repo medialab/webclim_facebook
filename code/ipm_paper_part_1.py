@@ -469,10 +469,10 @@ def save_supplementary_figure_1(posts_df, post_url_df, url_df):
     fig = plt.figure(figsize=(10, 12))
 
     accounts_to_plot = [
-        'News2morrow',
         'Pharmaceuticals Exposed',
-        'Truth Train',
         'Humanity vs Insanity - The CRANE Report',
+        'News2morrow',
+        'Truth Train',
         'The British Constitution Group',
         "Arnica - Parents' Support Network, Promoting Natural Immunity",
         'ROKOTUSKRIITTISET',
@@ -528,7 +528,7 @@ def save_all_groups_figures(posts_df, post_url_df, url_df):
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
-            save_figure('part_1_all_groups_{}'.format(int(group_index / 10) + 1), folder='ip&m', dpi=100)
+            save_figure('z_part_1_all_groups_{}'.format(int(group_index / 10) + 1), folder='ip&m', dpi=100)
 
         group_index += 1
 
@@ -548,5 +548,5 @@ if __name__ == "__main__":
     posts_main = concatenate_crowdtangle_group_data("main_news_2021")
     save_figure_3(posts_main)
 
-    # save_supplementary_figure_1(posts_fake, appearance_df, url_df)
-    save_all_groups_figures(posts_fake, appearance_df, url_df)
+    save_supplementary_figure_1(posts_fake, appearance_df, url_df)
+    # save_all_groups_figures(posts_fake, appearance_df, url_df)
