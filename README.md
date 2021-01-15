@@ -91,21 +91,3 @@ python code/qanon_paper.py
 ```
 
 The figures saved as PNG in the `figure` folder, and the content of the tables will be either printed in the console or saved as CSV in the same folder.
-
-## Generate a draft
-
-First you should install Latex with:
-
-```
-sudo apt-get install texlive-full
-```
-
-To generate the PDF used to submit to the Web Conference 2021, you should run:
-
-```
-cd article/
-pdflatex webclim-facebook
-bibtex webclim-facebook
-pdflatex webclim-facebook
-pdflatex webclim-facebook
-```
