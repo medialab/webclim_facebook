@@ -18,6 +18,25 @@ from ipm_paper_part_1 import details_temporal_evolution
 warnings.filterwarnings("ignore")
 
 
+def import_crowdtangle_group_data():
+
+    posts_wi_date_df = import_data(folder="crowdtangle_group", 
+                                   file_name="posts_self_declared_wi_date.csv")
+    print('\nThere are {} Facebook pages with the last strike date visible on the screenshot.'.\
+        format(posts_wi_date_df.account_id.nunique()))
+
+    posts_wo_date_df = import_data(folder="crowdtangle_group", 
+                                   file_name="posts_self_declared_wo_date.csv")
+    print('There are {} Facebook pages without the last strike date visible on the screenshot.'.\
+        format(posts_wo_date_df.account_id.nunique()))
+
+    posts_df = pd.concat([posts_wi_date_df, posts_wo_date_df])
+
+    posts_df['date'] = pd.to_datetime(posts_df['date'])
+
+    return posts_df
+
+
 def import_json(folder, file_name):
     data_path = os.path.join('.', 'data', folder, file_name)
     with open(data_path) as json_file:
@@ -277,18 +296,16 @@ def save_supplementary_table_1():
 
 if __name__ == "__main__":
     
-    collect_date = "2020-12-01"
-    posts_df = import_data(folder="self_declared_repeat_offenders", file_name='posts_group_' + collect_date + '.csv')
-    posts_df = clean_post_data(posts_df)
-    repeat_offender_date = import_json(folder='self_declared_repeat_offenders', file_name='dates.json')
+    posts_df = import_crowdtangle_group_data()
+    # repeat_offender_date = import_json(folder='self_declared_repeat_offenders', file_name='dates.json')
 
-    save_figure_4(posts_df, repeat_offender_date)
-    save_figure_5(posts_df, repeat_offender_date)
+    # save_figure_4(posts_df, repeat_offender_date)
+    # save_figure_5(posts_df, repeat_offender_date)
 
-    screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
-    save_supplementary_figure_1(screenshot_df)
+    # screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
+    # save_supplementary_figure_1(screenshot_df)
 
-    # save_figure_6(posts_df)
+    # # save_figure_6(posts_df)
 
-    save_all_groups_figures(posts_df, repeat_offender_date)
-    # save_supplementary_table_1()
+    # save_all_groups_figures(posts_df, repeat_offender_date)
+    # # save_supplementary_table_1()
