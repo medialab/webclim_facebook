@@ -13,7 +13,7 @@ import matplotlib.dates as mdates
 import scipy.stats as stats
 
 from utils import import_data, save_figure
-from ipm_paper_part_1 import details_temporal_evolution
+from ipm_paper_part_1 import details_temporal_evolution, plot_one_group
 
 warnings.filterwarnings("ignore")
 
@@ -44,36 +44,6 @@ def import_json(folder, file_name):
     return data
 
 
-def rolling_average_per_day(df, column):
-    return df.groupby(by=["date"])[column].mean().rolling(window=5, win_type='triang', center=True).mean()
-
-
-def plot_one_group(posts_df, account_id, ax):
-    
-    posts_df_group = posts_df[posts_df["account_id"] == account_id] 
-    plt.plot(rolling_average_per_day(posts_df_group, 'reaction'), label="Number of reactions per post")
-    plt.plot(rolling_average_per_day(posts_df_group, 'share'), label="Number of shares per post")
-    plt.plot(rolling_average_per_day(posts_df_group, 'comment'), label="Number of comments per post")
-    
-    plt.legend()
-
-    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%d-%m-%Y'))
-    plt.gca().xaxis.set_major_locator(mdates.MonthLocator(interval=2))
-    plt.xticks(rotation=30, ha='right')
-    
-    plt.xlim(
-        np.datetime64(datetime.datetime.strptime('2019-11-01', '%Y-%m-%d') - datetime.timedelta(days=4)), 
-        np.datetime64(datetime.datetime.strptime('2020-11-30', '%Y-%m-%d') + datetime.timedelta(days=4))
-    )
-    plt.ylim(bottom=0)
-    plt.locator_params(axis='y', nbins=3)
-    
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    ax.grid(axis="y")
-
-
 def save_figure_4(posts_df, repeat_offender_date):
 
     account_name = 'I Love Carbon Dioxide'
@@ -84,18 +54,23 @@ def save_figure_4(posts_df, repeat_offender_date):
     
     plt.title(account_name, size="x-large")
 
-    plot_one_group(posts_df, account_id, ax)
+    plot_one_group(ax, posts_df, account_id, fake_news_dates=[])
 
-    xticks = [np.datetime64('2020-01-01'), np.datetime64('2020-04-01'), np.datetime64('2020-07-01'), 
-              np.datetime64('2020-10-01'), np.datetime64(repeat_offender_date[account_name])]
+    xticks = [np.datetime64('2019-01-01'), np.datetime64('2019-03-01'), np.datetime64('2019-05-01'), 
+              np.datetime64('2019-07-01'), np.datetime64('2019-09-01'), np.datetime64('2019-11-01'),
+              np.datetime64('2020-01-01'), np.datetime64('2020-03-01'), 
+              np.datetime64('2020-07-01'), np.datetime64('2020-09-01'), np.datetime64('2020-11-01'), 
+              np.datetime64(repeat_offender_date[account_name])
+             ]
     plt.xticks(xticks, rotation=30, ha='right')
     plt.gca().get_xticklabels()[-1].set_color('red')
 
     plt.axvline(x=np.datetime64(repeat_offender_date[account_name]), 
                 color='C3', linestyle='--', linewidth=2)
 
+    plt.legend()
     plt.tight_layout()
-    save_figure('figure_4', folder='ip&m', dpi=50)
+    save_figure('figure_4', folder='ip&m', dpi=100)
 
 
 def add_layout_details(ax):
@@ -297,9 +272,9 @@ def save_supplementary_table_1():
 if __name__ == "__main__":
     
     posts_df = import_crowdtangle_group_data()
-    # repeat_offender_date = import_json(folder='self_declared_repeat_offenders', file_name='dates.json')
+    repeat_offender_date = import_json(folder='self_declared_repeat_offenders', file_name='dates.json')
 
-    # save_figure_4(posts_df, repeat_offender_date)
+    save_figure_4(posts_df, repeat_offender_date)
     # save_figure_5(posts_df, repeat_offender_date)
 
     # screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
