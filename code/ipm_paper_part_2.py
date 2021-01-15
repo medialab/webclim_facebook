@@ -175,26 +175,6 @@ def save_figure_5(posts_df, repeat_offender_date):
     save_figure('figure_5', folder='ip&m', dpi=50)
 
 
-def save_supplementary_figure_1(screenshot_df):
-
-    plt.figure(figsize=(10, 4))
-    ax = plt.subplot()
-
-    plt.hist(screenshot_df['score'].values, 100, facecolor='grey')
-    plt.xlabel("CrowdTangle overperforming scores for the posts sharing the 'reduced distribution' screenshot")
-    plt.axvline(x=0, color='k', linestyle='-')
-
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-
-    plt.tight_layout()
-    save_figure('supplementary_figure_1', folder='ip&m', dpi=50)
-
-    print('\nThe average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
-    print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
-
-
 def save_figure_6(posts_df):
 
     plt.figure(figsize=(5, 7))
@@ -278,7 +258,8 @@ if __name__ == "__main__":
     # save_figure_5(posts_df, repeat_offender_date)
 
     # screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
-    # save_supplementary_figure_1(screenshot_df)
+    # print('\nThe average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
+    # print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
 
     # # save_figure_6(posts_df)
 
