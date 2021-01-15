@@ -175,38 +175,6 @@ def save_figure_5(posts_df, repeat_offender_date):
     save_figure('figure_5', folder='ip&m', dpi=50)
 
 
-def save_figure_6(posts_df):
-
-    plt.figure(figsize=(5, 7))
-
-    ax = plt.subplot(3, 1, 1)
-    plt.title("self-declared 'repeat offender' accounts", fontsize='x-large')
-    plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df["date"].value_counts().sort_index(), 
-            label="Reactions per post")
-    plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df["date"].value_counts().sort_index(), 
-            label="Shares per post")
-    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df["date"].value_counts().sort_index(), 
-            label="Comments per post")
-    details_temporal_evolution(posts_df, ax)
-
-    ax = plt.subplot(3, 1, 2)
-    plt.plot(posts_df["date"].value_counts().sort_index()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-        label="Posts per day", color=[.2, .2, .2])
-    details_temporal_evolution(posts_df, ax)
-
-    ax = plt.subplot(3, 1, 3)
-    plt.plot(posts_df.groupby(by=["date"])["reaction"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Reactions per day")
-    plt.plot(posts_df.groupby(by=["date"])["share"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Shares per day")
-    plt.plot(posts_df.groupby(by=["date"])["comment"].sum()/posts_df.groupby(by=["date"])["account_id"].nunique(), 
-            label="Comments per day")
-    details_temporal_evolution(posts_df, ax)
-
-    plt.tight_layout()
-    save_figure('figure_6', folder='ip&m', dpi=50)
-
-
 def save_all_groups_figures(posts_df, repeat_offender_date):
 
     group_index = 0
@@ -260,8 +228,6 @@ if __name__ == "__main__":
     # screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
     # print('\nThe average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
     # print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
-
-    # # save_figure_6(posts_df)
 
     # save_all_groups_figures(posts_df, repeat_offender_date)
     # # save_supplementary_table_1()
