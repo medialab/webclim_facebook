@@ -11,17 +11,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import scipy.stats as stats
-from nltk.stem import WordNetLemmatizer 
-from nltk.corpus import stopwords 
-from nltk.tokenize import word_tokenize
 
 from utils import import_data, save_figure
 from ipm_paper_part_1 import details_temporal_evolution
 
 warnings.filterwarnings("ignore")
-
-stop_words = stopwords.words('english') + ['u', 'also', 'ha']
-wnl = WordNetLemmatizer() 
 
 
 def import_json(folder, file_name):
@@ -29,28 +23,6 @@ def import_json(folder, file_name):
     with open(data_path) as json_file:
         data = json.load(json_file)
     return data
-
-def clean_post_data(df):
-
-    clean_df = pd.DataFrame(columns=[
-        "account_name", "account_id",
-        "date", "share", "comment", "reaction"
-    ])
-
-    clean_df['account_name'] = df['account_name'].astype(str)
-    clean_df['account_id'] = df['account_id'].astype(int)
-
-    clean_df['date'] = pd.to_datetime(df['date'])
-
-    clean_df['account_id'] = df['account_id'].astype(int)
-    clean_df["share"]   = df["actual_share_count"].astype(int)
-    clean_df["comment"] = df["actual_comment_count"].astype(int)
-
-    clean_df["reaction"] = df[["actual_like_count", "actual_favorite_count", "actual_love_count",
-    "actual_wow_count", "actual_haha_count", "actual_sad_count",
-    "actual_angry_count", "actual_thankful_count"]].sum(axis=1).astype(int)
-
-    return clean_df
 
 
 def rolling_average_per_day(df, column):
@@ -313,7 +285,6 @@ if __name__ == "__main__":
     save_figure_4(posts_df, repeat_offender_date)
     save_figure_5(posts_df, repeat_offender_date)
 
-    ## minet ct posts-by-id repeat-offender-post-url ./data/self_declared_repeat_offenders/supplementary_table_1.csv > ./data/self_declared_repeat_offenders/posts.csv
     screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
     save_supplementary_figure_1(screenshot_df)
 
