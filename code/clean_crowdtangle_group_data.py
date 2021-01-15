@@ -18,7 +18,6 @@ def clean_columns(df):
 
     clean_df['date'] = pd.to_datetime(df['date'])
 
-    clean_df['account_id'] = df['account_id'].astype(int)
     clean_df["share"]   = df[["actual_share_count"]].astype(int)
     clean_df["comment"] = df[["actual_comment_count"]].astype(int)
 
