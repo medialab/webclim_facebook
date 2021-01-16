@@ -27,6 +27,23 @@ def import_crowdtangle_group_data():
 
     posts_wo_date_df = import_data(folder="crowdtangle_group", 
                                    file_name="posts_self_declared_wo_date.csv")
+    list_wo_name = [
+        'Artists For A Free World',
+        'Terrence K Williams',
+        'Ben Garrison Cartoons',
+        'Wendy Bell Radio',
+        'New Independence Network',
+        'Pruden POD & Post',
+        'PR Conservative',
+        'Org of Conservative Trump Americans',
+        'Con Ciencia Indigena',
+        'Republican Party of Lafayette County',
+        'The Daily Perspective Podcast',
+        'Freedom Memes',
+        'White Dragon Society',
+        'Robertson Family Values'
+    ]
+    posts_wo_date_df = posts_wo_date_df[~posts_wo_date_df['account_name'].isin(list_wo_name)]
     print('There are {} Facebook pages without the last strike date visible on the screenshot.'.\
         format(posts_wo_date_df.account_id.nunique()))
 
@@ -220,9 +237,9 @@ def save_supplementary_table_1():
 if __name__ == "__main__":
     
     posts_df = import_crowdtangle_group_data()
-    repeat_offender_date = import_json(folder='self_declared_repeat_offenders', file_name='dates.json')
+    pages_df = 
 
-    save_figure_4(posts_df, repeat_offender_date)
+    # save_figure_4(posts_df, repeat_offender_date)
     # save_figure_5(posts_df, repeat_offender_date)
 
     # screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
