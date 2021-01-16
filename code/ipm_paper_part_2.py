@@ -84,7 +84,7 @@ def save_figure_4(posts_df, pages_df):
     save_figure('figure_4', folder='ip&m', dpi=100)
 
 
-def compute_periods_average(posts_df, pages_df):
+def compute_periods_average(posts_df, pages_df, period_length=7):
 
     before_date = {
         'reaction': [],
@@ -107,12 +107,12 @@ def compute_periods_average(posts_df, pages_df):
         posts_df_group = posts_df[posts_df["account_id"] == account_id]
 
         posts_df_group_before = posts_df_group[
-            (posts_df_group['date'] > reduced_distribution_date - datetime.timedelta(days=30)) &
+            (posts_df_group['date'] > reduced_distribution_date - datetime.timedelta(days=period_length)) &
             (posts_df_group['date'] < reduced_distribution_date)
         ]
         posts_df_group_after = posts_df_group[
             (posts_df_group['date'] > reduced_distribution_date) &
-            (posts_df_group['date'] < reduced_distribution_date + datetime.timedelta(days=30))
+            (posts_df_group['date'] < reduced_distribution_date + datetime.timedelta(days=period_length))
         ]
             
         if (len(posts_df_group_before) > 0) & (len(posts_df_group_after) > 0):
@@ -145,32 +145,62 @@ def print_before_after_statistics(before_date, after_date):
 
     t, p = stats.wilcoxon(before_date['post_nb'], after_date['post_nb'])
     print('\nWilcoxon test between the number of posts: t =', t, ', p =', p)
+    print(np.mean(before_date['post_nb']), np.mean(after_date['post_nb']))
 
 
-def save_figure_5(posts_df, pages_df):
+def plot_before_after_bars(before_date, after_date, ax):
 
-    before_date, after_date = compute_periods_average(posts_df, pages_df)
+    width = .25
+    labels = ['Reactions', 'Shares', 'Comments', 'Number of posts']
+    x = np.arange(len(labels)) 
+
+    # Plot the bars
+    plt.bar(x - width/2, [np.mean(before_date['reaction']), np.mean(before_date['share']), 
+                            np.mean(before_date['comment']), np.mean(before_date['post_nb'])], 
+                    width, label="7 days before the reduced distribution date", color='paleturquoise', edgecolor=[.2, .2, .2], zorder=3)
+    plt.bar(x + width/2, [np.mean(after_date['reaction']), np.mean(after_date['share']), 
+                            np.mean(after_date['comment']), np.mean(after_date['post_nb'])], 
+                    width, label="7 days after the reduced distribution date", color='navajowhite', edgecolor=[.2, .2, .2], zorder=3)
+
+    # Add the error bars
+    idx = 0   
+    for metric in ['reaction', 'share', 'comment', 'post_nb']:
+        low, high = calculate_confidence_interval(before_date[metric])
+        plt.errorbar(idx - width/2, np.mean(before_date[metric]), 
+            yerr=[[np.mean(before_date[metric]) - low], [high - np.mean(before_date[metric])]], 
+            color=[.2, .2, .2], zorder=4, linestyle='')
+
+        low, high = calculate_confidence_interval(after_date[metric])
+        plt.errorbar(idx + width/2, np.mean(after_date[metric]), 
+            yerr=[[np.mean(after_date[metric]) - low], [high - np.mean(after_date[metric])]], 
+            color=[.2, .2, .2], zorder=4, linestyle='')
+
+        idx += 1
+
+    plt.legend(framealpha=1)
+
+    plt.title("Engagement metrics averaged over {} 'reduced distribution' accounts"\
+        .format(len(before_date['reaction'])))
+    plt.xticks(x, labels, fontsize='large',)
+    ax.tick_params(axis='x', which='both', length=0)
+    plt.xlim([-.5, 3.5])
+    ax.grid(axis="y", zorder=0)
+    plt.locator_params(axis='y', nbins=8)
+
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+
+
+def save_figure_5(posts_df, pages_df, period_length=7):
+
+    before_date, after_date = compute_periods_average(posts_df, pages_df, period_length=period_length)
     print_before_after_statistics(before_date, after_date)
 
-    # df_reaction['mean'] = df_reaction.mean(axis=1)
-    # df_share['mean'] = df_share.mean(axis=1)
-    # df_comment['mean'] = df_comment.mean(axis=1)
-    # df_post_number['mean'] = df_post_number.mean(axis=1)
-
-    # plt.figure(figsize=(10, 7))
-
-    # ax = plt.subplot(2, 1, 1)
-    # plt.plot(df_reaction['mean'], label="Number of reactions per post")
-    # plt.plot(df_share['mean'], label="Number of shares per post")
-    # plt.plot(df_comment['mean'], label="Number of comments per post")
-    # add_layout_details(ax)
-
-    # ax = plt.subplot(2, 1, 2)
-    # plt.plot(df_post_number['mean'], label="Number of posts per day", color="grey")
-    # add_layout_details(ax)
-
-    # plt.tight_layout(pad=3)
-    # save_figure('figure_5', folder='ip&m', dpi=100)
+    _, ax = plt.subplots(figsize=(10, 4))
+    plot_before_after_bars(before_date, after_date, ax)
+    plt.tight_layout()
+    save_figure('figure_5', folder='ip&m', dpi=100)
 
 
 def save_all_groups_figures(posts_df, repeat_offender_date):

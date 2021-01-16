@@ -455,13 +455,13 @@ def save_figure_1(posts_df, post_url_df, url_df):
 
     # bottom panel
     repeat_offender, free = compute_periods_average(posts_df, post_url_df, url_df)
+    print_repeat_offender_statistics(repeat_offender, free)
+
     ax = fig.add_subplot(gs[1, 1:4])
     plot_repeat_offender_average(repeat_offender, free, ax)
-
     plt.tight_layout(pad=3)
     save_figure('figure_1', folder='ip&m', dpi=100)
 
-    print_repeat_offender_statistics(repeat_offender, free)
 
 
 def save_supplementary_figure_1(posts_df, post_url_df, url_df):
