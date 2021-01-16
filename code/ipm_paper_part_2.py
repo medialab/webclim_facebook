@@ -13,7 +13,7 @@ import matplotlib.dates as mdates
 import scipy.stats as stats
 
 from utils import import_data, save_figure
-from ipm_paper_part_1 import details_temporal_evolution, plot_one_group
+from ipm_paper_part_1 import details_temporal_evolution, plot_one_group, calculate_confidence_interval
 
 warnings.filterwarnings("ignore")
 
@@ -86,72 +86,64 @@ def save_figure_4(posts_df, pages_df):
 
 def compute_periods_average(posts_df, pages_df):
 
-    reaction_before = []
-    share_before = []
-    comment_before = []
-    posts_before = []
+    before_date = {
+        'reaction': [],
+        'share': [],
+        'comment': [],
+        'post_nb': []
+    }
+    after_date = {
+        'reaction': [],
+        'share': [],
+        'comment': [],
+        'post_nb': []
+    }
 
-    reaction_after = []
-    share_after = []
-    comment_after = []
-    posts_after = []
+    for account_id in posts_df['account_id'].unique():
 
-    df_reaction = pd.DataFrame(index=list(range(-7, 8)))
-    df_share = pd.DataFrame(index=list(range(-7, 8)))
-    df_comment = pd.DataFrame(index=list(range(-7, 8)))
+        account_name = posts_df[posts_df['account_id']==account_id].account_name.unique()[0]
+        reduced_distribution_date = pages_df[pages_df['page_name'] == account_name]['date'].values[0]
+        reduced_distribution_date = datetime.datetime.strptime(str(reduced_distribution_date)[:10], '%Y-%m-%d')
+        posts_df_group = posts_df[posts_df["account_id"] == account_id]
 
-    df_post_number = pd.DataFrame(index=list(range(-7, 8)))
-
-    for account_name in posts_df['account_name'].unique():
-
-        posts_df_group = posts_df[posts_df["account_name"] == account_name] 
-        posts_df_group = posts_df_group[
-            (posts_df_group['date'] >= datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d') - datetime.timedelta(days=7)) &
-            (posts_df_group['date'] <= datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d') + datetime.timedelta(days=7))
+        posts_df_group_before = posts_df_group[
+            (posts_df_group['date'] > reduced_distribution_date - datetime.timedelta(days=30)) &
+            (posts_df_group['date'] < reduced_distribution_date)
         ]
+        posts_df_group_after = posts_df_group[
+            (posts_df_group['date'] > reduced_distribution_date) &
+            (posts_df_group['date'] < reduced_distribution_date + datetime.timedelta(days=30))
+        ]
+            
+        if (len(posts_df_group_before) > 0) & (len(posts_df_group_after) > 0):
+            
+            before_date['reaction'].append(np.mean(posts_df_group_before['reaction']))
+            after_date['reaction'].append(np.mean(posts_df_group_after['reaction']))
 
-        if len(posts_df_group.groupby(by=["date"])["reaction"].mean().values) == 15:
+            before_date['share'].append(np.mean(posts_df_group_before['share']))
+            after_date['share'].append(np.mean(posts_df_group_after['share']))
 
-            reaction_before.append(np.mean(posts_df_group[posts_df_group['date'] < datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')]['reaction']))
-            reaction_after.append(np.mean(posts_df_group[posts_df_group['date'] > datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')]['reaction']))
+            before_date['comment'].append(np.mean(posts_df_group_before['comment']))
+            after_date['comment'].append(np.mean(posts_df_group_after['comment']))
 
-            share_before.append(np.mean(posts_df_group[posts_df_group['date'] < datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')]['share']))
-            share_after.append(np.mean(posts_df_group[posts_df_group['date'] > datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')]['share']))
-
-            comment_before.append(np.mean(posts_df_group[posts_df_group['date'] < datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')]['comment']))
-            comment_after.append(np.mean(posts_df_group[posts_df_group['date'] > datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')]['comment']))
-
-            df_reaction[account_name] = posts_df_group.groupby(by=["date"])["reaction"].mean().values
-            df_share[account_name] = posts_df_group.groupby(by=["date"])["share"].mean().values
-            df_comment[account_name] = posts_df_group.groupby(by=["date"])["comment"].mean().values
-
-        post_number = posts_df_group["date"].value_counts().to_frame()
-        post_number = post_number.rename(columns={"date": "post_number"})
-        post_number['date'] = post_number.index
-        post_number['relative_date'] = post_number['date'] - datetime.datetime.strptime(repeat_offender_date[account_name], '%Y-%m-%d')
-        post_number['relative_date'] = post_number['relative_date'].apply(lambda x: x.days)
-        post_number = post_number.drop(columns=['date'])
-
-        default_post_number = pd.DataFrame({'relative_date': list(range(-7, 8))})
-        post_number = post_number.merge(default_post_number, on='relative_date', how='outer')\
-            .sort_values(by=['relative_date']).reset_index(drop=True)
-        post_number['post_number'] = post_number['post_number'].fillna(0).astype(int)
-
-        df_post_number[account_name] = post_number['post_number'].values
-        posts_before.append(np.mean(post_number['post_number'].values[:7]))
-        posts_after.append(np.mean(post_number['post_number'].values[8:]))
+            before_date['post_nb'].append(len(posts_df_group_before))
+            after_date['post_nb'].append(len(posts_df_group_after))
 
     return before_date, after_date
 
 
 def print_before_after_statistics(before_date, after_date):
-    t, p = stats.wilcoxon(reaction_before, reaction_after)
+
+    t, p = stats.wilcoxon(before_date['reaction'], after_date['reaction'])
     print('\nWilcoxon test between the reactions: t =', t, ', p =', p)
-    t, p = stats.wilcoxon(share_before, share_after)
+
+    t, p = stats.wilcoxon(before_date['share'], after_date['share'])
     print('\nWilcoxon test between the shares: t =', t, ', p =', p)
-    t, p = stats.wilcoxon(comment_before, comment_after)
+
+    t, p = stats.wilcoxon(before_date['comment'], after_date['comment'])
     print('\nWilcoxon test between the comments: t =', t, ', p =', p)
-    t, p = stats.wilcoxon(posts_before, posts_after)
+
+    t, p = stats.wilcoxon(before_date['post_nb'], after_date['post_nb'])
     print('\nWilcoxon test between the number of posts: t =', t, ', p =', p)
 
 
@@ -160,25 +152,25 @@ def save_figure_5(posts_df, pages_df):
     before_date, after_date = compute_periods_average(posts_df, pages_df)
     print_before_after_statistics(before_date, after_date)
 
-    df_reaction['mean'] = df_reaction.mean(axis=1)
-    df_share['mean'] = df_share.mean(axis=1)
-    df_comment['mean'] = df_comment.mean(axis=1)
-    df_post_number['mean'] = df_post_number.mean(axis=1)
+    # df_reaction['mean'] = df_reaction.mean(axis=1)
+    # df_share['mean'] = df_share.mean(axis=1)
+    # df_comment['mean'] = df_comment.mean(axis=1)
+    # df_post_number['mean'] = df_post_number.mean(axis=1)
 
-    plt.figure(figsize=(10, 7))
+    # plt.figure(figsize=(10, 7))
 
-    ax = plt.subplot(2, 1, 1)
-    plt.plot(df_reaction['mean'], label="Number of reactions per post")
-    plt.plot(df_share['mean'], label="Number of shares per post")
-    plt.plot(df_comment['mean'], label="Number of comments per post")
-    add_layout_details(ax)
+    # ax = plt.subplot(2, 1, 1)
+    # plt.plot(df_reaction['mean'], label="Number of reactions per post")
+    # plt.plot(df_share['mean'], label="Number of shares per post")
+    # plt.plot(df_comment['mean'], label="Number of comments per post")
+    # add_layout_details(ax)
 
-    ax = plt.subplot(2, 1, 2)
-    plt.plot(df_post_number['mean'], label="Number of posts per day", color="grey")
-    add_layout_details(ax)
+    # ax = plt.subplot(2, 1, 2)
+    # plt.plot(df_post_number['mean'], label="Number of posts per day", color="grey")
+    # add_layout_details(ax)
 
-    plt.tight_layout(pad=3)
-    save_figure('figure_5', folder='ip&m', dpi=100)
+    # plt.tight_layout(pad=3)
+    # save_figure('figure_5', folder='ip&m', dpi=100)
 
 
 def save_all_groups_figures(posts_df, repeat_offender_date):
@@ -209,32 +201,18 @@ def save_all_groups_figures(posts_df, repeat_offender_date):
         group_index += 1
 
 
-def save_supplementary_table_1():
-
-    df = import_data(folder="self_declared_repeat_offenders", file_name='alledged-repeat-offenders - Feuille 1.csv')
-    
-    df = df[df['date_in_screenshot'] & df['page_name_in_screenshot'] & df['is_clearly_reduced']]
-    df = df[df['group-or-page']=='page']
-    df = df.drop_duplicates(subset=['account-url'], keep='first')
-    df = df[['repeat-offender-post-url']]
-
-    df_path = os.path.join('.', 'data', 'self_declared_repeat_offenders', 'supplementary_table_1.csv')
-    df.to_csv(df_path, index=False)
-    print("The supplementary table 1 was saved in the 'self_declared_repeat_offenders' folder.")
-
-
 if __name__ == "__main__":
     
     posts_df = import_crowdtangle_group_data()
     pages_df = import_data(folder="crowdtangle_list", file_name="self_declared_page_details.csv")
     pages_df['date'] = pd.to_datetime(pages_df['date'])
 
-    save_figure_4(posts_df, pages_df)
-    # save_figure_5(posts_df, pages_df)
+    # save_figure_4(posts_df, pages_df)
+    save_figure_5(posts_df, pages_df)
 
-    screenshot_df = import_data(folder="crowdtangle_post_by_id", file_name='screenshot_posts.csv')
-    print('\n\nOVERPERFORMING SCORE ANALYSIS')
-    print('The average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
-    print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
+    # screenshot_df = import_data(folder="crowdtangle_post_by_id", file_name='screenshot_posts.csv')
+    # print('\n\nOVERPERFORMING SCORE ANALYSIS')
+    # print('The average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
+    # print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
 
     # save_all_groups_figures(posts_df, repeat_offender_date)
