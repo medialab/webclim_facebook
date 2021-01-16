@@ -61,10 +61,11 @@ def import_json(folder, file_name):
     return data
 
 
-def save_figure_4(posts_df, repeat_offender_date):
+def save_figure_4(posts_df, pages_df):
 
     account_name = 'I Love Carbon Dioxide'
     account_id = posts_df[posts_df['account_name']==account_name].account_id.unique()[0]
+    reduced_distribution_date = pages_df[pages_df['page_name'] == account_name]['date'].values[0]
 
     plt.figure(figsize=(10, 4))
     ax = plt.subplot()
@@ -77,12 +78,12 @@ def save_figure_4(posts_df, repeat_offender_date):
               np.datetime64('2019-07-01'), np.datetime64('2019-09-01'), np.datetime64('2019-11-01'),
               np.datetime64('2020-01-01'), np.datetime64('2020-03-01'), 
               np.datetime64('2020-07-01'), np.datetime64('2020-09-01'), np.datetime64('2020-11-01'), 
-              np.datetime64(repeat_offender_date[account_name])
+              np.datetime64(reduced_distribution_date)
              ]
     plt.xticks(xticks, rotation=30, ha='right')
     plt.gca().get_xticklabels()[-1].set_color('red')
 
-    plt.axvline(x=np.datetime64(repeat_offender_date[account_name]), 
+    plt.axvline(x=np.datetime64(reduced_distribution_date), 
                 color='C3', linestyle='--', linewidth=2)
 
     plt.legend()
@@ -237,9 +238,10 @@ def save_supplementary_table_1():
 if __name__ == "__main__":
     
     posts_df = import_crowdtangle_group_data()
-    pages_df = 
+    pages_df = import_data(folder="crowdtangle_list", file_name="self_declared_page_details.csv")
+    pages_df['date'] = pd.to_datetime(pages_df['date'])
 
-    # save_figure_4(posts_df, repeat_offender_date)
+    save_figure_4(posts_df, pages_df)
     # save_figure_5(posts_df, repeat_offender_date)
 
     # screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
