@@ -54,13 +54,6 @@ def import_crowdtangle_group_data():
     return posts_df
 
 
-def import_json(folder, file_name):
-    data_path = os.path.join('.', 'data', folder, file_name)
-    with open(data_path) as json_file:
-        data = json.load(json_file)
-    return data
-
-
 def save_figure_4(posts_df, pages_df):
 
     account_name = 'I Love Carbon Dioxide'
@@ -91,22 +84,7 @@ def save_figure_4(posts_df, pages_df):
     save_figure('figure_4', folder='ip&m', dpi=100)
 
 
-def add_layout_details(ax):
-
-    plt.axvline(x=0, color='C3', linestyle='--', linewidth=2)
-
-    plt.legend()
-    plt.xticks(ticks=[-7, 0, 7], labels=['7 days before', 'Alleged date', '7 days after'])
-    plt.ylim(bottom=0)
-    plt.locator_params(axis='y', nbins=3)
-    ax.grid(axis="y")
-
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-
-
-def save_figure_5(posts_df, repeat_offender_date):
+def compute_periods_average(posts_df, pages_df):
 
     reaction_before = []
     share_before = []
@@ -163,6 +141,10 @@ def save_figure_5(posts_df, repeat_offender_date):
         posts_before.append(np.mean(post_number['post_number'].values[:7]))
         posts_after.append(np.mean(post_number['post_number'].values[8:]))
 
+    return before_date, after_date
+
+
+def print_before_after_statistics(before_date, after_date):
     t, p = stats.wilcoxon(reaction_before, reaction_after)
     print('\nWilcoxon test between the reactions: t =', t, ', p =', p)
     t, p = stats.wilcoxon(share_before, share_after)
@@ -171,6 +153,12 @@ def save_figure_5(posts_df, repeat_offender_date):
     print('\nWilcoxon test between the comments: t =', t, ', p =', p)
     t, p = stats.wilcoxon(posts_before, posts_after)
     print('\nWilcoxon test between the number of posts: t =', t, ', p =', p)
+
+
+def save_figure_5(posts_df, pages_df):
+
+    before_date, after_date = compute_periods_average(posts_df, pages_df)
+    print_before_after_statistics(before_date, after_date)
 
     df_reaction['mean'] = df_reaction.mean(axis=1)
     df_share['mean'] = df_share.mean(axis=1)
@@ -190,7 +178,7 @@ def save_figure_5(posts_df, repeat_offender_date):
     add_layout_details(ax)
 
     plt.tight_layout(pad=3)
-    save_figure('figure_5', folder='ip&m', dpi=50)
+    save_figure('figure_5', folder='ip&m', dpi=100)
 
 
 def save_all_groups_figures(posts_df, repeat_offender_date):
@@ -242,11 +230,11 @@ if __name__ == "__main__":
     pages_df['date'] = pd.to_datetime(pages_df['date'])
 
     save_figure_4(posts_df, pages_df)
-    # save_figure_5(posts_df, repeat_offender_date)
+    # save_figure_5(posts_df, pages_df)
 
-    # screenshot_df = import_data(folder="self_declared_repeat_offenders", file_name='posts.csv')
-    # print('\nThe average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
-    # print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
+    screenshot_df = import_data(folder="crowdtangle_post_by_id", file_name='screenshot_posts.csv')
+    print('\n\nOVERPERFORMING SCORE ANALYSIS')
+    print('The average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
+    print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
 
     # save_all_groups_figures(posts_df, repeat_offender_date)
-    # # save_supplementary_table_1()
