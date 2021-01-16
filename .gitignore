@@ -8,6 +8,8 @@ src/__pycache__/*
 .env
 
 *.csv
+!misinformation_account_urls.csv
+
 *.txt
 !requirements.txt
 
