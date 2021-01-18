@@ -203,10 +203,9 @@ def save_figure_5(posts_df, pages_df, period_length=7):
     save_figure('figure_5', folder='ip&m', dpi=100)
 
 
-def save_all_groups_figures(posts_df, repeat_offender_date):
+def save_all_groups_figures(posts_df, pages_df):
 
     group_index = 0
-
     for account_id in posts_df['account_id'].unique():
 
         if group_index % 10 == 0:
@@ -216,17 +215,24 @@ def save_all_groups_figures(posts_df, repeat_offender_date):
         
         account_name = posts_df[posts_df['account_id']==account_id].account_name.unique()[0]
         plt.title(account_name, size="x-large")
+        reduced_distribution_date = pages_df[pages_df['page_name'] == account_name]['date'].values[0]
 
-        plot_one_group(posts_df, account_id, ax)
-        plt.axvline(x=np.datetime64(repeat_offender_date[account_name]), 
+        plot_one_group(ax, posts_df, account_id, fake_news_dates=[])
+
+        xticks = [np.datetime64('2019-01-01'), np.datetime64('2019-05-01'), np.datetime64('2019-09-01'),
+                  np.datetime64('2020-01-01'), np.datetime64('2020-05-01'), np.datetime64('2020-09-01'),
+                  np.datetime64(reduced_distribution_date)]
+        plt.xticks(xticks, rotation=30, ha='right')
+        plt.gca().get_xticklabels()[-1].set_color('red')
+        plt.axvline(x=np.datetime64(reduced_distribution_date), 
                     color='C3', linestyle='--', linewidth=2)
 
-        if group_index > 0: 
-            ax.get_legend().set_visible(False)
+        if group_index % 10 == 0: 
+            plt.legend()
 
         if (group_index % 10 == 9) | (group_index == posts_df['account_id'].nunique() - 1):
             plt.tight_layout()
-            save_figure('supplementary_figure_3_{}'.format(int(group_index / 10) + 1), folder='ip&m', dpi=30)
+            save_figure('z_part_2_all_groups_{}'.format(int(group_index / 10) + 1), folder='ip&m', dpi=100)
 
         group_index += 1
 
@@ -238,11 +244,11 @@ if __name__ == "__main__":
     pages_df['date'] = pd.to_datetime(pages_df['date'])
 
     # save_figure_4(posts_df, pages_df)
-    save_figure_5(posts_df, pages_df)
+    # save_figure_5(posts_df, pages_df)
 
     # screenshot_df = import_data(folder="crowdtangle_post_by_id", file_name='screenshot_posts.csv')
     # print('\n\nOVERPERFORMING SCORE ANALYSIS')
     # print('The average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
     # print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
 
-    # save_all_groups_figures(posts_df, repeat_offender_date)
+    save_all_groups_figures(posts_df, pages_df)
