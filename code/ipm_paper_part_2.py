@@ -203,6 +203,14 @@ def save_figure_5(posts_df, pages_df, period_length=7):
     save_figure('figure_5', folder='ip&m', dpi=100)
 
 
+def print_statistics_screenshot_posts(screenshot_df):
+    print('\n\nOVERPERFORMING SCORE STATISTICS')
+    print('The average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
+    print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
+    w, p = stats.wilcoxon(screenshot_df['score'].values, alternative="less")
+    print('\nWilcoxon test of the overperfoming scores against zero: w =', w, ', p =', p)
+
+
 def save_all_groups_figures(posts_df, pages_df):
 
     group_index = 0
@@ -239,16 +247,14 @@ def save_all_groups_figures(posts_df, pages_df):
 
 if __name__ == "__main__":
     
-    posts_df = import_crowdtangle_group_data()
-    pages_df = import_data(folder="crowdtangle_list", file_name="self_declared_page_details.csv")
-    pages_df['date'] = pd.to_datetime(pages_df['date'])
+    # posts_df = import_crowdtangle_group_data()
+    # pages_df = import_data(folder="crowdtangle_list", file_name="self_declared_page_details.csv")
+    # pages_df['date'] = pd.to_datetime(pages_df['date'])
 
     # save_figure_4(posts_df, pages_df)
     # save_figure_5(posts_df, pages_df)
 
-    # screenshot_df = import_data(folder="crowdtangle_post_by_id", file_name='screenshot_posts.csv')
-    # print('\n\nOVERPERFORMING SCORE ANALYSIS')
-    # print('The average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
-    # print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
+    screenshot_df = import_data(folder="crowdtangle_post_by_id", file_name='screenshot_posts.csv')
+    print_statistics_screenshot_posts(screenshot_df)
 
-    save_all_groups_figures(posts_df, pages_df)
+    # save_all_groups_figures(posts_df, pages_df)
