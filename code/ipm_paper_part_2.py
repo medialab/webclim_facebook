@@ -84,6 +84,47 @@ def save_figure_4(posts_df, pages_df):
     save_figure('figure_4', folder='ip&m', dpi=100)
 
 
+def save_supplementary_figure_2(posts_df, pages_df):
+
+    accounts_to_plot = [
+        'Tucker Carlson Tonight',
+        'Normals Are Pissed',
+        'Botanica Health',
+        'Jodie Meschuk',
+        'The PROOF Blog',
+        "The Rational Capitalist",
+        'Mark Levin',
+        'POVnow',
+        "Tell The USA to DUMP Trump",
+        'Florida Boys TV'
+    ]
+
+    fig = plt.figure(figsize=(10, 12))
+
+    for idx in range(len(accounts_to_plot)):
+        ax = plt.subplot(5, 2, idx + 1)
+        plt.title(accounts_to_plot[idx])
+
+        account_id = posts_df[posts_df['account_name']==accounts_to_plot[idx]].account_id.unique()[0]
+        reduced_distribution_date = pages_df[pages_df['page_name'] == accounts_to_plot[idx]]['date'].values[0]
+
+        plot_one_group(ax, posts_df, account_id, fake_news_dates=[])
+
+        xticks = [np.datetime64('2019-01-01'), np.datetime64('2019-05-01'), np.datetime64('2019-09-01'),
+                  np.datetime64('2020-01-01'), np.datetime64('2020-05-01'), np.datetime64('2020-09-01'),
+                  np.datetime64(reduced_distribution_date)]
+        plt.xticks(xticks, rotation=30, ha='right')
+        plt.gca().get_xticklabels()[-1].set_color('red')
+        plt.axvline(x=np.datetime64(reduced_distribution_date), 
+                    color='C3', linestyle='--', linewidth=2)
+
+        if idx == 0: 
+            plt.legend()
+
+    plt.tight_layout()
+    save_figure('supplementary_figure_2', folder='ip&m', dpi=100)
+
+
 def compute_periods_average(posts_df, pages_df, period_length=7):
 
     before_date = {
@@ -208,7 +249,7 @@ def print_statistics_screenshot_posts(screenshot_df):
     print('The average score is {}.'.format(np.nanmean(screenshot_df['score'].values)))
     print('Only {} posts have a positive score.'.format(len(screenshot_df[screenshot_df['score'] > 0])))
     w, p = stats.wilcoxon(screenshot_df['score'].values, alternative="less")
-    print('\nWilcoxon test of the overperfoming scores against zero: w =', w, ', p =', p)
+    print('Wilcoxon test of the overperfoming scores against zero: w =', w, ', p =', p)
 
 
 def save_all_groups_figures(posts_df, pages_df):
@@ -247,14 +288,15 @@ def save_all_groups_figures(posts_df, pages_df):
 
 if __name__ == "__main__":
     
-    # posts_df = import_crowdtangle_group_data()
-    # pages_df = import_data(folder="crowdtangle_list", file_name="self_declared_page_details.csv")
-    # pages_df['date'] = pd.to_datetime(pages_df['date'])
+    posts_df = import_crowdtangle_group_data()
+    pages_df = import_data(folder="crowdtangle_list", file_name="self_declared_page_details.csv")
+    pages_df['date'] = pd.to_datetime(pages_df['date'])
 
-    # save_figure_4(posts_df, pages_df)
-    # save_figure_5(posts_df, pages_df)
+    save_figure_4(posts_df, pages_df)
+    save_supplementary_figure_2(posts_df, pages_df)
+    save_figure_5(posts_df, pages_df)
 
     screenshot_df = import_data(folder="crowdtangle_post_by_id", file_name='screenshot_posts.csv')
     print_statistics_screenshot_posts(screenshot_df)
 
-    # save_all_groups_figures(posts_df, pages_df)
+    save_all_groups_figures(posts_df, pages_df)
