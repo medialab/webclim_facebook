@@ -468,8 +468,6 @@ def save_figure_1(posts_df, post_url_df, url_df):
 
 
 def save_supplementary_figure_1(posts_df, post_url_df, url_df):
-    
-    fig = plt.figure(figsize=(10, 12))
 
     accounts_to_plot = [
         'Pharmaceuticals Exposed',
@@ -483,6 +481,8 @@ def save_supplementary_figure_1(posts_df, post_url_df, url_df):
         "'FACEBOOK CENSORED NEWS'",
         'Tampa Bay Trump Club'
     ]
+
+    fig = plt.figure(figsize=(10, 12))
 
     for idx in range(len(accounts_to_plot)):
         ax = plt.subplot(5, 2, idx + 1)
@@ -499,6 +499,7 @@ def save_supplementary_figure_1(posts_df, post_url_df, url_df):
 
         if idx == 0:
             legend1 = plt.legend(loc='upper left')
+            plt.ylim(top=40)
         elif idx == 1:
             patch1 = mpatches.Patch(facecolor='pink', alpha=0.4, edgecolor='k')
             patch2 = mpatches.Patch(facecolor='white', alpha=0.4, edgecolor='k')
