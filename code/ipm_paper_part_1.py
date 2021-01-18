@@ -436,12 +436,15 @@ def plot_repeat_offender_average(repeat_offender, free, ax):
 
 
 def print_repeat_offender_statistics(repeat_offender, free):
-    t, p = stats.wilcoxon(repeat_offender['reaction'], free['reaction'])
-    print('\nWilcoxon test between the reactions: t =', t, ', p =', p)
-    t, p = stats.wilcoxon(repeat_offender['share'], free['share'])
-    print('\nWilcoxon test between the shares: t =', t, ', p =', p)
-    t, p = stats.wilcoxon(repeat_offender['comment'], free['comment'])
-    print('\nWilcoxon test between the comments: t =', t, ', p =', p)
+
+    w, p = stats.wilcoxon(repeat_offender['reaction'], free['reaction'])
+    print('\nWilcoxon test between the reactions: w =', w, ', p =', p)
+    
+    w, p = stats.wilcoxon(repeat_offender['share'], free['share'])
+    print('\nWilcoxon test between the shares: w =', w, ', p =', p)
+    
+    w, p = stats.wilcoxon(repeat_offender['comment'], free['comment'])
+    print('\nWilcoxon test between the comments: w =', w, ', p =', p)
 
 
 def save_figure_1(posts_df, post_url_df, url_df):

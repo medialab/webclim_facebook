@@ -134,17 +134,17 @@ def compute_periods_average(posts_df, pages_df, period_length=7):
 
 def print_before_after_statistics(before_date, after_date):
 
-    t, p = stats.wilcoxon(before_date['reaction'], after_date['reaction'])
-    print('\nWilcoxon test between the reactions: t =', t, ', p =', p)
+    w, p = stats.wilcoxon(before_date['reaction'], after_date['reaction'])
+    print('\nWilcoxon test between the reactions: w =', w, ', p =', p)
 
-    t, p = stats.wilcoxon(before_date['share'], after_date['share'])
-    print('\nWilcoxon test between the shares: t =', t, ', p =', p)
+    w, p = stats.wilcoxon(before_date['share'], after_date['share'])
+    print('\nWilcoxon test between the shares: w =', w, ', p =', p)
 
-    t, p = stats.wilcoxon(before_date['comment'], after_date['comment'])
-    print('\nWilcoxon test between the comments: t =', t, ', p =', p)
+    w, p = stats.wilcoxon(before_date['comment'], after_date['comment'])
+    print('\nWilcoxon test between the comments: w =', w, ', p =', p)
 
-    t, p = stats.wilcoxon(before_date['post_nb'], after_date['post_nb'])
-    print('\nWilcoxon test between the number of posts: t =', t, ', p =', p)
+    w, p = stats.wilcoxon(before_date['post_nb'], after_date['post_nb'])
+    print('\nWilcoxon test between the number of posts: w =', w, ', p =', p)
     print(np.mean(before_date['post_nb']), np.mean(after_date['post_nb']))
 
 
