@@ -122,7 +122,7 @@ def save_supplementary_figure_2(posts_df, pages_df):
             plt.legend()
 
     plt.tight_layout()
-    save_figure('supplementary_figure_2', folder='ip&m', dpi=100)
+    save_figure('supplementary_figure_3', folder='ip&m', dpi=100)
 
 
 def compute_periods_average(posts_df, pages_df, period_length=7):
@@ -299,4 +299,4 @@ if __name__ == "__main__":
     screenshot_df = import_data(folder="crowdtangle_post_by_id", file_name='screenshot_posts.csv')
     print_statistics_screenshot_posts(screenshot_df)
 
-    save_all_groups_figures(posts_df, pages_df)
+    # save_all_groups_figures(posts_df, pages_df)

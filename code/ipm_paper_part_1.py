@@ -38,8 +38,6 @@ def concatenate_crowdtangle_group_data(suffix):
     posts_df = pd.concat([posts_group_df, posts_page_df])
 
     posts_df['date'] = pd.to_datetime(posts_df['date'])
-    # posts_df = posts_df[posts_df['date'] >= datetime.datetime.strptime('2019-09-01', '%Y-%m-%d')]
-    # posts_df = posts_df[posts_df['date'] <= datetime.datetime.strptime('2020-08-31', '%Y-%m-%d')]
 
     return posts_df
 
@@ -102,16 +100,6 @@ def plot_group_average(posts_df, title_detail):
     plt.tight_layout()
 
 
-def save_figure_2(posts_fake):
-    plot_group_average(posts_fake, title_detail="Misinformation")
-    save_figure('figure_2', folder='ip&m', dpi=100)
-
-
-def save_figure_3(posts_main):
-    plot_group_average(posts_main, title_detail="Established news")
-    save_figure('figure_3', folder='ip&m', dpi=100)
-
-
 def print_evolution_percentages(posts_df):
     print('\nFor the {} Facebook accounts about fake news:'.format(posts_df.account_id.nunique()))
 
@@ -122,38 +110,29 @@ def print_evolution_percentages(posts_df):
         ))
 
 
-def print_figure_2_statistics(posts_df):
+def save_figure_2(posts_fake):
+    plot_group_average(posts_fake, title_detail="Misinformation")
+    save_figure('figure_2', folder='ip&m', dpi=100)
+    print_evolution_percentages(posts_fake)
 
-    print_evolution_percentages(posts_df)
 
-    all_accounts_index = 0
-    declining_accounts_index = 0
-
-    for account_id in posts_df['account_id'].unique():
-        posts_df_group = posts_df[posts_df["account_id"] == account_id]
-        reaction_serie = posts_df_group.groupby(by=["date"])['reaction'].mean()
-        share_serie = posts_df_group.groupby(by=["date"])['share'].mean()
-        comment_serie = posts_df_group.groupby(by=["date"])['comment'].mean()
-
-        if ('2020-06-08' in reaction_serie.index) and ('2020-06-10' in reaction_serie.index):
-            all_accounts_index += 1
-            if ((reaction_serie.loc['2020-06-10'] < reaction_serie.loc['2020-06-08']) and 
-                (share_serie.loc['2020-06-10'] < share_serie.loc['2020-06-08']) and 
-                (comment_serie.loc['2020-06-10'] < comment_serie.loc['2020-06-08'])):
-                declining_accounts_index += 1
-
-    print('\nAmong the {} misinformation accounts, {} of them see their three engagement metrics decline.'\
-            .format(all_accounts_index, declining_accounts_index))
-
+def save_supplementary_figure_2(posts_fake):
     list_complete_groups_id = []
-    for id in posts_df['account_id'].unique():
-        posts_df_group = posts_df[posts_df["account_id"] == id]
-        if ((np.min(posts_df_group['date']) == np.min(posts_df['date'])) & 
-            (np.max(posts_df_group['date']) == np.max(posts_df['date']))):
+    for id in posts_fake['account_id'].unique():
+        posts_df_group = posts_fake[posts_fake["account_id"] == id]
+        if ((np.min(posts_df_group['date']) == np.min(posts_fake['date'])) & 
+            (np.max(posts_df_group['date']) == np.max(posts_fake['date']))):
             list_complete_groups_id.append(id)
-    posts_df_temp = posts_df[posts_df["account_id"].isin(list_complete_groups_id)]
+    posts_fake_temp = posts_fake[posts_fake["account_id"].isin(list_complete_groups_id)]
 
-    print_evolution_percentages(posts_df_temp)
+    plot_group_average(posts_fake_temp, title_detail="Misinformation")
+    save_figure('supplementary_figure_2', folder='ip&m', dpi=100)
+    print_evolution_percentages(posts_fake_temp)
+
+
+def save_figure_3(posts_main):
+    plot_group_average(posts_main, title_detail="Established news")
+    save_figure('figure_3', folder='ip&m', dpi=100)
 
 
 def rolling_average_per_day(df, column):
@@ -546,11 +525,12 @@ if __name__ == "__main__":
     url_df = import_data(folder="sciencefeedback", file_name="appearances_2021-01-04_.csv")    
     save_figure_1(posts_fake, appearance_df, url_df)
 
+    save_supplementary_figure_1(posts_fake, appearance_df, url_df)
+    # save_all_groups_figures(posts_fake, appearance_df, url_df)
+
     save_figure_2(posts_fake)
-    # print_figure_2_statistics(posts_fake)
+    save_supplementary_figure_2(posts_fake)
 
     posts_main = concatenate_crowdtangle_group_data("main_news_2021")
     save_figure_3(posts_main)
 
-    save_supplementary_figure_1(posts_fake, appearance_df, url_df)
-    # save_all_groups_figures(posts_fake, appearance_df, url_df)
