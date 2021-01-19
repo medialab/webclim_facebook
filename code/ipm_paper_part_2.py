@@ -289,7 +289,7 @@ def save_all_groups_figures(posts_df, pages_df):
 if __name__ == "__main__":
     
     posts_df = import_crowdtangle_group_data()
-    pages_df = import_data(folder="crowdtangle_list", file_name="self_declared_page_details.csv")
+    pages_df = import_data(folder="crowdtangle_list", file_name="page_list_part_2.csv")
     pages_df['date'] = pd.to_datetime(pages_df['date'])
 
     save_figure_4(posts_df, pages_df)
