@@ -350,9 +350,9 @@ def plot_repeat_offender_example(posts_df, post_url_df, url_df, ax):
 
     legend1 = plt.legend(loc='upper left')
 
-    patch1 = mpatches.Patch(facecolor='pink', alpha=0.4, edgecolor='k')
-    patch2 = mpatches.Patch(facecolor='white', alpha=0.4, edgecolor='k')
-    legend2 = plt.legend([patch1, patch2], ["'Repeat offender' periods", "'No strike' periods"],
+    patch1 = mpatches.Patch(facecolor='white', alpha=0.4, edgecolor='k')
+    patch2 = mpatches.Patch(facecolor='pink', alpha=0.4, edgecolor='k')
+    legend2 = plt.legend([patch1, patch2], ["'No strike' periods", "'Repeat offender' periods"],
                 loc='upper right', framealpha=1)
     plt.gca().add_artist(legend1)
 
@@ -378,23 +378,24 @@ def plot_repeat_offender_average(repeat_offender, free, ax):
     x = np.arange(len(labels)) 
 
     # Plot the bars
-    plt.bar(x - width/2, [np.mean(repeat_offender['reaction']), np.mean(repeat_offender['share']), 
+    plt.bar(x - width/2, [np.mean(free['reaction']), np.mean(free['share']), np.mean(free['comment'])], 
+                    width, label="'No strike' periods", color='white', edgecolor=[.2, .2, .2], zorder=3)
+
+    plt.bar(x + width/2, [np.mean(repeat_offender['reaction']), np.mean(repeat_offender['share']), 
                                         np.mean(repeat_offender['comment'])], 
                     width, label="'Repeat offender' periods", color='pink', edgecolor=[.2, .2, .2], zorder=3)
-    plt.bar(x + width/2, [np.mean(free['reaction']), np.mean(free['share']), np.mean(free['comment'])], 
-                    width, label="'No strike' periods", color='white', edgecolor=[.2, .2, .2], zorder=3)
 
     # Add the error bars
     idx = 0   
     for metric in ['reaction', 'share', 'comment']:
-        low, high = calculate_confidence_interval(repeat_offender[metric])
-        plt.errorbar(idx - width/2, np.mean(repeat_offender[metric]), 
-            yerr=[[np.mean(repeat_offender[metric]) - low], [high - np.mean(repeat_offender[metric])]], 
+        low, high = calculate_confidence_interval(free[metric])
+        plt.errorbar(idx - width/2, np.mean(free[metric]), 
+            yerr=[[np.mean(free[metric]) - low], [high - np.mean(free[metric])]], 
             color=[.2, .2, .2], zorder=4, linestyle='')
 
-        low, high = calculate_confidence_interval(free[metric])
-        plt.errorbar(idx + width/2, np.mean(free[metric]), 
-            yerr=[[np.mean(free[metric]) - low], [high - np.mean(free[metric])]], 
+        low, high = calculate_confidence_interval(repeat_offender[metric])
+        plt.errorbar(idx + width/2, np.mean(repeat_offender[metric]), 
+            yerr=[[np.mean(repeat_offender[metric]) - low], [high - np.mean(repeat_offender[metric])]], 
             color=[.2, .2, .2], zorder=4, linestyle='')
 
         idx += 1
@@ -480,9 +481,9 @@ def save_supplementary_figure_1(posts_df, post_url_df, url_df):
             legend1 = plt.legend(loc='upper left')
             plt.ylim(top=40)
         elif idx == 1:
-            patch1 = mpatches.Patch(facecolor='pink', alpha=0.4, edgecolor='k')
-            patch2 = mpatches.Patch(facecolor='white', alpha=0.4, edgecolor='k')
-            legend2 = plt.legend([patch1, patch2], ["'Repeat offender' periods", "'No strike' periods"],
+            patch1 = mpatches.Patch(facecolor='white', alpha=0.4, edgecolor='k')
+            patch2 = mpatches.Patch(facecolor='pink', alpha=0.4, edgecolor='k')
+            legend2 = plt.legend([patch1, patch2], ["'No strike' periods", "'Repeat offender' periods"],
                         loc='upper right', framealpha=1)
         plt.axvline(x=np.datetime64("2020-06-09"), color='black', linestyle='--', linewidth=1)
 
