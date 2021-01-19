@@ -8,7 +8,7 @@ src/__pycache__/*
 .env
 
 *.csv
-!misinformation_account_urls.csv
+!account_list_part_1.csv
 !page_list_part_2.csv
 
 *.txt
