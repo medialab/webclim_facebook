@@ -9,7 +9,7 @@ src/__pycache__/*
 
 *.csv
 !misinformation_account_urls.csv
-!self_declared_page_details.csv
+!page_list_part_2.csv
 
 *.txt
 !requirements.txt
