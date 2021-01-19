@@ -422,6 +422,8 @@ def print_repeat_offender_statistics(repeat_offender, free):
     
     w, p = stats.wilcoxon(repeat_offender['share'], free['share'])
     print('\nWilcoxon test between the shares: w =', w, ', p =', p)
+    decrease_percentage = (np.mean(repeat_offender['share']) - np.mean(free['share']))/np.mean(free['share'])
+    print(np.round(decrease_percentage, 2), '% evolution in shares')
     
     w, p = stats.wilcoxon(repeat_offender['comment'], free['comment'])
     print('\nWilcoxon test between the comments: w =', w, ', p =', p)
