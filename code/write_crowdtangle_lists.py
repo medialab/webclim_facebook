@@ -3,6 +3,8 @@ import pandas as pd
 from utils import (import_data, export_data)
 
 
+pd.options.display.max_colwidth = 300
+
 def create_template_csv_from_serie(serie, list_name):
 
     df = pd.DataFrame(columns=["Page or Account URL", "List"])
