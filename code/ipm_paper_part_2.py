@@ -167,8 +167,8 @@ def compute_periods_average(posts_df, pages_df, period_length=7):
             before_date['comment'].append(np.mean(posts_df_group_before['comment']))
             after_date['comment'].append(np.mean(posts_df_group_after['comment']))
 
-            before_date['post_nb'].append(len(posts_df_group_before))
-            after_date['post_nb'].append(len(posts_df_group_after))
+            before_date['post_nb'].append(len(posts_df_group_before)/period_length)
+            after_date['post_nb'].append(len(posts_df_group_after)/period_length)
 
     return before_date, after_date
 
@@ -213,11 +213,11 @@ def plot_before_after_bars(before_date, after_date, period_length):
     # Plot the bars
     plt.bar(x - width/2, [np.mean(before_date['reaction']), np.mean(before_date['share']), 
                             np.mean(before_date['comment'])], 
-            width, label="{} days before the reduced distribution date".format(period_length), 
+            width, label="{} days before the reduced distribution start date".format(period_length), 
             color='paleturquoise', edgecolor=[.2, .2, .2], zorder=3)
     plt.bar(x + width/2, [np.mean(after_date['reaction']), np.mean(after_date['share']), 
                             np.mean(after_date['comment'])], 
-            width, label="{} days after the reduced distribution date".format(period_length), 
+            width, label="{} days after the reduced distribution start date".format(period_length), 
             color='navajowhite', edgecolor=[.2, .2, .2], zorder=3)
 
     # Add the error bars
@@ -237,7 +237,7 @@ def plot_before_after_bars(before_date, after_date, period_length):
 
     # details
     plt.legend(framealpha=1)
-    plt.title("Engagement metrics averaged over {} 'reduced distribution' accounts"\
+    plt.title("Averages over {} 'reduced distribution' accounts"\
         .format(len(before_date['reaction'])), loc='right')
     plt.xticks(x, labels, fontsize='large',)
     plt.xlim([-.5, 2.5])
@@ -247,10 +247,10 @@ def plot_before_after_bars(before_date, after_date, period_length):
     ax = fig.add_subplot(gs[0, 3])
 
     plt.bar(-width/2, np.mean(before_date['post_nb']), 
-            width, label="{} days before the reduced distribution date".format(period_length), 
+            width, label="{} days before the reduced distribution start date".format(period_length), 
             color='paleturquoise', edgecolor=[.2, .2, .2], zorder=3)
     plt.bar(width/2, np.mean(after_date['post_nb']), 
-            width, label="{} days after the reduced distribution date".format(period_length), 
+            width, label="{} days after the reduced distribution start date".format(period_length), 
             color='navajowhite', edgecolor=[.2, .2, .2], zorder=3)
     
     low, high = calculate_confidence_interval(before_date['post_nb'])
@@ -262,12 +262,15 @@ def plot_before_after_bars(before_date, after_date, period_length):
         yerr=[[np.mean(after_date['post_nb']) - low], [high - np.mean(after_date['post_nb'])]], 
         color=[.2, .2, .2], zorder=4, linestyle='')
 
-    plt.xticks([0], ['Number of posts'], fontsize='large',)
+    plt.xticks([0], ['Number of daily posts'], fontsize='large',)
     plt.xlim([-.5, .5])
     details_bar_plot(ax)
 
     plt.tight_layout()
-    save_figure('figure_5', folder='ip&m', dpi=100)
+    if period_length == 7:
+        save_figure('figure_5', folder='ip&m', dpi=100)
+    else:
+        save_figure('supplementary_figure_4', folder='ip&m', dpi=100)
 
 
 def save_figure_5(posts_df, pages_df, period_length=7):
