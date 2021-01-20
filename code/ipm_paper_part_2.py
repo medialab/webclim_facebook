@@ -189,23 +189,29 @@ def print_before_after_statistics(before_date, after_date):
     print(np.mean(before_date['post_nb']), np.mean(after_date['post_nb']))
 
 
-def plot_before_after_bars(before_date, after_date, ax):
+def plot_before_after_bars(before_date, after_date):
 
+    fig = plt.figure(figsize=(10, 4))
+    gs = fig.add_gridspec(1, 4)
+
+    ## ENGAGEMENT METRICS
+
+    ax = fig.add_subplot(gs[0, 0:3])
     width = .25
-    labels = ['Reactions', 'Shares', 'Comments', 'Number of posts']
+    labels = ['Reactions', 'Shares', 'Comments']
     x = np.arange(len(labels)) 
 
     # Plot the bars
     plt.bar(x - width/2, [np.mean(before_date['reaction']), np.mean(before_date['share']), 
-                            np.mean(before_date['comment']), np.mean(before_date['post_nb'])], 
-                    width, label="7 days before the reduced distribution date", color='paleturquoise', edgecolor=[.2, .2, .2], zorder=3)
+                            np.mean(before_date['comment'])], 
+            width, label="7 days before the reduced distribution date", color='paleturquoise', edgecolor=[.2, .2, .2], zorder=3)
     plt.bar(x + width/2, [np.mean(after_date['reaction']), np.mean(after_date['share']), 
-                            np.mean(after_date['comment']), np.mean(after_date['post_nb'])], 
-                    width, label="7 days after the reduced distribution date", color='navajowhite', edgecolor=[.2, .2, .2], zorder=3)
+                            np.mean(after_date['comment'])], 
+            width, label="7 days after the reduced distribution date", color='navajowhite', edgecolor=[.2, .2, .2], zorder=3)
 
     # Add the error bars
     idx = 0   
-    for metric in ['reaction', 'share', 'comment', 'post_nb']:
+    for metric in ['reaction', 'share', 'comment']:
         low, high = calculate_confidence_interval(before_date[metric])
         plt.errorbar(idx - width/2, np.mean(before_date[metric]), 
             yerr=[[np.mean(before_date[metric]) - low], [high - np.mean(before_date[metric])]], 
@@ -218,30 +224,54 @@ def plot_before_after_bars(before_date, after_date, ax):
 
         idx += 1
 
+    # details
     plt.legend(framealpha=1)
-
     plt.title("Engagement metrics averaged over {} 'reduced distribution' accounts"\
-        .format(len(before_date['reaction'])))
+        .format(len(before_date['reaction'])), loc='right')
     plt.xticks(x, labels, fontsize='large',)
     ax.tick_params(axis='x', which='both', length=0)
-    plt.xlim([-.5, 3.5])
+    plt.xlim([-.5, 2.5])
     ax.grid(axis="y", zorder=0)
     plt.locator_params(axis='y', nbins=8)
-
     ax.spines['right'].set_visible(False)
     ax.spines['left'].set_visible(False)
     ax.spines['top'].set_visible(False)
+
+    ## NUMBER OF POSTS
+    ax = fig.add_subplot(gs[0, 3])
+
+    plt.bar(-width/2, np.mean(before_date['post_nb']), 
+            width, label="7 days before the reduced distribution date", color='paleturquoise', edgecolor=[.2, .2, .2], zorder=3)
+    plt.bar(width/2, np.mean(after_date['post_nb']), 
+            width, label="7 days after the reduced distribution date", color='navajowhite', edgecolor=[.2, .2, .2], zorder=3)
+    
+    low, high = calculate_confidence_interval(before_date['post_nb'])
+    plt.errorbar(-width/2, np.mean(before_date['post_nb']), 
+        yerr=[[np.mean(before_date['post_nb']) - low], [high - np.mean(before_date['post_nb'])]], 
+        color=[.2, .2, .2], zorder=4, linestyle='')
+    low, high = calculate_confidence_interval(after_date['post_nb'])
+    plt.errorbar(width/2, np.mean(after_date['post_nb']), 
+        yerr=[[np.mean(after_date['post_nb']) - low], [high - np.mean(after_date['post_nb'])]], 
+        color=[.2, .2, .2], zorder=4, linestyle='')
+
+    plt.xticks([0], ['Number of posts'], fontsize='large',)
+    ax.tick_params(axis='x', which='both', length=0)
+    plt.xlim([-.5, .5])
+    ax.grid(axis="y", zorder=0)
+    plt.locator_params(axis='y', nbins=8)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+
+    plt.tight_layout()
+    save_figure('figure_5', folder='ip&m', dpi=100)
 
 
 def save_figure_5(posts_df, pages_df, period_length=7):
 
     before_date, after_date = compute_periods_average(posts_df, pages_df, period_length=period_length)
     print_before_after_statistics(before_date, after_date)
-
-    _, ax = plt.subplots(figsize=(10, 4))
-    plot_before_after_bars(before_date, after_date, ax)
-    plt.tight_layout()
-    save_figure('figure_5', folder='ip&m', dpi=100)
+    plot_before_after_bars(before_date, after_date)
 
 
 def print_statistics_screenshot_posts(screenshot_df):
@@ -292,11 +322,11 @@ if __name__ == "__main__":
     pages_df = import_data(folder="crowdtangle_list", file_name="page_list_part_2.csv")
     pages_df['date'] = pd.to_datetime(pages_df['date'])
 
-    save_figure_4(posts_df, pages_df)
-    save_supplementary_figure_2(posts_df, pages_df)
+    # save_figure_4(posts_df, pages_df)
+    # save_supplementary_figure_2(posts_df, pages_df)
     save_figure_5(posts_df, pages_df)
 
-    screenshot_df = import_data(folder="crowdtangle_post_by_id", file_name='screenshot_posts.csv')
-    print_statistics_screenshot_posts(screenshot_df)
+    # screenshot_df = import_data(folder="crowdtangle_post_by_id", file_name='screenshot_posts.csv')
+    # print_statistics_screenshot_posts(screenshot_df)
 
     # save_all_groups_figures(posts_df, pages_df)
