@@ -118,7 +118,7 @@ def print_individual_drops_statistics():
 
 
 def save_figure_2(posts_fake):
-    plot_group_average(posts_fake, title_detail="Misinformation")
+    plot_group_average(posts_fake, title_detail="Repeat offenders")
     save_figure('figure_2', folder='ip&m', dpi=100)
     print_evolution_percentages(posts_fake)
     print_individual_drops_statistics()
@@ -133,7 +133,7 @@ def save_supplementary_figure_2(posts_fake):
             list_complete_groups_id.append(id)
     posts_fake_temp = posts_fake[posts_fake["account_id"].isin(list_complete_groups_id)]
 
-    plot_group_average(posts_fake_temp, title_detail="Misinformation")
+    plot_group_average(posts_fake_temp, title_detail="Repeat offenders")
     save_figure('supplementary_figure_2', folder='ip&m', dpi=100)
     print_evolution_percentages(posts_fake_temp)
 
@@ -366,7 +366,7 @@ def plot_repeat_offender_example(posts_df, post_url_df, url_df, ax):
 
     plt.ylim(top=80)
 
-    plt.title("Engagement metrics for one Facebook group example ('" + account_name + "')")
+    plt.title("Engagement metrics for one 'repeat offenders' group ('" + account_name + "')")
 
 
 def calculate_confidence_interval(sample):
@@ -410,7 +410,7 @@ def plot_repeat_offender_average(repeat_offender, free, ax):
 
     plt.legend(framealpha=1)
 
-    plt.title("Engagement metrics averaged over {} 'misinformation' accounts"\
+    plt.title("Engagement metrics averaged over {} 'repeat offenders' accounts"\
         .format(len(repeat_offender['reaction'])))
     plt.xticks(x, labels, fontsize='large',)
     ax.tick_params(axis='x', which='both', length=0)

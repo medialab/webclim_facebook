@@ -63,7 +63,7 @@ def save_figure_4(posts_df, pages_df):
     plt.figure(figsize=(10, 4))
     ax = plt.subplot()
     
-    plt.title(account_name, size="x-large")
+    plt.title("Engagement metrics for one 'reduced distribution' page ('" + account_name + "')", size="x-large")
 
     plot_one_group(ax, posts_df, account_id, fake_news_dates=[])
 
@@ -238,7 +238,7 @@ def plot_before_after_bars(before_date, after_date, period_length):
     # details
     plt.legend(framealpha=1)
     plt.title("Averages over {} 'reduced distribution' accounts"\
-        .format(len(before_date['reaction'])), loc='right')
+        .format(len(before_date['reaction'])), loc='right', size="x-large")
     plt.xticks(x, labels, fontsize='large',)
     plt.xlim([-.5, 2.5])
     details_bar_plot(ax)
@@ -326,14 +326,14 @@ if __name__ == "__main__":
     
     posts_df = import_crowdtangle_group_data()
     pages_df = import_data(folder="crowdtangle_list", file_name="page_list_part_2.csv")
-    pages_df['date'] = pd.to_datetime(pages_df['date'])
+    pages_df['date'] = pd.to_datetime(pages_df['reduced_distribution_start_date'])
 
-    # save_figure_4(posts_df, pages_df)
-    # save_supplementary_figure_2(posts_df, pages_df)
+    save_figure_4(posts_df, pages_df)
+    save_supplementary_figure_2(posts_df, pages_df)
     save_figure_5(posts_df, pages_df)
     save_figure_5(posts_df, pages_df, period_length=30)
 
-    # screenshot_df = import_data(folder="crowdtangle_post_by_id", file_name='screenshot_posts.csv')
-    # print_statistics_screenshot_posts(screenshot_df)
+    screenshot_df = import_data(folder="crowdtangle_post_by_id", file_name='screenshot_posts.csv')
+    print_statistics_screenshot_posts(screenshot_df)
 
     # save_all_groups_figures(posts_df, pages_df)
