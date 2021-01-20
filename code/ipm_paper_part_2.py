@@ -189,7 +189,16 @@ def print_before_after_statistics(before_date, after_date):
     print(np.mean(before_date['post_nb']), np.mean(after_date['post_nb']))
 
 
-def plot_before_after_bars(before_date, after_date):
+def details_bar_plot(ax):
+    ax.tick_params(axis='x', which='both', length=0)
+    ax.grid(axis="y", zorder=0)
+    plt.locator_params(axis='y', nbins=8)
+    ax.spines['right'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['top'].set_visible(False)
+
+
+def plot_before_after_bars(before_date, after_date, period_length):
 
     fig = plt.figure(figsize=(10, 4))
     gs = fig.add_gridspec(1, 4)
@@ -204,10 +213,12 @@ def plot_before_after_bars(before_date, after_date):
     # Plot the bars
     plt.bar(x - width/2, [np.mean(before_date['reaction']), np.mean(before_date['share']), 
                             np.mean(before_date['comment'])], 
-            width, label="7 days before the reduced distribution date", color='paleturquoise', edgecolor=[.2, .2, .2], zorder=3)
+            width, label="{} days before the reduced distribution date".format(period_length), 
+            color='paleturquoise', edgecolor=[.2, .2, .2], zorder=3)
     plt.bar(x + width/2, [np.mean(after_date['reaction']), np.mean(after_date['share']), 
                             np.mean(after_date['comment'])], 
-            width, label="7 days after the reduced distribution date", color='navajowhite', edgecolor=[.2, .2, .2], zorder=3)
+            width, label="{} days after the reduced distribution date".format(period_length), 
+            color='navajowhite', edgecolor=[.2, .2, .2], zorder=3)
 
     # Add the error bars
     idx = 0   
@@ -229,21 +240,18 @@ def plot_before_after_bars(before_date, after_date):
     plt.title("Engagement metrics averaged over {} 'reduced distribution' accounts"\
         .format(len(before_date['reaction'])), loc='right')
     plt.xticks(x, labels, fontsize='large',)
-    ax.tick_params(axis='x', which='both', length=0)
     plt.xlim([-.5, 2.5])
-    ax.grid(axis="y", zorder=0)
-    plt.locator_params(axis='y', nbins=8)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['top'].set_visible(False)
+    details_bar_plot(ax)
 
     ## NUMBER OF POSTS
     ax = fig.add_subplot(gs[0, 3])
 
     plt.bar(-width/2, np.mean(before_date['post_nb']), 
-            width, label="7 days before the reduced distribution date", color='paleturquoise', edgecolor=[.2, .2, .2], zorder=3)
+            width, label="{} days before the reduced distribution date".format(period_length), 
+            color='paleturquoise', edgecolor=[.2, .2, .2], zorder=3)
     plt.bar(width/2, np.mean(after_date['post_nb']), 
-            width, label="7 days after the reduced distribution date", color='navajowhite', edgecolor=[.2, .2, .2], zorder=3)
+            width, label="{} days after the reduced distribution date".format(period_length), 
+            color='navajowhite', edgecolor=[.2, .2, .2], zorder=3)
     
     low, high = calculate_confidence_interval(before_date['post_nb'])
     plt.errorbar(-width/2, np.mean(before_date['post_nb']), 
@@ -255,13 +263,8 @@ def plot_before_after_bars(before_date, after_date):
         color=[.2, .2, .2], zorder=4, linestyle='')
 
     plt.xticks([0], ['Number of posts'], fontsize='large',)
-    ax.tick_params(axis='x', which='both', length=0)
     plt.xlim([-.5, .5])
-    ax.grid(axis="y", zorder=0)
-    plt.locator_params(axis='y', nbins=8)
-    ax.spines['right'].set_visible(False)
-    ax.spines['left'].set_visible(False)
-    ax.spines['top'].set_visible(False)
+    details_bar_plot(ax)
 
     plt.tight_layout()
     save_figure('figure_5', folder='ip&m', dpi=100)
@@ -271,7 +274,7 @@ def save_figure_5(posts_df, pages_df, period_length=7):
 
     before_date, after_date = compute_periods_average(posts_df, pages_df, period_length=period_length)
     print_before_after_statistics(before_date, after_date)
-    plot_before_after_bars(before_date, after_date)
+    plot_before_after_bars(before_date, after_date, period_length=period_length)
 
 
 def print_statistics_screenshot_posts(screenshot_df):
@@ -325,6 +328,7 @@ if __name__ == "__main__":
     # save_figure_4(posts_df, pages_df)
     # save_supplementary_figure_2(posts_df, pages_df)
     save_figure_5(posts_df, pages_df)
+    save_figure_5(posts_df, pages_df, period_length=30)
 
     # screenshot_df = import_data(folder="crowdtangle_post_by_id", file_name='screenshot_posts.csv')
     # print_statistics_screenshot_posts(screenshot_df)
