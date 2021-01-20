@@ -109,11 +109,19 @@ def print_evolution_percentages(posts_df):
             int(np.around((serie.loc['2020-06-10'] - serie.loc['2020-06-08']) * 100 / serie.loc['2020-06-08'], decimals=0))
         ))
 
+def print_individual_drops_statistics():
+    df = import_data(folder="crowdtangle_list", file_name="account_list_part_1.csv")
+    df = df.dropna(subset=['june_drop'])
+    df['june_drop'] = df['june_drop'].astype(str).apply(lambda x:x[:-1]).astype(int)
+    print('\nThere are {} accounts for which we can calculate the drop.'.format(len(df)))
+    print('Among them, {} accounts have a drop (decrease).'.format(len(df[df['june_drop'] < 0])))
+
 
 def save_figure_2(posts_fake):
     plot_group_average(posts_fake, title_detail="Misinformation")
     save_figure('figure_2', folder='ip&m', dpi=100)
     print_evolution_percentages(posts_fake)
+    print_individual_drops_statistics()
 
 
 def save_supplementary_figure_2(posts_fake):
